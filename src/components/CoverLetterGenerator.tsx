@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../stores/auth';
 import { useTranslation } from 'react-i18next';
-import { CVMetadata, getUserCVs, invokeExtractCvText, invokeGenerateCoverLetter, pollGeneratedContent, GenerationStatus } from '../lib/supabase'; // Importer aussi les fonctions pour les lettres de motivation plus tard
-import { FaFileAlt, FaSpinner, FaTrash, FaMagic, FaSave } from 'react-icons/fa';
+import { CVMetadata, getUserCVs, invokeExtractCvText, invokeGenerateCoverLetter, pollGeneratedContent, GenerationStatus, exportGeneratedCoverLetter } from '../lib/supabase'; // Importer aussi les fonctions pour les lettres de motivation plus tard
+import { FaFileAlt, FaSpinner, FaTrash, FaMagic, FaSave, FaDownload } from 'react-icons/fa';
 
-// Importer CoverLetterMetadata et les fonctions associées quand elles seront utilisées activement
-import { CoverLetterMetadata /*, createCoverLetter, getUserCoverLetters, updateCoverLetter, deleteCoverLetter */ } from '../lib/supabase';
+// Importer CoverLetterMetadata et activer createCoverLetter pour la sauvegarde
+import { CoverLetterMetadata, createCoverLetter /*, getUserCoverLetters, updateCoverLetter, deleteCoverLetter */ } from '../lib/supabase';
 
 interface CoverLetterGeneratorProps {
   initialJobTitle?: string;
@@ -40,6 +40,8 @@ const CoverLetterGenerator: React.FC<CoverLetterGeneratorProps> = ({
   const [taskId, setTaskId] = useState<string | null>(null);
   const [editingLetter, setEditingLetter] = useState<string>(''); // Pour la modification
   const [isSaving, setIsSaving] = useState(false);
+  const [lastTaskId, setLastTaskId] = useState<string | null>(null); // Pour l'export
+  const [isExporting, setIsExporting] = useState(false);
 
   // États généraux
   const [isLoading, setIsLoading] = useState(false);
@@ -100,6 +102,7 @@ const CoverLetterGenerator: React.FC<CoverLetterGeneratorProps> = ({
           setGeneratedLetter(result.content || '');
           setEditingLetter(result.content || '');
           setIsGenerating(false);
+          setLastTaskId(taskId);
           setTaskId(null);
           setFeedbackMessage({ type: 'success', text: t('coverLetterGenerator.feedback.generationSuccess') });
         } else if (result.status === 'failed') {
@@ -168,7 +171,7 @@ const CoverLetterGenerator: React.FC<CoverLetterGeneratorProps> = ({
       setFeedbackMessage({ type: 'error', text: t('coverLetterGenerator.errors.saveFailed') });
       return;
     }
-    setIsLoading(true);
+    setIsSaving(true);
     try {
       const letterDataToSave: Omit<CoverLetterMetadata, 'id' | 'created_at' | 'updated_at'> & { user_id: string } = {
         user_id: user.id,
@@ -182,16 +185,9 @@ const CoverLetterGenerator: React.FC<CoverLetterGeneratorProps> = ({
         ai_model_used: 'placeholder_model', // TODO: Mettre à jour avec le vrai modèle si applicable
       };
       
-      // Pour l'instant, nous créons toujours une nouvelle lettre.
-      // Une logique pour `updateCoverLetter` pourrait être ajoutée si on modifie une lettre existante.
-      // const savedLetter = await createCoverLetter(letterDataToSave);
-      // console.log('Lettre sauvegardée:', savedLetter);
-
-      // --- Placeholder pour la sauvegarde --- 
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simuler l'appel API
-      const savedLetterPlaceholder = { ...letterDataToSave, id: new Date().toISOString(), created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
-      console.log('Lettre sauvegardée (simulation):', savedLetterPlaceholder);
-      // --- Fin Placeholder --- 
+      // Création réelle de la lettre côté base
+      const savedLetter = await createCoverLetter(letterDataToSave);
+      console.log('Lettre sauvegardée:', savedLetter);
 
       setFeedbackMessage({ type: 'success', text: t('coverLetterGenerator.success.saved') });
       if (onLetterGenerated) {
@@ -201,7 +197,29 @@ const CoverLetterGenerator: React.FC<CoverLetterGeneratorProps> = ({
       console.error('Failed to save cover letter:', err);
       setFeedbackMessage({ type: 'error', text: err.message || t('coverLetterGenerator.errors.saveFailed') });
     }
-    setIsLoading(false);
+    setIsSaving(false);
+  };
+
+  const handleExport = async (format: 'pdf' | 'docx') => {
+    if (!lastTaskId) {
+      setFeedbackMessage({ type: 'error', text: 'Export impossible: aucune génération associée.' });
+      return;
+    }
+    setIsExporting(true);
+    try {
+      const filenameBase = `${companyName ? companyName + '-' : ''}${jobTitle || 'Cover-Letter'}`.trim() || 'Cover-Letter';
+      const res = await exportGeneratedCoverLetter(lastTaskId, format, filenameBase);
+      if ((res as any).signedUrl) {
+        window.open((res as any).signedUrl, '_blank');
+        setFeedbackMessage({ type: 'success', text: 'Export réussi. Le téléchargement va démarrer.' });
+      } else {
+        setFeedbackMessage({ type: 'success', text: 'Export terminé.' });
+      }
+    } catch (err: any) {
+      console.error('Export cover letter failed:', err);
+      setFeedbackMessage({ type: 'error', text: err.message || 'Échec de l’export de la lettre.' });
+    }
+    setIsExporting(false);
   };
 
   return (
@@ -313,14 +331,32 @@ const CoverLetterGenerator: React.FC<CoverLetterGeneratorProps> = ({
             />
           )}
           {generatedLetter && (
-            <button 
-              onClick={handleSaveLetter}
-              disabled={isGenerating || isSaving || !editingLetter}
-              className="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSaving ? <FaSpinner className="animate-spin mr-2" /> : <FaSave className="mr-2" />}
-              {isSaving ? t('coverLetterGenerator.buttons.saving') : t('coverLetterGenerator.buttons.save')}
-            </button>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button 
+                onClick={handleSaveLetter}
+                disabled={isGenerating || isSaving || !editingLetter}
+                className="w-full sm:w-auto flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSaving ? <FaSpinner className="animate-spin mr-2" /> : <FaSave className="mr-2" />}
+                {isSaving ? t('coverLetterGenerator.buttons.saving') : t('coverLetterGenerator.buttons.save')}
+              </button>
+              <button
+                onClick={() => handleExport('pdf')}
+                disabled={isGenerating || isExporting || !lastTaskId}
+                className="w-full sm:w-auto flex items-center justify-center px-4 py-2 border border-white/10 rounded-md shadow-sm text-sm font-medium text-white bg-white/10 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isExporting ? <FaSpinner className="animate-spin mr-2" /> : <FaDownload className="mr-2" />}
+                Export PDF
+              </button>
+              <button
+                onClick={() => handleExport('docx')}
+                disabled={isGenerating || isExporting || !lastTaskId}
+                className="w-full sm:w-auto flex items-center justify-center px-4 py-2 border border-white/10 rounded-md shadow-sm text-sm font-medium text-white bg-white/10 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isExporting ? <FaSpinner className="animate-spin mr-2" /> : <FaDownload className="mr-2" />}
+                Export DOCX
+              </button>
+            </div>
           )}
         </div>
       </div>

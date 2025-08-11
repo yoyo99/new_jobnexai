@@ -753,6 +753,80 @@ export const pollGeneratedContent = async (taskId: string): Promise<GenerationSt
   return data;
 };
 
+/**
+ * Exporte une lettre de motivation générée via l'Edge Function `export-cover-letter`.
+ * Retourne une URL signée (valide 1h) vers le fichier dans le stockage Supabase.
+ */
+export interface ExportCoverLetterResult {
+  bucket?: string;
+  path?: string;
+  signedUrl?: string;
+  expiresIn?: number;
+  format: 'pdf' | 'docx';
+}
+
+export const exportGeneratedCoverLetter = async (
+  taskId: string,
+  format: 'pdf' | 'docx' = 'pdf',
+  filename?: string,
+): Promise<ExportCoverLetterResult> => {
+  if (!supabaseExport) throw new Error('Supabase client is not initialized');
+  if (!taskId) throw new Error('Task ID is required for export.');
+
+  const { data, error } = await supabaseExport.functions.invoke('export-cover-letter', {
+    body: {
+      taskId,
+      format,
+      mode: 'store', // store in Storage and return a signed URL
+      filename,
+    },
+  });
+
+  if (error) {
+    console.error('Error invoking export-cover-letter function:', error);
+    throw error;
+  }
+  if (!data || (data as any).error) {
+    const msg = (data as any)?.error || 'Failed to export cover letter';
+    console.error('Error from export-cover-letter function:', msg);
+    throw new Error(msg);
+  }
+  return data as ExportCoverLetterResult;
+};
+
+/**
+ * Exporte une lettre de motivation à partir d'un contenu brut via l'Edge Function `export-cover-letter-from-content`.
+ * Retourne une URL signée (valide 1h) vers le fichier dans le stockage Supabase.
+ */
+export const exportCoverLetterFromContent = async (
+  content: string,
+  format: 'pdf' | 'docx' = 'pdf',
+  filename?: string,
+): Promise<ExportCoverLetterResult> => {
+  if (!supabaseExport) throw new Error('Supabase client is not initialized');
+  if (!content || content.trim().length === 0) throw new Error('Content is required for export.');
+
+  const { data, error } = await supabaseExport.functions.invoke('export-cover-letter-from-content', {
+    body: {
+      content,
+      format,
+      mode: 'store', // store in Storage and return a signed URL
+      filename,
+    },
+  });
+
+  if (error) {
+    console.error('Error invoking export-cover-letter-from-content function:', error);
+    throw error;
+  }
+  if (!data || (data as any).error) {
+    const msg = (data as any)?.error || 'Failed to export cover letter from content';
+    console.error('Error from export-cover-letter-from-content function:', msg);
+    throw new Error(msg);
+  }
+  return data as ExportCoverLetterResult;
+};
+
 // --- Fonctions pour la gestion des Lettres de Motivation Utilisateurs ---
 
 export interface CoverLetterMetadata {
