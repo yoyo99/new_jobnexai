@@ -38,14 +38,16 @@ Deno.serve(async (req: Request) => {
       return new Response(JSON.stringify({ error: 'Invalid JWT token: ' + (authError?.message || 'User not found') }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const {
-      cvText,
-      jobTitle,
-      companyName,
-      jobDescription,
-      customInstructions,
-      targetLanguage
-    } = await req.json();
+    const body = await req.json();
+    const cvText = body.cvText;
+    const jobTitle = body.jobTitle;
+    const companyName = body.companyName;
+    const jobDescription = body.jobDescription;
+    const customInstructions = body.customInstructions;
+    const targetLanguage = body.targetLanguage || body.language; // accept legacy `language`
+
+    // Minimal diagnostics (no sensitive content)
+    try { console.log('generate-cover-letter payload keys:', Object.keys(body)); } catch (_) { /* ignore logging errors */ }
 
     if (!cvText || !jobTitle || !companyName || !jobDescription || !targetLanguage) {
       return new Response(JSON.stringify({ error: 'Missing required fields: cvText, jobTitle, companyName, jobDescription, targetLanguage.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -164,7 +166,14 @@ Deno.serve(async (req: Request) => {
       }
     };
 
-    EdgeRuntime.waitUntil(backgroundTask());
+    // Schedule background work in Supabase Edge runtime when available; otherwise run fire-and-forget
+    const edge = (globalThis as any).EdgeRuntime;
+    if (edge?.waitUntil && typeof edge.waitUntil === 'function') {
+      edge.waitUntil(backgroundTask());
+    } else {
+      // Fallback: execute without waitUntil (may terminate early on some platforms)
+      backgroundTask();
+    }
 
     return new Response(
       JSON.stringify({ taskId }),
