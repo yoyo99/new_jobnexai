@@ -1,8 +1,7 @@
 // Follow this setup guide to integrate the Deno language server with your editor:
 // https://deno.land/manual/getting_started/setup_your_environment
 // supabase/functions/generate-cover-letter/index.ts
-import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from '../_shared/deps.ts';
 
 import { corsHeaders } from '../_shared/cors.ts';
 
@@ -167,7 +166,8 @@ Deno.serve(async (req: Request) => {
     };
 
     // Schedule background work in Supabase Edge runtime when available; otherwise run fire-and-forget
-    const edge = (globalThis as any).EdgeRuntime;
+    type EdgeEnv = { EdgeRuntime?: { waitUntil?: (p: Promise<unknown>) => void } };
+    const edge = (globalThis as unknown as EdgeEnv).EdgeRuntime;
     if (edge?.waitUntil && typeof edge.waitUntil === 'function') {
       edge.waitUntil(backgroundTask());
     } else {

@@ -1,21 +1,20 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from '../_shared/deps.ts';
 import { corsHeaders } from "../_shared/cors.ts";
 
 // Placeholder functions for modular logic. These will be implemented later.
-async function processScraping(payload: any) {
+function processScraping(payload: unknown) {
   console.log('Processing scraping job:', payload);
   // In a real scenario, this would call the scraping logic
   return { success: true, message: 'Scraping not implemented yet.' };
 }
 
-async function processMatching(payload: any) {
+function processMatching(payload: unknown) {
   console.log('Processing matching job:', payload);
   // In a real scenario, this would call the matching logic
   return { success: true, message: 'Matching not implemented yet.' };
 }
 
-async function processApplication(payload: any) {
+function processApplication(payload: unknown) {
   console.log('Processing application job:', payload);
   // In a real scenario, this would call the application logic
   return { success: true, message: 'Application not implemented yet.' };
@@ -26,7 +25,7 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 )
 
-serve(async (req: Request) => {
+Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -65,37 +64,35 @@ async function processJob(job: any) {
   // Mark as processing
   await supabase
     .from('job_queue')
-    .update({ status: 'processing', updated_at: new Date() })
+    .update({ status: 'processing', updated_at: new Date().toISOString() })
     .eq('id', job.id);
 
   try {
-    let result;
-    
+    let result: unknown;
     switch (job.type) {
       case 'scraping':
-        result = await processScraping(job.payload);
+        result = processScraping(job.payload);
         break;
       case 'matching':
-        result = await processMatching(job.payload);
+        result = processMatching(job.payload);
         break;
       case 'application':
-        result = await processApplication(job.payload);
+        result = processApplication(job.payload);
         break;
       default:
         throw new Error(`Unknown job type: ${job.type}`);
     }
 
-    // Save the result
     await supabase.from('job_results').insert({
       job_id: job.id,
-      result
+      result,
     });
 
     await supabase
       .from('job_queue')
-      .update({ status: 'completed', updated_at: new Date() })
+      .update({ status: 'completed', updated_at: new Date().toISOString() })
       .eq('id', job.id);
-    
+
     console.log(`Job ${job.id} completed successfully.`);
 
   } catch (e) {
@@ -103,11 +100,11 @@ async function processJob(job: any) {
     console.error(`Error processing job ${job.id}:`, error);
     await supabase
       .from('job_queue')
-      .update({ 
-        status: 'failed', 
-        attempts: job.attempts + 1,
+      .update({
+        status: 'failed',
+        attempts: (job.attempts ?? 0) + 1,
         last_error: error.message,
-        updated_at: new Date()
+        updated_at: new Date().toISOString(),
       })
       .eq('id', job.id);
   }
