@@ -1,11 +1,16 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.54.0';
 import { corsHeaders } from "../_shared/cors.ts";
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-)
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  }
+);
 
 const TIER_LIMITS = {
   trial: { applications: 5, scraping_jobs: 2, cover_letters: 5 },
@@ -14,15 +19,27 @@ const TIER_LIMITS = {
   enterprise: { applications: -1, scraping_jobs: -1, cover_letters: -1 }
 };
 
-serve(async (req: Request) => {
+Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    const { userId, action } = await req.json();
+    let userId: string | undefined;
+    let action: string | undefined;
+
+    if (req.method === 'GET') {
+      const url = new URL(req.url);
+      userId = url.searchParams.get('userId') ?? undefined;
+      action = url.searchParams.get('action') ?? undefined;
+    } else {
+      const body = await req.json().catch(() => ({} as Record<string, unknown>));
+      userId = (body as any).userId as string | undefined;
+      action = (body as any).action as string | undefined;
+    }
+
     if (!userId || !action) {
-      throw new Error('userId and action are required.');
+      return new Response(JSON.stringify({ error: 'userId and action are required.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     // Get user's subscription tier and current usage
@@ -58,7 +75,7 @@ serve(async (req: Request) => {
       const newUsage = { ...user.usage, [actionKey]: currentUsage + 1 };
       const { error: updateError } = await supabase
         .from('user_subscriptions')
-        .update({ usage: newUsage, updated_at: new Date() })
+        .update({ usage: newUsage, updated_at: new Date().toISOString() })
         .eq('user_id', userId);
 
       if (updateError) throw updateError;
