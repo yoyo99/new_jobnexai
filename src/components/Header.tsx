@@ -23,6 +23,7 @@ const userCoreNavigation = [
   { name: 'navigation.dashboard', href: '/app/dashboard' },
   { name: 'navigation.jobSearch', href: '/app/job-search' },
   { name: 'navigation.applications', href: '/app/suivi' },
+  { name: 'navigation.letters', href: '/app/letters' },
   { name: 'navigation.cvBuilder', href: '/app/cv-builder' },
   { name: 'navigation.network', href: '/app/network' },
   { name: 'navigation.marketAnalysis', href: '/app/market-analysis' },
