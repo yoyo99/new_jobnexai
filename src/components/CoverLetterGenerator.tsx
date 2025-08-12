@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../stores/auth';
 import { useTranslation } from 'react-i18next';
-import { CVMetadata, getUserCVs, invokeExtractCvText, invokeGenerateCoverLetter, pollGeneratedContent, GenerationStatus, exportGeneratedCoverLetter } from '../lib/supabase'; // Importer aussi les fonctions pour les lettres de motivation plus tard
+import { CVMetadata, getUserCVs, invokeExtractCvText, invokeGenerateCoverLetter, pollGeneratedContent, GenerationStatus, exportCoverLetterFromContent } from '../lib/supabase'; // Importer aussi les fonctions pour les lettres de motivation plus tard
 import { FaFileAlt, FaSpinner, FaTrash, FaMagic, FaSave, FaDownload } from 'react-icons/fa';
 
 // Importer CoverLetterMetadata et activer createCoverLetter pour la sauvegarde
@@ -201,14 +201,14 @@ const CoverLetterGenerator: React.FC<CoverLetterGeneratorProps> = ({
   };
 
   const handleExport = async (format: 'pdf' | 'docx') => {
-    if (!lastTaskId) {
-      setFeedbackMessage({ type: 'error', text: 'Export impossible: aucune génération associée.' });
+    if (!editingLetter || editingLetter.trim().length === 0) {
+      setFeedbackMessage({ type: 'error', text: 'Export impossible: aucun contenu de lettre à exporter.' });
       return;
     }
     setIsExporting(true);
     try {
       const filenameBase = `${companyName ? companyName + '-' : ''}${jobTitle || 'Cover-Letter'}`.trim() || 'Cover-Letter';
-      const res = await exportGeneratedCoverLetter(lastTaskId, format, filenameBase);
+      const res = await exportCoverLetterFromContent(editingLetter, format, filenameBase);
       if ((res as any).signedUrl) {
         window.open((res as any).signedUrl, '_blank');
         setFeedbackMessage({ type: 'success', text: 'Export réussi. Le téléchargement va démarrer.' });
@@ -340,9 +340,9 @@ const CoverLetterGenerator: React.FC<CoverLetterGeneratorProps> = ({
                 {isSaving ? <FaSpinner className="animate-spin mr-2" /> : <FaSave className="mr-2" />}
                 {isSaving ? t('coverLetterGenerator.buttons.saving') : t('coverLetterGenerator.buttons.save')}
               </button>
-              <button
+              <button 
                 onClick={() => handleExport('pdf')}
-                disabled={isGenerating || isExporting || !lastTaskId}
+                disabled={isGenerating || isExporting || !editingLetter.trim()}
                 className="w-full sm:w-auto flex items-center justify-center px-4 py-2 border border-white/10 rounded-md shadow-sm text-sm font-medium text-white bg-white/10 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isExporting ? <FaSpinner className="animate-spin mr-2" /> : <FaDownload className="mr-2" />}
@@ -350,7 +350,7 @@ const CoverLetterGenerator: React.FC<CoverLetterGeneratorProps> = ({
               </button>
               <button
                 onClick={() => handleExport('docx')}
-                disabled={isGenerating || isExporting || !lastTaskId}
+                disabled={isGenerating || isExporting || !editingLetter.trim()}
                 className="w-full sm:w-auto flex items-center justify-center px-4 py-2 border border-white/10 rounded-md shadow-sm text-sm font-medium text-white bg-white/10 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isExporting ? <FaSpinner className="animate-spin mr-2" /> : <FaDownload className="mr-2" />}

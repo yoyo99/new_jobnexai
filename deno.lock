@@ -3470,7 +3470,7 @@
         "npm:typescript@^5.4.0",
         "npm:uuid@^11.1.0",
         "npm:vite-plugin-compression@~0.5.1",
-        "npm:vite@^6.3.2",
+        "npm:vite@^7.1.2",
         "npm:web-vitals@^3.5.2",
         "npm:zustand@^4.5.2"
       ]

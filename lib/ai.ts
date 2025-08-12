@@ -1,6 +1,7 @@
 import OpenAI from 'openai';;
 // Importation de la librairie compromise pour la lemmatisation
 import nlp from 'compromise';;
+const apiKey = import.meta.env.VITE_OPENAI_API_KEY as string | undefined;
 /**z
  * Effectue une analyse sémantique d'un texte donné.
  * Cette fonction prend en entrée un texte et retourne une liste de suggestions
@@ -109,6 +110,13 @@ function analyzeJobDescription(jobDescription: string): JobDescriptionAnalysis {
 export function generateInterviewQuestion(jobDescription: string): string {
   // Analyse de la description du poste
   const jobInfo = analyzeJobDescription(jobDescription);
+  // Prépare les mots lemmatisés de la description pour le matching
+  const lowerCaseDescription = jobDescription.toLowerCase();
+  const cleanedDescription = lowerCaseDescription.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
+  const words = cleanedDescription.split(/\s+/);
+  const lemmatizedWords = words.map((word) => {
+    return nlp(word).nouns().toSingular().out("text") || nlp(word).verbs().toInfinitive().out("text") || word;
+  });
 
   // Liste de questions types avec leurs mots-clés associés, leur type et leur niveau
   const questions = [
@@ -134,16 +142,21 @@ export function generateInterviewQuestion(jobDescription: string): string {
       type: "motivation",
       level: "all",
       difficulty:"easy"
-    },{      question: "Comment gérez-vous le stress et la pression ?",
+    },
+    {      
+      question: "Comment gérez-vous le stress et la pression ?",
       keywords: ["stress", "pression", "gestion", "adaptation"],
       type: "behavioral",
-      level: "all", difficulty: "medium",
-
+      level: "all",
+      difficulty: "medium",
+    },
+    {
       question: "Où vous voyez-vous dans cinq ans ?",
       keywords: ["projection", "avenir", "ambition", "objectif"],
-      type: "motivation", //Type motivation
-      level: "all", difficulty: "medium",
-    {      
+      type: "motivation",
+      level: "all",
+      difficulty: "medium",
+    },
       question:"Parlez-moi d'un défi que vous avez rencontré et comment vous l'avez surmonté.",
       keywords: ["défi", "problème", "solution", "résolution"],
       type: "behavioral",
@@ -196,6 +209,7 @@ export function generateInterviewQuestion(jobDescription: string): string {
       keywords: ["java"],
       type: "technical",
       level: "all",
+      difficulty: "medium"
     },
     {
       question: "Comment avez-vous communiqué avec une équipe dans un projet ?",
@@ -408,16 +422,11 @@ export function rateAnswer(answer: string, question: string, jobDescription: str
     })
      const cleanedQuestion = lowerCaseQuestion.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
      // Tokenisation
+     const questionWords = cleanedQuestion.split(/\s+/);
+     // Lemmatisation
      const lemmatizedQuestionWords = questionWords.map((word) => {
        return nlp(word).nouns().toSingular().out("text") || nlp(word).verbs().toInfinitive().out("text") || word;       
      });
-
-     const questionWords = cleanedQuestion.split(/\s+/);
-     // On utilise la librairie compromise pour la lemmatisation  
-     const docQuestion = nlp(cleanedQuestion);
-     const lemmatizedQuestionWords = docQuestion.terms().data().map((t) => {
-       return t.normal; // Normalisation du mot.
-   });
 
   // Extraction des mots-clés
   const answerKeywords = lemmatizedAnswerWords.filter((word) => word.length > 2);
@@ -509,9 +518,20 @@ export function rateAnswer(answer: string, question: string, jobDescription: str
 }
 
 /**
- * Structure pour stocker les conversations en cours.
+ * Types et structure de conversations.
  */
+interface HistoryItem { question: string; answer?: string; feedbacks?: string[]; note?: number }
+interface Conversation { conversationId: string; jobDescription: string; history: HistoryItem[]; weakPoints: string[] }
 const conversations: Conversation[] = [];
+
+function getAverageNote(conversationId: string): number {
+  const conv = conversations.find((c) => c.conversationId === conversationId);
+  if (!conv || !conv.history.length) return 0;
+  const notes = conv.history.map((h) => h.note).filter((n): n is number => typeof n === 'number');
+  if (!notes.length) return 0;
+  const sum = notes.reduce((a, b) => a + b, 0);
+  return sum / notes.length;
+}
 
 /**
  * Démarre une nouvelle conversation.
@@ -681,30 +701,44 @@ export function getNextQuestion(conversationId: string): string {
            question:"Comment vous améliorerez-vous en communication ?",
            keywords: ["communication"],
            type: "general",            
-            difficulty: "hard",
-            level: "all",
-          }, 
-          {
-             question: "Comment vous améliorerez-vous en gestion de projet ?",
-           difficulty: "medium",
-            keywords: ["gestion", "projet"],
-            type: "general",
-            level: "junior",
-          },
-        ];;
-        
-    const averageNote = getAverageNote(conversationId); // On récupère la moyenne des notes.    
 
-      // On adapte la difficulté des questions en fonction de la moyenne.
-    let difficulty = "medium";
-    if(averageNote >= 4) {
-        difficulty = "hard";
-    } else if (averageNote < 2) {
-        difficulty = "easy";
-    } else {      
-        difficulty = "medium";
+  // On adapte la difficulté des questions en fonction de la moyenne.
+  let difficulty = "medium";
+  if (averageNote >= 4) {
+    difficulty = "hard";
+  } else if (averageNote < 2) {
+    difficulty = "easy";
+  }
+
+  // Sélection des questions candidates selon la difficulté
+  let candidates = allQuestions.filter((q) => q.difficulty === difficulty);
+  if (candidates.length === 0) candidates = allQuestions;
+
+  // Prépare les mots lemmatisés de la description pour le matching
+  const lower = jobDescription.toLowerCase();
+  const cleaned = lower.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
+  const tokens = cleaned.split(/\s+/);
+  const lemmas = tokens.map((w) => {
+    return nlp(w).nouns().toSingular().out("text") || nlp(w).verbs().toInfinitive().out("text") || w;
+  });
+
+  let best = candidates[0];
+  let maxMatches = -1;
+  for (const q of candidates) {
+    let matches = 0;
+    for (const kw of q.keywords) {
+      if (lemmas.includes(kw)) matches++;
     }
+    if (matches > maxMatches) {
+      maxMatches = matches;
+      best = q;
+    }
+  }
 
+  return best.question;
+}
+
+/**
  * Récupère l'historique complet d'une conversation.
  *
  * @param {string} conversationId - L'identifiant de la conversation.
