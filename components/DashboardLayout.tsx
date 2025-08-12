@@ -60,6 +60,7 @@ export function DashboardLayout() {
         { name: 'navigation.jobSearch', href: '/jobs', icon: FolderIcon },
         { name: 'navigation.applications', href: '/applications', icon: ClipboardDocumentListIcon },
         { name: 'navigation.cvBuilder', href: '/cv-builder', icon: DocumentTextIcon },
+        { name: 'Mes Lettres', href: '/letters', icon: DocumentTextIcon },
         { name: 'navigation.network', href: '/network', icon: UsersIcon },
         { name: 'navigation.marketAnalysis', href: '/market-analysis', icon: ChartPieIcon },
         { name: 'navigation.profile', href: '/profile', icon: UserIcon },

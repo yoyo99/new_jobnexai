@@ -61,7 +61,7 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
       // Navigation par défaut pour les candidats
       setNavigation([
         { name: 'navigation.dashboard', href: '/app/dashboard', icon: HomeIcon },
-        { name: 'navigation.jobSearch', href: '/app/job-search', icon: FolderIcon },
+        { name: 'navigation.jobSearch', href: '/app/jobs', icon: FolderIcon },
         { name: 'navigation.applications', href: '/app/suivi', icon: ClipboardDocumentListIcon },
         { name: 'Mes Lettres', href: '/app/letters', icon: DocumentTextIcon },
         { name: 'navigation.cvBuilder', href: '/app/cv-builder', icon: DocumentTextIcon },

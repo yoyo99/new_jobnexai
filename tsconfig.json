@@ -23,12 +23,20 @@
   },
   "include": [
     "src/**/*",
+    "components/**/*",
+    "lib/**/*",
+    "App.tsx",
+    "main.tsx",
     "./*.d.ts"
   ],
   "exclude": [
     "node_modules",
     "**/*.test.ts",
     "**/*.test.tsx",
-    "**/__tests__/**/*"
+    "**/__tests__/**/*",
+    "supabase/functions/**/*",
+    "JobNexAI-WindSurf/**/*",
+    "components/applications/**/*",
+    "lib/ai.ts"
   ]
 }

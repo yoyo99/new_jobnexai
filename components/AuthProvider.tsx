@@ -1,9 +1,9 @@
-import { useEffect } from 'react'
+import React, { useEffect, type ReactNode } from 'react'
 import { useAuth } from '../stores/auth'
 import { supabase } from '../lib/supabase'
 
 interface AuthProviderProps {
-  children: React.ReactNode
+  children: ReactNode
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {

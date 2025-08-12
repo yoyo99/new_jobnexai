@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { DashboardLayout } from './components/DashboardLayout'
 import { JobSearch } from './components/JobSearch'
 import { MarketAnalysis } from './components/MarketAnalysis'
@@ -22,7 +22,7 @@ import { ResetPassword } from './components/ResetPassword'
 import { AuthCallback } from './components/AuthCallback'
 import { FreelanceProjects } from './components/freelance/FreelanceProjects'
 import { FreelanceProfile } from './components/freelance/FreelanceProfile'
-import { MarketTrendsPage } from './components/pages/MarketTrendsPage'
+import { MarketTrendsPage } from './components/MarketTrendsPage'
 import { RecruiterDashboard } from './components/recruiter/RecruiterDashboard'
 import { CandidateSearch } from './components/recruiter/CandidateSearch'
 import { JobPostings } from './components/recruiter/JobPostings'
@@ -32,6 +32,7 @@ import { ErrorBoundary } from './components/ErrorBoundary'
 import { StripeCheckoutStatus } from './components/StripeCheckoutStatus'
 import { Billing } from './components/Billing'
 import { SubscriptionBanner } from './components/SubscriptionBanner'
+import UserCoverLetters from '@/components/letters/UserCoverLetters'
 
 function App() {
   return (
@@ -54,72 +55,91 @@ function App() {
                 <UserTypeSelection />
               </ProtectedRoute>
             } />
-            <Route element={
+            {/* Redirections des anciens chemins vers /app/* */}
+            <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
+            <Route path="/profile" element={<Navigate to="/app/profile" replace />} />
+            <Route path="/billing" element={<Navigate to="/app/billing" replace />} />
+            <Route path="/jobs" element={<Navigate to="/app/jobs" replace />} />
+            <Route path="/applications" element={<Navigate to="/app/applications" replace />} />
+            <Route path="/letters" element={<Navigate to="/app/letters" replace />} />
+            <Route path="/market-analysis" element={<Navigate to="/app/market-analysis" replace />} />
+            <Route path="/cv-builder" element={<Navigate to="/app/cv-builder" replace />} />
+            <Route path="/network" element={<Navigate to="/app/network" replace />} />
+            <Route path="/market-trends" element={<Navigate to="/app/market-trends" replace />} />
+            <Route path="/freelance/projects" element={<Navigate to="/app/freelance/projects" replace />} />
+            <Route path="/freelance/profile" element={<Navigate to="/app/freelance/profile" replace />} />
+            <Route path="/recruiter/dashboard" element={<Navigate to="/app/recruiter/dashboard" replace />} />
+            <Route path="/recruiter/candidates" element={<Navigate to="/app/recruiter/candidates" replace />} />
+            <Route path="/recruiter/job-postings" element={<Navigate to="/app/recruiter/job-postings" replace />} />
+            <Route path="/recruiter/create-job" element={<Navigate to="/app/recruiter/create-job" replace />} />
+
+            <Route path="/app" element={
               <ProtectedRoute>
                 <DashboardLayout />
               </ProtectedRoute>
             }>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/billing" element={<Billing />} />
-              <Route path="/jobs" element={
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="profile" element={<Profile />} />
+              <Route path="billing" element={<Billing />} />
+              <Route path="jobs" element={
                 <ProtectedRoute requiresSubscription>
                   <JobSearch />
                 </ProtectedRoute>
               } />
-              <Route path="/applications" element={
+              <Route path="applications" element={
                 <ProtectedRoute requiresSubscription>
                   <JobApplications />
                 </ProtectedRoute>
               } />
-              <Route path="/market-analysis" element={
+              <Route path="letters" element={<UserCoverLetters />} />
+              <Route path="market-analysis" element={
                 <ProtectedRoute requiresSubscription>
                   <MarketAnalysis />
                 </ProtectedRoute>
               } />
-              <Route path="/cv-builder" element={
+              <Route path="cv-builder" element={
                 <ProtectedRoute requiresSubscription>
                   <CVBuilder />
                 </ProtectedRoute>
               } />
-              <Route path="/network" element={
+              <Route path="network" element={
                 <ProtectedRoute requiresSubscription>
                   <NetworkPage />
                 </ProtectedRoute>
               } />
-              <Route path="/market-trends" element={
+              <Route path="market-trends" element={
                 <ProtectedRoute requiresSubscription>
                   <MarketTrendsPage />
                 </ProtectedRoute>
               } />
               {/* Routes pour les freelances */}
-              <Route path="/freelance/projects" element={
+              <Route path="freelance/projects" element={
                 <ProtectedRoute requiresSubscription>
                   <FreelanceProjects />
                 </ProtectedRoute>
               } />
-              <Route path="/freelance/profile" element={
+              <Route path="freelance/profile" element={
                 <ProtectedRoute requiresSubscription>
                   <FreelanceProfile />
                 </ProtectedRoute>
               } />
               {/* Routes pour les recruteurs */}
-              <Route path="/recruiter/dashboard" element={
+              <Route path="recruiter/dashboard" element={
                 <ProtectedRoute requiresSubscription>
                   <RecruiterDashboard />
                 </ProtectedRoute>
               } />
-              <Route path="/recruiter/candidates" element={
+              <Route path="recruiter/candidates" element={
                 <ProtectedRoute requiresSubscription>
                   <CandidateSearch />
                 </ProtectedRoute>
               } />
-              <Route path="/recruiter/job-postings" element={
+              <Route path="recruiter/job-postings" element={
                 <ProtectedRoute requiresSubscription>
                   <JobPostings />
                 </ProtectedRoute>
               } />
-              <Route path="/recruiter/create-job" element={
+              <Route path="recruiter/create-job" element={
                 <ProtectedRoute requiresSubscription>
                   <CreateJobPosting />
                 </ProtectedRoute>
