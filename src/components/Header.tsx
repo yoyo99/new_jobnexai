@@ -38,7 +38,7 @@ const adminSpecificNavigation = [
 export function Header() {
   console.log('[Header] FUNCTION EXECUTION STARTED'); // <--- NOUVEAU LOG AJOUTÉ ICI
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const { t } = useTranslation()
+  const { t } = useTranslation('common')
   const { user, subscription, signOut } = useAuth()
   console.log('[Header] User from useAuth in Header:', user);
   const location = useLocation()
