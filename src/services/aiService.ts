@@ -1,39 +1,11 @@
 /**
  * @file Centralized AI Service
- * @description This service manages all interactions with different AI models (OpenAI, Mistral, etc.)
+ * @description This service manages all interactions with different AI models (e.g., OpenAI, Mammouth)
  * for tasks like cover letter generation, CV analysis, and job matching.
  */
 
-import { getUserAISettings as fetchUserSettings, UserAISettingsData } from '../lib/supabase';
-
-// Définition des moteurs d'IA supportés
-export type SupportedAI = 'openai' | 'mistral' | 'gemini' | 'claude' | 'cohere' | 'huggingface' | 'internal';
-
-const DEFAULT_ENGINE: SupportedAI = 'openai';
-
-// --- Fonctions de service --- //
-
-/**
- * Récupère les paramètres IA d'un utilisateur depuis Supabase ou retourne des valeurs par défaut.
- * @param userId - L'ID de l'utilisateur (optionnel)
- * @returns Les paramètres IA de l'utilisateur.
- */
-const getUserSettings = async (userId?: string): Promise<UserAISettingsData> => {
-  if (userId) {
-    const settings = await fetchUserSettings(userId);
-    if (settings) {
-      return settings;
-    }
-  }
-  // Retourne des paramètres par défaut si l'utilisateur n'est pas connecté ou n'a pas de configuration
-  return {
-    feature_engines: {
-      coverLetter: DEFAULT_ENGINE,
-      matchScore: 'internal',
-    },
-    api_keys: {},
-  };
-};
+import { generateCoverLetter as generateCoverLetterFromLib } from '../lib/ai';
+import { matchCVWithJob } from '../lib/ai_logic/matchCV';
 
 /**
  * Génère une lettre de motivation en utilisant le moteur IA configuré.
@@ -45,29 +17,18 @@ const getUserSettings = async (userId?: string): Promise<UserAISettingsData> => 
  * @returns La lettre de motivation générée.
  */
 export const generateCoverLetter = async (
-  cv: string,
+  cv: any, // Le CV peut être un objet complexe
   jobDescription: string,
   language: string,
-  tone: string,
-  userId?: string
+  tone: 'professional' | 'conversational' | 'enthusiastic',
+  userId?: string // Gardé pour la cohérence de l'API, mais la logique est dans le client
 ): Promise<string> => {
-  const settings = await getUserSettings(userId);
-  const engine = settings.feature_engines?.coverLetter || DEFAULT_ENGINE;
-
-  console.log(`Generating cover letter with ${engine}...`);
-
+  console.log(`Génération de la lettre de motivation via le service centralisé...`);
   try {
-    if (engine === 'mistral') {
-      return await generateWithMistral(cv, jobDescription, language, tone);
-    } else if (engine === 'openai') {
-      // TODO: Implémenter OpenAI
-      throw new Error('OpenAI non encore implémenté');
-    } else {
-      // Fallback vers Mistral par défaut
-      return await generateWithMistral(cv, jobDescription, language, tone);
-    }
+    // Délégation à la librairie `ai.ts` qui gère la sélection du fournisseur (y compris Mammouth)
+    return await generateCoverLetterFromLib(cv, jobDescription, language, tone);
   } catch (error) {
-    console.error('Erreur lors de la génération de la lettre:', error);
+    console.error('Erreur lors de la génération de la lettre de motivation via le service AI:', error);
     throw new Error(`Impossible de générer la lettre de motivation: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
   }
 };
@@ -75,40 +36,6 @@ export const generateCoverLetter = async (
 /**
  * Génère une lettre de motivation via la fonction serverless
  */
-async function generateWithMistral(
-  cv: string,
-  jobDescription: string,
-  language: string,
-  tone: string
-): Promise<string> {
-  // Appel à la fonction serverless existante pour éviter l'exposition de la clé API
-  const response = await fetch('/.netlify/functions/generate-cover-letter', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      cv,
-      jobDescription,
-      language,
-      tone,
-      provider: 'mistral' // Paramètre attendu par la fonction serverless
-    }),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.text();
-    throw new Error(`Erreur lors de la génération: ${response.status} - ${errorData}`);
-  }
-
-  const result = await response.json();
-  
-  if (!result.letter) {
-    throw new Error('Aucune lettre de motivation générée');
-  }
-
-  return result.letter;
-}
 
 /**
  * Calcule le score de matching entre un CV et une offre d'emploi.
@@ -120,54 +47,19 @@ async function generateWithMistral(
 export const getMatchScore = async (
   cv: string,
   jobDescription: string,
-  userId?: string
-): Promise<{ score: number; explanation: string }> => {
-  const settings = await getUserSettings(userId);
-  const engine = settings.feature_engines?.matchScore || 'internal';
-
-  console.log(`Calculating match score with ${engine}...`);
-
-  // Utiliser l'algorithme interne pour l'instant
-  // La fonction serverless job-matching est conçue pour matcher des utilisateurs/jobs en base
-  // Pour l'analyse de texte brut, nous utilisons l'algorithme interne qui est efficace
-  return calculateInternalMatch(cv, jobDescription);
+  userId?: string // Gardé pour la cohérence de l'API
+): Promise<{ score: number; summary: string }> => {
+  console.log(`Calcul du score de matching avec Mammouth.ai...`);
+  try {
+    // Appel à la fonction qui utilise Mammouth.ai pour une analyse sémantique
+    const result = await matchCVWithJob(cv, jobDescription);
+    return result;
+  } catch (error) {
+    console.error('Erreur lors du calcul du score de matching:', error);
+    return {
+      score: 0,
+      summary: `Une erreur est survenue lors de l'analyse: ${error instanceof Error ? error.message : 'Erreur inconnue'}`
+    };
+  }
 };
 
-/**
- * Algorithme interne simple pour calculer le score de matching
- */
-function calculateInternalMatch(
-  cv: string,
-  jobDescription: string
-): { score: number; explanation: string } {
-  const cvLower = cv.toLowerCase();
-  const jobLower = jobDescription.toLowerCase();
-  
-  // Mots-clés techniques courants
-  const techKeywords = [
-    'javascript', 'typescript', 'react', 'vue', 'angular', 'node', 'python', 'java',
-    'php', 'sql', 'mongodb', 'postgresql', 'git', 'docker', 'kubernetes', 'aws',
-    'azure', 'gcp', 'html', 'css', 'sass', 'tailwind', 'bootstrap', 'api', 'rest',
-    'graphql', 'microservices', 'agile', 'scrum', 'ci/cd', 'devops'
-  ];
-  
-  let matches = 0;
-  let totalKeywords = 0;
-  
-  for (const keyword of techKeywords) {
-    if (jobLower.includes(keyword)) {
-      totalKeywords++;
-      if (cvLower.includes(keyword)) {
-        matches++;
-      }
-    }
-  }
-  
-  // Score de base entre 60 et 95
-  const baseScore = totalKeywords > 0 ? Math.round((matches / totalKeywords) * 35) + 60 : 75;
-  
-  return {
-    score: Math.max(60, Math.min(95, baseScore)),
-    explanation: `Score calculé sur ${matches}/${totalKeywords} compétences techniques correspondantes. ${matches > totalKeywords * 0.7 ? 'Excellent' : matches > totalKeywords * 0.4 ? 'Bon' : 'Moyen'} niveau de correspondance.`
-  };
-}

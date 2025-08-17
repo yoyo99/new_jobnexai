@@ -4,6 +4,7 @@
     "jobSearch": "Ricerca di lavoro",
     "applications": "Candidature",
     "cvBuilder": "Creatore di CV",
+    "letters": "Le mie lettere",
     "network": "Rete",
     "profile": {
       "title": "Profilo",
@@ -251,6 +252,8 @@
     "yearly": "Annuale",
     "minimumSalary": "Stipendio minimo",
     "maximumSalary": "Stipendio massimo",
+    "competitive": "Competitivo",
+    "negotiable": "Negoziabile",
     "postedToday": "Pubblicato oggi",
     "postedThisWeek": "Pubblicato questa settimana",
     "postedThisMonth": "Pubblicato questo mese",

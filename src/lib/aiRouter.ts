@@ -1,7 +1,7 @@
 // aiRouter.ts : Route dynamiquement les appels IA selon le choix utilisateur et la clé API stockée.
 // Gère le chiffrement local (MVP) et supporte multi-fournisseurs.
 
-export type SupportedAI = 'openai' | 'gemini' | 'claude' | 'cohere' | 'huggingface' | 'mistral' | 'custom';
+export type SupportedAI = 'openai' | 'gemini' | 'claude' | 'cohere' | 'huggingface' | 'custom';
 
 interface AIRouterOptions {
   engine: SupportedAI;
@@ -27,7 +27,6 @@ export async function matchScoreIA(
   // if (engine === 'gemini') { ... }
   // if (engine === 'cohere') { ... }
   // if (engine === 'huggingface') { ... }
-  // if (engine === 'mistral') { ... }
   // if (engine === 'custom') { ... }
   // Pour l’instant, fallback local
   const matchCount = jobKeywords.filter((kw) => userSkills.includes(kw)).length;

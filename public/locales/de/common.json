@@ -4,6 +4,7 @@
     "jobSearch": "Jobsuche",
     "applications": "Bewerbungen",
     "cvBuilder": "Lebenslauf-Builder",
+    "letters": "Meine Briefe",
     "network": "Netzwerk",
     "profile": {
         "title": "Profil",
@@ -253,6 +254,8 @@
     "yearly": "Jährlich",
     "minimumSalary": "Mindestgehalt",
     "maximumSalary": "Maximalgehalt",
+    "competitive": "Wettbewerbsfähig",
+    "negotiable": "Verhandelbar",
     "postedToday": "Heute veröffentlicht",
     "postedThisWeek": "Diese Woche veröffentlicht",
     "postedThisMonth": "Diesen Monat veröffentlicht",

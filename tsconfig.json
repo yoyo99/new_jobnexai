@@ -19,21 +19,29 @@
     },
     "resolveJsonModule": true,
     "moduleResolution": "node",
-    "outDir": "dist"
+    "outDir": "dist",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "types": [
+      "jest",
+      "@testing-library/jest-dom",
+      "node"
+    ]
   },
   "include": [
     "src/**/*",
     "components/**/*",
     "lib/**/*",
+    "tests/**/*",
     "App.tsx",
     "main.tsx",
     "./*.d.ts"
   ],
   "exclude": [
     "node_modules",
-    "**/*.test.ts",
-    "**/*.test.tsx",
-    "**/__tests__/**/*",
     "supabase/functions/**/*",
     "JobNexAI-WindSurf/**/*",
     "components/applications/**/*",

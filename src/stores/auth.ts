@@ -16,7 +16,7 @@ export interface Profile {
   trial_ends_at?: string | null;
   created_at: string;
   updated_at: string;
-  ai_provider?: 'openai' | 'mistral'; // Ajout du fournisseur d'IA
+  ai_provider?: 'openai' | 'mammouth'; // Ajout du fournisseur d'IA
 }
 
 export interface Subscription {

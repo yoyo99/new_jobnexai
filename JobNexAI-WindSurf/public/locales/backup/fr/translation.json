@@ -1,9 +1,0 @@
-{
-  "auth": {
-    "errors": {
-      "acceptTerms": "Vous devez accepter les conditions d'utilisation pour vous inscrire.",
-      "emailRequired": "Veuillez saisir votre adresse e-mail.",
-      "passwordLength": "Le mot de passe doit comporter au moins 9 caractères.",
-      "requiredFields": "Veuillez remplir tous les champs",
-      "unknown": "Une erreur est survenue"
-    },

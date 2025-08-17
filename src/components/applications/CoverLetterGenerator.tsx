@@ -67,7 +67,7 @@ export function CoverLetterGenerator() {
       const selectedJob = jobs?.find(j => j.id === jobId);
       if (!selectedJob) throw new Error('Offre d\'emploi non trouvée');
       if (!user?.id) throw new Error('Utilisateur non authentifié');
-      return generateCoverLetter(JSON.stringify(cv), selectedJob.description, language, tone, user.id);
+      return generateCoverLetter(cv, selectedJob.description, language, tone, user.id);
     },
     onSuccess: () => {
       setLocalError(null);

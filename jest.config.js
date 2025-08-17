@@ -1,10 +1,10 @@
 module.exports = {
-  preset: 'ts-jest', // Peut être redondant avec la config transform ci-dessous
+  preset: 'ts-jest',
   transform: {
     '^.+\\.tsx?$': [
       'ts-jest',
       {
-        tsconfig: 'tsconfig.jest.json',
+        tsconfig: 'tsconfig.json',
         babelConfig: false,
       },
     ],
@@ -12,4 +12,8 @@ module.exports = {
   testEnvironment: 'jsdom',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   setupFilesAfterEnv: ['<rootDir>/tests/setupTests.ts'],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+    '\\.(css|less|scss|sass)$': 'identity-obj-proxy' // Ajout pour mocker les imports de style
+  },
 };

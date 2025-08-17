@@ -45,37 +45,35 @@ const CoverLetterGenerator: React.FC<CoverLetterGeneratorProps> = ({
 
   // États généraux
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [feedbackMessage, setFeedbackMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   // Charger les CVs de l'utilisateur pour la sélection
   const fetchUserCVs = useCallback(async () => {
     if (user?.id) {
       setIsLoading(true);
-      setError(null);
       setFeedbackMessage(null);
       try {
         const cvs = await getUserCVs(user.id);
-        setUserCVs(cvs);
-        if (cvs.find(cv => cv.is_primary)) {
-          setSelectedCvId(cvs.find(cv => cv.is_primary)!.id);
-        } else if (cvs.length > 0) {
-          setSelectedCvId(cvs[0].id);
+        if (cvs && cvs.length > 0) {
+          setUserCVs(cvs);
+          const primaryCV = cvs.find(cv => cv.is_primary);
+          setSelectedCvId(primaryCV ? primaryCV.id : cvs[0].id);
         }
       } catch (err) {
         console.error('Failed to fetch user CVs:', err);
         const errorMessage = err instanceof Error ? err.message : t('coverLetterGenerator.errors.fetchCvError');
-        setError(errorMessage);
         setFeedbackMessage({ type: 'error', text: errorMessage });
       } finally {
         setIsLoading(false);
       }
     }
-  }, [user?.id, t]);
+  // La fonction `t` est stable et ne doit pas être dans les dépendances.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]); // Dépendances de la fonction de fetch
 
   useEffect(() => {
     fetchUserCVs();
-  }, [fetchUserCVs]);
+  }, [fetchUserCVs]); // S'exécute uniquement si la fonction fetchUserCVs change
 
   // Mettre à jour les états si les props initiales changent
   useEffect(() => {
@@ -107,7 +105,7 @@ const CoverLetterGenerator: React.FC<CoverLetterGeneratorProps> = ({
           setFeedbackMessage({ type: 'success', text: t('coverLetterGenerator.feedback.generationSuccess') });
         } else if (result.status === 'failed') {
           clearInterval(interval);
-          setError(result.error || t('coverLetterGenerator.errors.generationError'));
+          setFeedbackMessage({ type: 'error', text: result.error || t('coverLetterGenerator.errors.generationError') });
           setIsGenerating(false);
           setTaskId(null);
         }
@@ -115,7 +113,7 @@ const CoverLetterGenerator: React.FC<CoverLetterGeneratorProps> = ({
       } catch (err) {
         clearInterval(interval);
         const errorMessage = err instanceof Error ? err.message : t('coverLetterGenerator.errors.pollingError');
-        setError(errorMessage);
+        setFeedbackMessage({ type: 'error', text: errorMessage });
         setIsGenerating(false);
         setTaskId(null);
       }
@@ -127,12 +125,11 @@ const CoverLetterGenerator: React.FC<CoverLetterGeneratorProps> = ({
 
   const handleGenerateLetter = async () => {
     if (!user?.id || !selectedCvId || !jobDescription) {
-      setError(t('coverLetterGenerator.errors.formInvalid'));
+      setFeedbackMessage({ type: 'error', text: t('coverLetterGenerator.errors.formInvalid') });
       return;
     }
 
     setIsGenerating(true);
-    setError(null);
     setFeedbackMessage(null);
     setGeneratedLetter('');
     setEditingLetter('');
@@ -160,7 +157,6 @@ const CoverLetterGenerator: React.FC<CoverLetterGeneratorProps> = ({
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : t('coverLetterGenerator.errors.startGenerationError');
-      setError(errorMessage);
       setFeedbackMessage({ type: 'error', text: errorMessage });
       setIsGenerating(false);
     }
@@ -229,14 +225,9 @@ const CoverLetterGenerator: React.FC<CoverLetterGeneratorProps> = ({
       </h2>
 
       {feedbackMessage && (
-        <div className={`p-3 rounded-md text-sm ${feedbackMessage.type === 'success' ? 'bg-green-800' : 'bg-red-800'}`}>
+                        <div role="alert" data-testid="feedback-alert" className={`p-3 rounded-md text-sm ${feedbackMessage.type === 'success' ? 'bg-green-800' : 'bg-red-800'}`}>
           {feedbackMessage.text}
         </div>
-      )}
-      {error && !feedbackMessage && (
-         <div className='p-3 rounded-md text-sm bg-red-800'>
-           {error}
-         </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

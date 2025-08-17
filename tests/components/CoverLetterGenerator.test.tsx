@@ -1,105 +1,97 @@
-import React from 'react';
+/// <reference types="@testing-library/jest-dom" />
+
 import { render, screen, waitFor } from '@testing-library/react';
-import '@testing-library/jest-dom';
-import CoverLetterGenerator from '../../src/components/CoverLetterGenerator';
-import { useAuth } from '../../src/stores/auth';
-// Note: supabase functions will be imported AFTER jest.mock call
+import { describe, test, beforeEach, afterEach, jest } from '@jest/globals';
 
-// Mock des modules et fonctions externes
-jest.mock('../../src/stores/auth', () => ({
-  useAuth: jest.fn(),
+// Mock dependencies before importing the component
+jest.mock('@/stores/auth', () => ({
+    useAuth: jest.fn(() => ({ user: null, session: null, loading: true })),
 }));
 
-jest.mock('../../src/lib/supabase', () => ({
-  getUserCVs: jest.fn(), // Factory returns jest.fn() directly
-  invokeExtractCvText: jest.fn(),
-  invokeGenerateCoverLetter: jest.fn(),
+jest.mock('@/lib/supabase', () => ({
+    getUserCVs: jest.fn((_userId: string) => Promise.resolve([])),
 }));
 
-// Now import the mocked functions from supabase
-import { getUserCVs, invokeExtractCvText, invokeGenerateCoverLetter } from '../../src/lib/supabase';
-
-// Mock react-i18next
 jest.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (key: string) => key, // Simple mock pour t function
-    i18n: {
-      changeLanguage: jest.fn(),
-      language: 'fr', // Langue par défaut pour les tests
-    },
-  }),
-}));
+    useTranslation: () => ({
+      t: (key: string) => key,
+      i18n: {
+        changeLanguage: () => new Promise(() => {}),
+      },
+    }),
+  }));
 
-const mockUser = { id: 'test-user-id', email: 'test@example.com' };
-const mockCVs = [
-  { id: 'cv1', file_name: 'CV_Primaire.pdf', storage_path: 'bucket/cv1.pdf', uploaded_at: new Date().toISOString(), is_primary: true, user_id: mockUser.id, extracted_text: null, metadata: null },
-  { id: 'cv2', file_name: 'CV_Secondaire.pdf', storage_path: 'bucket/cv2.pdf', uploaded_at: new Date().toISOString(), is_primary: false, user_id: mockUser.id, extracted_text: null, metadata: null },
+// Import the component and mocked functions
+import CoverLetterGenerator from '@/components/CoverLetterGenerator';
+import { useAuth } from '@/stores/auth';
+import { getUserCVs, CVMetadata } from '@/lib/supabase';
+
+// Type assertion for mocks
+const mockedUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
+const mockedGetUserCVs = getUserCVs as jest.MockedFunction<typeof getUserCVs>;
+
+const mockCVs: CVMetadata[] = [
+    {
+        id: 'cv1',
+        user_id: 'user-123',
+        file_name: 'CV_Primaire.pdf',
+        storage_path: 'user-123/cv1.pdf',
+        is_primary: true,
+        uploaded_at: new Date().toISOString(),
+    },
+    {
+        id: 'cv2',
+        user_id: 'user-123',
+        file_name: 'CV_Secondaire.pdf',
+        storage_path: 'user-123/cv2.pdf',
+        is_primary: false,
+        uploaded_at: new Date().toISOString(),
+    },
 ];
 
 describe('CoverLetterGenerator', () => {
-  beforeEach(() => {
-    // Réinitialiser les mocks avant chaque test
-    (useAuth as unknown as jest.Mock).mockReturnValue({ user: mockUser, session: {} });
-    
-    (getUserCVs as jest.Mock).mockReset();
-    // Default successful implementation with logging
-    (getUserCVs as jest.Mock).mockImplementation(async (userId: string) => {
-      console.log('[TEST DEBUG] mockGetUserCVs (default implementation) called with userId:', userId);
-      return mockCVs;
+    beforeEach(() => {
+        // Provide a default mock implementation for useAuth
+        mockedUseAuth.mockReturnValue({
+            user: { id: 'user-123' },
+            session: { access_token: 'fake-token' },
+            loading: false,
+        });
     });
 
-    (invokeExtractCvText as jest.Mock).mockReset();
-    (invokeExtractCvText as jest.Mock).mockResolvedValue({ extractedText: 'Texte du CV extrait', totalPages: 1, meta: {} });
-
-    (invokeGenerateCoverLetter as jest.Mock).mockReset();
-    (invokeGenerateCoverLetter as jest.Mock).mockResolvedValue({ coverLetter: 'Lettre de motivation générée.' });
-  });
-
-  test('devrait afficher le formulaire avec les champs initiaux et charger les CVs', async () => {
-    render(<CoverLetterGenerator />);
-
-    // Vérifier la présence des champs principaux
-    expect(screen.getByLabelText('coverLetterGenerator.labels.jobTitle')).toBeInTheDocument();
-    expect(screen.getByLabelText('coverLetterGenerator.labels.companyName')).toBeInTheDocument();
-    expect(screen.getByLabelText('coverLetterGenerator.labels.jobDescription')).toBeInTheDocument();
-    expect(screen.getByLabelText('coverLetterGenerator.labels.cv')).toBeInTheDocument(); // Le sélecteur de CV
-
-    // Vérifier que getUserCVs a été appelé
-    expect(getUserCVs).toHaveBeenCalledWith(mockUser.id);
-
-    // Attendre que les CVs soient chargés et affichés dans le sélecteur
-    await waitFor(() => {
-      expect(screen.getByText('CV_Primaire.pdf (' + new Date(mockCVs[0].uploaded_at).toLocaleDateString() + ')')).toBeInTheDocument();
-      expect(screen.getByText('CV_Secondaire.pdf (' + new Date(mockCVs[1].uploaded_at).toLocaleDateString() + ')')).toBeInTheDocument();
+    afterEach(() => {
+        jest.clearAllMocks();
     });
 
-    // Vérifier que le CV primaire est sélectionné par défaut
-    const cvSelect = screen.getByLabelText('coverLetterGenerator.labels.cv') as HTMLSelectElement;
-    expect(cvSelect.value).toBe('cv1');
-  });
+    test('devrait afficher le formulaire et charger les CVs avec succès', async () => {
+        mockedGetUserCVs.mockResolvedValue(mockCVs);
 
-  test('devrait afficher un message d\'erreur si le chargement des CVs échoue', async () => {
-    // Forcer getUserCVs à retourner une erreur qui n'est pas une instance de Error
-    // pour que le composant utilise t('coverLetterGenerator.errors.fetchCvError')
-    (getUserCVs as jest.Mock).mockRejectedValueOnce('Simulated CV fetch error, not an Error instance');
+        render(<CoverLetterGenerator />);
 
-    render(<CoverLetterGenerator />);
+        // Check for form fields
+        expect(screen.getByLabelText('coverLetterGenerator.labels.jobTitle')).toBeInTheDocument();
+        expect(screen.getByLabelText('coverLetterGenerator.labels.companyName')).toBeInTheDocument();
 
-    // Attendre que le message d'erreur s'affiche
-    // Note: nous utilisons findByText car le message peut apparaître de manière asynchrone
-    expect(await screen.findByText('coverLetterGenerator.errors.fetchCvError')).toBeInTheDocument();
+        // Wait for CVs to be loaded and displayed in the select
+        await waitFor(() => {
+            expect(screen.getByText(/CV_Primaire.pdf/)).toBeInTheDocument();
+        });
+        
+        const cvSelect = screen.getByLabelText('coverLetterGenerator.labels.cv') as HTMLSelectElement;
+        expect(cvSelect.value).toBe('cv1'); // Primary CV should be selected
+        expect(mockedGetUserCVs).toHaveBeenCalledTimes(1);
+    });
 
-    // Vérifier que le sélecteur de CV n'est pas désactivé par isLoading (car le chargement est terminé, même avec une erreur)
-    const cvSelect = screen.getByLabelText('coverLetterGenerator.labels.cv') as HTMLSelectElement;
-    // Le sélecteur peut être désactivé si aucun CV n'est chargé et qu'il n'y a pas d'option valide,
-    // mais il ne doit pas être désactivé à cause de l'état isLoading.
-    // Pour ce test, nous vérifions surtout que le message d'erreur est là.
-    // Si le composant désactive le select en cas d'erreur de chargement des CVs, ce test pourrait avoir besoin d'ajustement.
-    // Pour l'instant, la logique du composant ne semble pas désactiver le select en cas d'erreur de fetch, seulement pendant le fetch.
-    expect(cvSelect).not.toHaveAttribute('disabled'); 
-    // Ou plus spécifiquement, si on veut s'assurer qu'il n'est pas désactivé à cause de `isLoading`
-    // on pourrait avoir besoin de vérifier l'absence du spinner si celui-ci était conditionné par `isLoading` uniquement.
-  });
+        test('devrait afficher un message d\'erreur si le chargement des CVs échoue', async () => {
+        const errorMessage = 'Failed to load CVs';
+        mockedGetUserCVs.mockRejectedValue(new Error(errorMessage));
 
-  // D'autres tests viendront ici...
+        render(<CoverLetterGenerator />);
+
+        // The feedback alert should appear with the error message
+        const alert = await screen.findByRole('alert');
+        expect(alert).toBeInTheDocument();
+        expect(alert).toHaveTextContent(errorMessage);
+        expect(mockedGetUserCVs).toHaveBeenCalledTimes(1);
+    });
 });

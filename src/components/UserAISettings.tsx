@@ -13,7 +13,6 @@ const IA_ENGINES = [
   { id: 'claude', label: 'Anthropic Claude', placeholder: 'sk-ant-' },
   { id: 'cohere', label: 'Cohere', placeholder: 'API Key Cohere' },
   { id: 'huggingface', label: 'HuggingFace', placeholder: 'hf_' },
-  { id: 'mistral', label: 'Mistral AI', placeholder: 'API Key Mistral' },
   { id: 'custom', label: 'IA interne/maison', placeholder: 'Token interne' },
 ];
 

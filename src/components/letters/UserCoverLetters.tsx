@@ -1,6 +1,7 @@
 import React, { Fragment, useEffect, useMemo, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { toast } from 'react-hot-toast';
+import { LoadingSpinner } from '../LoadingSpinner';
 import {
   EyeIcon,
   PencilSquareIcon,
@@ -165,21 +166,29 @@ export default function UserCoverLetters() {
                           <PencilSquareIcon className="w-5 h-5" />
                         </button>
                         <button
-                          className="btn-ghost"
-                          title="Exporter en PDF"
-                          disabled={exportingId === cl.id}
+                          className="btn-ghost disabled:cursor-not-allowed"
+                          title={!cl.cover_letter_content ? 'Contenu vide, export impossible' : 'Exporter en PDF'}
+                          disabled={exportingId === cl.id || !cl.cover_letter_content}
                           onClick={() => onExport(cl, 'pdf')}
                         >
-                          <ArrowDownTrayIcon className="w-5 h-5" />
+                          {exportingId === cl.id ? (
+                            <LoadingSpinner size="sm" />
+                          ) : (
+                            <ArrowDownTrayIcon className="w-5 h-5" />
+                          )}
                           <span className="sr-only">PDF</span>
                         </button>
                         <button
-                          className="btn-ghost"
-                          title="Exporter en DOCX"
-                          disabled={exportingId === cl.id}
+                          className="btn-ghost disabled:cursor-not-allowed"
+                          title={!cl.cover_letter_content ? 'Contenu vide, export impossible' : 'Exporter en DOCX'}
+                          disabled={exportingId === cl.id || !cl.cover_letter_content}
                           onClick={() => onExport(cl, 'docx')}
                         >
-                          <ArrowDownTrayIcon className="w-5 h-5 rotate-180" />
+                          {exportingId === cl.id ? (
+                            <LoadingSpinner size="sm" />
+                          ) : (
+                            <ArrowDownTrayIcon className="w-5 h-5 rotate-180" />
+                          )}
                           <span className="sr-only">DOCX</span>
                         </button>
                         <button
