@@ -86,17 +86,18 @@ Deno.serve(async (req: Request) => {
     }
 
     userPrompt += `
-      Based on the provided CV, identify the candidate's city.
+      Based on the provided CV, identify the candidate's city and address.
       Then, generate a compelling body for a cover letter, tailored to the job description and highlighting relevant skills from the CV.
 
       VERY IMPORTANT:
-      - Respond with a JSON object containing two keys: "candidateCity" and "letterBody".
+      - Respond with a JSON object containing three keys: "candidateCity", "candidateAddress", and "letterBody".
       - The "letterBody" should only contain the paragraphs of the letter, separated by newlines. Do not include salutations, subject, date, or signature.
-      - The "candidateCity" should be a single string.
+      - The "candidateCity" and "candidateAddress" should be single strings.
 
       Example response format:
       {
         "candidateCity": "Paris",
+        "candidateAddress": "123 Rue de la République",
         "letterBody": "Paragraph 1...\n\nParagraph 2..."
       }
     `;
@@ -157,7 +158,7 @@ Deno.serve(async (req: Request) => {
           throw new Error('AI returned invalid format. Expected a JSON object.');
         }
 
-        const { candidateCity, letterBody } = parsedContent;
+        const { candidateCity, letterBody, candidateAddress } = parsedContent;
 
         if (!letterBody || !candidateCity) {
           throw new Error('AI response is missing required `letterBody` or `candidateCity` keys.');
@@ -166,16 +167,18 @@ Deno.serve(async (req: Request) => {
         // --- Assemble the full letter --- 
         const candidateFullName = user.user_metadata?.full_name || 'Candidat';
         const candidateEmail = user.email || '';
+        const candidatePhone = user.phone || ''; // Assuming phone is available
 
         const currentDate = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 
+        const headerLine = `${candidateFullName} | ${candidateAddress} | ${currentDate} | ${candidateEmail} | ${candidatePhone}`;
+
         const finalLetter = `
-${candidateFullName}
-${candidateEmail}
+${headerLine}
 
+À l’attention du Responsable de Recrutement
 ${companyName}
-
-À ${candidateCity}, le ${currentDate}
+[Adresse de l’entreprise]
 
 **Objet : Candidature au poste de ${jobTitle}**
 

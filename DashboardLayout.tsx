@@ -12,6 +12,7 @@ import {
   ClipboardDocumentListIcon,
   BriefcaseIcon,
   RectangleGroupIcon,
+  PencilSquareIcon,
   MagnifyingGlassIcon,
   PlusCircleIcon,
   CreditCardIcon,
@@ -35,35 +36,37 @@ export function DashboardLayout() {
     // Définir la navigation en fonction du type d'utilisateur
     if (user?.user_type === 'freelancer') {
       setNavigation([
-        { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-        { name: 'Projets disponibles', href: '/freelance/projects', icon: RectangleGroupIcon },
-        { name: 'Mon profil freelance', href: '/freelance/profile', icon: UserIcon },
-        { name: 'CV Builder', href: '/cv-builder', icon: DocumentTextIcon },
-        { name: 'Réseau', href: '/network', icon: UsersIcon },
-        { name: 'Analyse du marché', href: '/market-analysis', icon: ChartPieIcon },
-        { name: 'Facturation', href: '/billing', icon: CreditCardIcon },
+        { name: 'Dashboard', href: '/app/dashboard', icon: HomeIcon },
+        { name: 'Projets disponibles', href: '/app/freelance/projects', icon: RectangleGroupIcon },
+        { name: 'Mon profil freelance', href: '/app/freelance/profile', icon: UserIcon },
+        { name: 'CV Builder', href: '/app/cv-builder', icon: DocumentTextIcon },
+        { name: 'Lettres de motivation', href: '/app/letters', icon: PencilSquareIcon },
+        { name: 'Réseau', href: '/app/network', icon: UsersIcon },
+        { name: 'Analyse du marché', href: '/app/market-analysis', icon: ChartPieIcon },
+        { name: 'Facturation', href: '/app/billing', icon: CreditCardIcon },
       ])
     } else if (user?.user_type === 'recruiter') {
       setNavigation([
-        { name: 'Dashboard', href: '/recruiter/dashboard', icon: HomeIcon },
-        { name: 'Recherche de candidats', href: '/recruiter/candidates', icon: MagnifyingGlassIcon },
-        { name: 'Mes offres d\'emploi', href: '/recruiter/job-postings', icon: ClipboardDocumentListIcon },
-        { name: 'Créer une offre', href: '/recruiter/create-job', icon: PlusCircleIcon },
-        { name: 'Réseau', href: '/network', icon: UsersIcon },
-        { name: 'Profil', href: '/profile', icon: UserIcon },
-        { name: 'Facturation', href: '/billing', icon: CreditCardIcon },
+        { name: 'Dashboard', href: '/app/recruiter/dashboard', icon: HomeIcon },
+        { name: 'Recherche de candidats', href: '/app/recruiter/candidates', icon: MagnifyingGlassIcon },
+        { name: 'Mes offres d\'emploi', href: '/app/recruiter/job-postings', icon: ClipboardDocumentListIcon },
+        { name: 'Créer une offre', href: '/app/recruiter/create-job', icon: PlusCircleIcon },
+        { name: 'Réseau', href: '/app/network', icon: UsersIcon },
+        { name: 'Profil', href: '/app/profile', icon: UserIcon },
+        { name: 'Facturation', href: '/app/billing', icon: CreditCardIcon },
       ])
     } else {
       // Navigation par défaut pour les candidats
       setNavigation([
-        { name: 'navigation.dashboard', href: '/dashboard', icon: HomeIcon },
-        { name: 'navigation.jobSearch', href: '/jobs', icon: FolderIcon },
-        { name: 'navigation.applications', href: '/applications', icon: ClipboardDocumentListIcon },
-        { name: 'navigation.cvBuilder', href: '/cv-builder', icon: DocumentTextIcon },
-        { name: 'navigation.network', href: '/network', icon: UsersIcon },
-        { name: 'navigation.marketAnalysis', href: '/market-analysis', icon: ChartPieIcon },
-        { name: 'navigation.profile', href: '/profile', icon: UserIcon },
-        { name: 'Facturation', href: '/billing', icon: CreditCardIcon },
+        { name: 'navigation.dashboard', href: '/app/dashboard', icon: HomeIcon },
+        { name: 'navigation.jobSearch', href: '/app/jobs', icon: FolderIcon },
+        { name: 'navigation.applications', href: '/app/applications', icon: ClipboardDocumentListIcon },
+        { name: 'navigation.letters', href: '/app/letters', icon: PencilSquareIcon },
+        { name: 'navigation.cvBuilder', href: '/app/cv-builder', icon: DocumentTextIcon },
+        { name: 'navigation.network', href: '/app/network', icon: UsersIcon },
+        { name: 'navigation.marketAnalysis', href: '/app/market-analysis', icon: ChartPieIcon },
+        { name: 'navigation.profile', href: '/app/profile', icon: UserIcon },
+        { name: 'Facturation', href: '/app/billing', icon: CreditCardIcon },
       ])
     }
   }, [user?.user_type, t])

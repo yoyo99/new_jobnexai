@@ -10,14 +10,14 @@ import { corsHeaders } from '../_shared/cors.ts';
 import {
   PDFDocument,
   StandardFonts,
-} from 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.esm.min.js';
+} from 'https://cdn.jsdelivr.net/npm/pdf-lib@^1.17.1/dist/pdf-lib.esm.min.js';
 import {
   Document,
   Packer,
   Paragraph,
   HeadingLevel,
   TextRun,
-} from 'https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.min.js';
+} from 'https://cdn.jsdelivr.net/npm/docx@^8.5.0/build/index.min.js';
 
 const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
@@ -110,15 +110,18 @@ Deno.serve(async (req: Request) => {
     const isGET = req.method === 'GET';
     const body = isGET ? {} : (await req.json().catch(() => ({})) || {});
 
-    const content = (body.content ?? url.searchParams.get('content')) as string | null;
+    const rawContent = (body.content ?? url.searchParams.get('content')) as string | null;
     const rawFormat = (body.format ?? url.searchParams.get('format') ?? 'pdf') as string;
     const format = rawFormat.toLowerCase(); // 'pdf' | 'docx'
     const mode = ((body.mode ?? url.searchParams.get('mode') ?? 'store') as string).toLowerCase(); // 'store' | 'download'
     const filenameOverride = (body.filename ?? url.searchParams.get('filename')) as string | null;
 
-    if (!content || content.trim().length === 0) {
+    if (!rawContent || rawContent.trim().length === 0) {
       return jsonResponse({ error: 'Missing content' }, 400);
     }
+
+    // Clean content from markdown for export
+    const content = rawContent.replace(/\*\*/g, '');
 
     // Generate file
     let mime = '';

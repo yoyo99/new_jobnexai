@@ -299,5 +299,15 @@
         ]
       }
     }
+  },
+  "navigation": {
+    "dashboard": "Tableau de bord",
+    "jobSearch": "Recherche d'emploi",
+    "applications": "Mes candidatures",
+    "letters": "Lettres de motivation",
+    "cvBuilder": "Mon CV",
+    "network": "Réseau",
+    "marketAnalysis": "Analyse du marché",
+    "profile": "Mon profil"
   }
 }
