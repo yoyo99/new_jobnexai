@@ -20,7 +20,10 @@ const supabaseAdmin = createClient(
 
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get('Origin');
-    if (req.method === 'OPTIONS') {
+
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    console.log('Handling OPTIONS request for generate-cover-letter');
     return new Response('ok', { headers: getCorsHeaders(origin) });
   }
 
@@ -87,18 +90,19 @@ Deno.serve(async (req: Request) => {
     }
 
     userPrompt += `
-      Based on the provided CV, identify the candidate's city and address.
+      Based on the provided CV and job offer, identify the candidate's full address and the company's full address.
       Then, generate a compelling body for a cover letter, tailored to the job description and highlighting relevant skills from the CV.
 
       VERY IMPORTANT:
-      - Respond with a JSON object containing three keys: "candidateCity", "candidateAddress", and "letterBody".
+      - Respond with a JSON object containing four keys: "candidateAddress", "companyAddress", "candidateCity", and "letterBody".
       - The "letterBody" should only contain the paragraphs of the letter, separated by newlines. Do not include salutations, subject, date, or signature.
-      - The "candidateCity" and "candidateAddress" should be single strings.
+      - "candidateAddress" and "companyAddress" should be full, multi-line addresses formatted as a single string with '\n' for newlines. If the company address is not explicitly mentioned, try to infer it or leave it as an empty string.
 
       Example response format:
       {
+        "candidateAddress": "123 Rue de la République\n75001 Paris",
+        "companyAddress": "456 Avenue des Champs-Élysées\n75008 Paris",
         "candidateCity": "Paris",
-        "candidateAddress": "123 Rue de la République",
         "letterBody": "Paragraph 1...\n\nParagraph 2..."
       }
     `;
@@ -159,10 +163,10 @@ Deno.serve(async (req: Request) => {
           throw new Error('AI returned invalid format. Expected a JSON object.');
         }
 
-        const { candidateCity, letterBody, candidateAddress } = parsedContent;
+        const { candidateAddress, companyAddress, candidateCity, letterBody } = parsedContent;
 
-        if (!letterBody || !candidateCity) {
-          throw new Error('AI response is missing required `letterBody` or `candidateCity` keys.');
+        if (!letterBody || !candidateAddress || !candidateCity) {
+          throw new Error('AI response is missing required `letterBody`, `candidateAddress` or `candidateCity` keys.');
         }
 
         // --- Assemble the full letter --- 
@@ -172,14 +176,17 @@ Deno.serve(async (req: Request) => {
 
         const currentDate = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 
-        const headerLine = `${candidateFullName} | ${candidateAddress} | ${currentDate} | ${candidateEmail} | ${candidatePhone}`;
-
         const finalLetter = `
-${headerLine}
+${candidateFullName}
+${candidateAddress.replace(/\n/g, '\n')}
+${candidateEmail}
+${candidatePhone}
 
-À l’attention du Responsable de Recrutement
+À l'attention du service de recrutement
 ${companyName}
-[Adresse de l’entreprise]
+${companyAddress.replace(/\n/g, '\n')}
+
+Fait à ${candidateCity}, le ${currentDate}
 
 **Objet : Candidature au poste de ${jobTitle}**
 

@@ -93,11 +93,7 @@ function App() {
                 </ProtectedRoute>
               } />
               <Route path="letters" element={<UserCoverLetters />} />
-              <Route path="cover-letter-generator" element={
-                <ProtectedRoute>
-                  <CoverLetterGenerator />
-                </ProtectedRoute>
-              } />
+              <Route path="cover-letter-generator" element={<CoverLetterGenerator />} />
               <Route path="market-analysis" element={
                 <ProtectedRoute requiresSubscription>
                   <MarketAnalysis />

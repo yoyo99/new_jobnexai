@@ -90,7 +90,9 @@ async function ensureBucketExists(): Promise<void> {
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get('Origin');
 
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('Handling OPTIONS request');
     return new Response('ok', { headers: getCorsHeaders(origin) });
   }
 
