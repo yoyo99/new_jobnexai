@@ -86,41 +86,19 @@ Deno.serve(async (req: Request) => {
     }
 
     userPrompt += `
-      The cover letter should be tailored to the job description, highlighting relevant skills and experiences from the CV.
-      Ensure the tone is professional.
+      Based on the provided CV, identify the candidate's city.
+      Then, generate a compelling body for a cover letter, tailored to the job description and highlighting relevant skills from the CV.
 
-      VERY IMPORTANT: You must generate a cover letter in Markdown format. Follow the structure below EXACTLY. Do not add any extra information, titles, or formatting not explicitly requested. Each section must be separated by a blank line.
+      VERY IMPORTANT:
+      - Respond with a JSON object containing two keys: "candidateCity" and "letterBody".
+      - The "letterBody" should only contain the paragraphs of the letter, separated by newlines. Do not include salutations, subject, date, or signature.
+      - The "candidateCity" should be a single string.
 
-      1.  **Candidate's Information (top left, each on a new line):**
-          -   [Candidate's Full Name]
-          -   [Candidate's City from CV]
-          -   [Candidate's Phone Number from CV]
-          -   [Candidate's Email from CV]
-
-      2.  **Recipient's Information (below candidate's info, each on a new line):**
-          -   [Company Name]
-          -   (If available, Company Address and City, otherwise omit)
-
-      3.  **Location and Date (below recipient's info):**
-          -   [City of writing], le [Current Date]
-
-      4.  **Subject Line (must be exactly this format):**
-          -   Objet : Candidature au poste de ${jobTitle}
-
-      5.  **Salutation:**
-          -   Madame, Monsieur,
-
-      6.  **Body of the letter:**
-          -   Generate a compelling body text, split into several clear paragraphs. Each paragraph should be separated by a blank line.
-
-      7.  **Closing:**
-          -   Use a professional closing formula, e.g., "Dans l’attente de votre retour, je vous prie d’agréer, Madame, Monsieur, l’expression de mes salutations distinguées."
-
-      8.  **Signature (Final line of the letter):**
-          -   [Candidate's Full Name]
-          -   ABSOLUTELY NO OTHER INFORMATION in the signature. Only the full name.
-
-      Generate only the complete, formatted text of the cover letter based on this strict template. Do not include the section titles like "Candidate's Information".
+      Example response format:
+      {
+        "candidateCity": "Paris",
+        "letterBody": "Paragraph 1...\n\nParagraph 2..."
+      }
     `;
     
     const taskId = crypto.randomUUID();
@@ -166,16 +144,54 @@ Deno.serve(async (req: Request) => {
         }
 
         const completion = await mistralResponse.json();
-        const generatedLetter = completion.choices[0]?.message?.content?.trim();
-
-        if (!generatedLetter) {
-          throw new Error('AI failed to generate a cover letter content.');
+        const rawContent = completion.choices[0]?.message?.content?.trim();
+        if (!rawContent) {
+          throw new Error('AI returned empty content.');
         }
+
+        let parsedContent;
+        try {
+          parsedContent = JSON.parse(rawContent);
+        } catch (_e) {
+          console.error('Failed to parse AI response as JSON:', rawContent);
+          throw new Error('AI returned invalid format. Expected a JSON object.');
+        }
+
+        const { candidateCity, letterBody } = parsedContent;
+
+        if (!letterBody || !candidateCity) {
+          throw new Error('AI response is missing required `letterBody` or `candidateCity` keys.');
+        }
+
+        // --- Assemble the full letter --- 
+        const candidateFullName = user.user_metadata?.full_name || 'Candidat';
+        const candidateEmail = user.email || '';
+
+        const currentDate = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+        const finalLetter = `
+${candidateFullName}
+${candidateEmail}
+
+${companyName}
+
+À ${candidateCity}, le ${currentDate}
+
+**Objet : Candidature au poste de ${jobTitle}**
+
+Madame, Monsieur,
+
+${letterBody}
+
+Dans l’attente de votre retour, je vous prie d’agréer, Madame, Monsieur, l’expression de mes salutations distinguées.
+
+${candidateFullName}
+        `.trim();
 
         await supabaseAdmin
           .from('generated_content')
           .update({
-            content: generatedLetter,
+            content: finalLetter,
             status: 'completed',
             updated_at: new Date().toISOString(),
           })
