@@ -24,7 +24,7 @@ Deno.serve(async (req: Request) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     console.log('Handling OPTIONS request for generate-cover-letter');
-    return new Response('ok', { headers: getCorsHeaders(origin) });
+    return new Response(null, { status: 204, headers: getCorsHeaders(origin) });
   }
 
   try {
@@ -94,9 +94,10 @@ Deno.serve(async (req: Request) => {
       Then, generate a compelling body for a cover letter, tailored to the job description and highlighting relevant skills from the CV.
 
       VERY IMPORTANT:
-      - Respond with a JSON object containing four keys: "candidateAddress", "companyAddress", "candidateCity", and "letterBody".
-      - The "letterBody" should only contain the paragraphs of the letter, separated by newlines. Do not include salutations, subject, date, or signature.
-      - "candidateAddress" and "companyAddress" should be full, multi-line addresses formatted as a single string with '\n' for newlines. If the company address is not explicitly mentioned, try to infer it or leave it as an empty string.
+      - Respond ONLY with a valid JSON object containing four keys: "candidateAddress", "companyAddress", "candidateCity", and "letterBody".
+      - The "letterBody" must only contain the paragraphs of the letter. It must NOT include salutations, subject, date, or signature.
+      - "candidateAddress" and "companyAddress" must be full, multi-line addresses formatted as a single string with '\n' for newlines.
+      - Absolutely DO NOT use any placeholders like [Date], [Adresse de l’entreprise], [Your Name], etc. The content must be complete and ready to use.
 
       Example response format:
       {
@@ -163,7 +164,12 @@ Deno.serve(async (req: Request) => {
           throw new Error('AI returned invalid format. Expected a JSON object.');
         }
 
-        const { candidateAddress, companyAddress, candidateCity, letterBody } = parsedContent;
+        let { candidateAddress, companyAddress, candidateCity, letterBody } = parsedContent;
+
+        // Clean the letter body of any remaining placeholders
+        if (letterBody) {
+          letterBody = letterBody.replace(/\[.*?\]/g, '').trim();
+        }
 
         if (!letterBody || !candidateAddress || !candidateCity) {
           throw new Error('AI response is missing required `letterBody`, `candidateAddress` or `candidateCity` keys.');

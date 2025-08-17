@@ -6,13 +6,17 @@ const allowedOrigins = [
   'http://localhost:8080',               // Common local dev
 ];
 
+export const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
 export const getCorsHeaders = (origin: string | null) => {
   const headers = {
-    'Access-Control-Allow-Methods': 'POST, OPTIONS, GET, PUT, DELETE',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    ...corsHeaders,
     'Access-Control-Allow-Credentials': 'true',
     'Access-Control-Max-Age': '86400',
-    'Access-Control-Allow-Origin': allowedOrigins[0], // Default to production
   };
 
   if (origin && allowedOrigins.includes(origin)) {
