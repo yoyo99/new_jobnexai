@@ -24,7 +24,7 @@ Deno.serve(async (req: Request) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     console.log('Handling OPTIONS request for generate-cover-letter');
-    return new Response(null, { status: 204, headers: getCorsHeaders(origin) });
+    return new Response('ok', { headers: getCorsHeaders(origin) });
   }
 
   try {
@@ -183,14 +183,12 @@ Deno.serve(async (req: Request) => {
         const currentDate = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 
         const finalLetter = `
-${candidateFullName}
-${candidateAddress.replace(/\n/g, '\n')}
-${candidateEmail}
-${candidatePhone}
+<p>${candidateFullName}<br>${candidateEmail}<br>${candidatePhone}<br>${candidateAddress}</p>
+        <br>
+        <p>${companyAddress || ''}</p>
 
 À l'attention du service de recrutement
 ${companyName}
-${companyAddress.replace(/\n/g, '\n')}
 
 Fait à ${candidateCity}, le ${currentDate}
 

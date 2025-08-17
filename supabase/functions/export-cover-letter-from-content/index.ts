@@ -17,7 +17,7 @@ import {
   Paragraph,
   HeadingLevel,
   TextRun,
-} from 'https://cdn.jsdelivr.net/npm/docx@^8.5.0/build/index.min.js';
+} from 'https://esm.sh/docx@8.5.0';
 
 const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
@@ -93,7 +93,7 @@ Deno.serve(async (req: Request) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     console.log('Handling OPTIONS request for export-cover-letter-from-content');
-    return new Response(null, { status: 204, headers: getCorsHeaders(origin) });
+    return new Response('ok', { headers: getCorsHeaders(origin) });
   }
 
   try {
