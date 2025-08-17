@@ -88,7 +88,17 @@ Deno.serve(async (req: Request) => {
     userPrompt += `
       The cover letter should be tailored to the job description, highlighting relevant skills and experiences from the CV.
       Ensure the tone is professional.
-      Generate only the text of the cover letter itself. Do not include any surrounding text like "Here is your cover letter:" or any explanations.
+
+      VERY IMPORTANT: Structure the output EXACTLY as follows, without any extra text or explanations:
+      1.  **Candidate's Header**: On the top left, include the candidate's full name, address, email, and phone number, extracted from the CV. Below this, add the current date.
+      2.  **Recipient's Header**: On the right, below the candidate's header, add the recipient's details: "À l’attention du Responsable de Recrutement" (or the equivalent in the target language), the company name, and the company's address (if available in the job description).
+      3.  **Subject Line**: A clear subject line, like "Objet : Candidature pour le poste de [Job Title] chez [Company Name]".
+      4.  **Salutation**: A professional salutation (e.g., "Madame, Monsieur,").
+      5.  **Body**: The main content of the letter, structured in clear paragraphs.
+      6.  **Closing**: A professional closing (e.g., "Dans l’attente de votre retour, je vous prie d’agréer, Madame, Monsieur, l’expression de mes salutations distinguées.").
+      7.  **Signature**: The candidate's full name ONLY (e.g., "John Doe"). Do not add job titles, certifications, or other personal details in the signature block itself.
+
+      Generate only the complete, formatted text of the cover letter.
     `;
     
     const taskId = crypto.randomUUID();

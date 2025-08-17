@@ -99,9 +99,7 @@ const CoverLetterGenerator: React.FC<CoverLetterGeneratorProps> = ({
         const result: GenerationStatus = await pollGeneratedContent(taskId);
         if (result.status === 'completed') {
           clearInterval(interval);
-          // Remplacer le placeholder [Date] et préparer le contenu
-          const formattedDate = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
-          const finalContent = (result.content || '').replace(/\[Date\]/g, formattedDate);
+          const finalContent = result.content || '';
 
           setGeneratedLetter(finalContent);
           setEditingLetter(finalContent);
@@ -330,8 +328,13 @@ const CoverLetterGenerator: React.FC<CoverLetterGeneratorProps> = ({
                   placeholder={t('coverLetterGenerator.placeholders.letterOutput')}
                 />
               ) : (
-                <div className="prose prose-invert bg-gray-700 p-4 rounded-md min-h-[400px]">
-                  <ReactMarkdown>{editingLetter}</ReactMarkdown>
+                <div className="bg-gray-700 p-4 rounded-md min-h-[400px]">
+                  <div className="text-right mb-4 text-gray-300">
+                    {new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  </div>
+                  <div className="prose prose-invert max-w-none">
+                    <ReactMarkdown>{editingLetter.replace(/\\[Date\\]/g, '').trim()}</ReactMarkdown>
+                  </div>
                 </div>
               )}
             </div>

@@ -24,6 +24,7 @@ const userCoreNavigation = [
   { name: 'navigation.jobSearch', href: '/app/job-search' },
   { name: 'navigation.applications', href: '/app/suivi' },
   { name: 'navigation.letters', href: '/app/letters' },
+  { name: 'navigation.coverLetterGenerator', href: '/app/cover-letter-generator' },
   { name: 'navigation.cvBuilder', href: '/app/cv-builder' },
   { name: 'navigation.network', href: '/app/network' },
   { name: 'navigation.marketAnalysis', href: '/app/market-analysis' },

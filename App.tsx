@@ -33,6 +33,7 @@ import { StripeCheckoutStatus } from './components/StripeCheckoutStatus'
 import { Billing } from './components/Billing'
 import { SubscriptionBanner } from './components/SubscriptionBanner'
 import UserCoverLetters from '@/components/letters/UserCoverLetters'
+import CoverLetterGenerator from '@/components/CoverLetterGenerator'
 
 function App() {
   return (
@@ -92,6 +93,11 @@ function App() {
                 </ProtectedRoute>
               } />
               <Route path="letters" element={<UserCoverLetters />} />
+              <Route path="cover-letter-generator" element={
+                <ProtectedRoute requiresSubscription>
+                  <CoverLetterGenerator />
+                </ProtectedRoute>
+              } />
               <Route path="market-analysis" element={
                 <ProtectedRoute requiresSubscription>
                   <MarketAnalysis />
