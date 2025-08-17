@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../stores/auth';
 import { useTranslation } from 'react-i18next';
 import { CVMetadata, getUserCVs, invokeExtractCvText, invokeGenerateCoverLetter, pollGeneratedContent, GenerationStatus, exportCoverLetterFromContent } from '../lib/supabase'; // Importer aussi les fonctions pour les lettres de motivation plus tard
-import { FaFileAlt, FaSpinner, FaTrash, FaMagic, FaSave, FaDownload } from 'react-icons/fa';
+import { FaFileAlt, FaSpinner, FaTrash, FaMagic, FaSave, FaDownload, FaPencilAlt, FaEye } from 'react-icons/fa';
+import ReactMarkdown from 'react-markdown';
 
 // Importer CoverLetterMetadata et activer createCoverLetter pour la sauvegarde
 import { CoverLetterMetadata, createCoverLetter /*, getUserCoverLetters, updateCoverLetter, deleteCoverLetter */ } from '../lib/supabase';
@@ -42,6 +43,7 @@ const CoverLetterGenerator: React.FC<CoverLetterGeneratorProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [lastTaskId, setLastTaskId] = useState<string | null>(null); // Pour l'export
   const [isExporting, setIsExporting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false); // Pour basculer entre l'aperçu et l'édition
 
   // États généraux
   const [isLoading, setIsLoading] = useState(false);
@@ -97,9 +99,14 @@ const CoverLetterGenerator: React.FC<CoverLetterGeneratorProps> = ({
         const result: GenerationStatus = await pollGeneratedContent(taskId);
         if (result.status === 'completed') {
           clearInterval(interval);
-          setGeneratedLetter(result.content || '');
-          setEditingLetter(result.content || '');
+          // Remplacer le placeholder [Date] et préparer le contenu
+          const formattedDate = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+          const finalContent = (result.content || '').replace(/\[Date\]/g, formattedDate);
+
+          setGeneratedLetter(finalContent);
+          setEditingLetter(finalContent);
           setIsGenerating(false);
+          setIsEditing(false); // Afficher l'aperçu par défaut
           setLastTaskId(taskId);
           setTaskId(null);
           setFeedbackMessage({ type: 'success', text: t('coverLetterGenerator.feedback.generationSuccess') });
@@ -313,16 +320,31 @@ const CoverLetterGenerator: React.FC<CoverLetterGeneratorProps> = ({
           </>
         )}
           {generatedLetter && (
-            <textarea 
-              value={editingLetter}
-              onChange={(e) => setEditingLetter(e.target.value)}
-              rows={20}
-              className="w-full bg-gray-700 border-gray-600 rounded-md shadow-sm py-2 px-3 focus:ring-primary-500 focus:border-primary-500 sm:text-sm text-gray-200"
-              placeholder={t('coverLetterGenerator.placeholders.letterOutput')}
-            />
+            <div className="space-y-4">
+              {isEditing ? (
+                <textarea 
+                  value={editingLetter}
+                  onChange={(e) => setEditingLetter(e.target.value)}
+                  rows={20}
+                  className="w-full bg-gray-700 border-gray-600 rounded-md shadow-sm py-2 px-3 focus:ring-primary-500 focus:border-primary-500 sm:text-sm text-gray-200"
+                  placeholder={t('coverLetterGenerator.placeholders.letterOutput')}
+                />
+              ) : (
+                <div className="prose prose-invert bg-gray-700 p-4 rounded-md min-h-[400px]">
+                  <ReactMarkdown>{editingLetter}</ReactMarkdown>
+                </div>
+              )}
+            </div>
           )}
           {generatedLetter && (
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex flex-col sm:flex-row gap-2 pt-4">
+              <button
+                onClick={() => setIsEditing(!isEditing)}
+                className="w-full sm:w-auto flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                {isEditing ? <FaEye className="mr-2" /> : <FaPencilAlt className="mr-2" />}
+                {isEditing ? t('coverLetterGenerator.buttons.preview') : t('coverLetterGenerator.buttons.edit')}
+              </button>
               <button 
                 onClick={handleSaveLetter}
                 disabled={isGenerating || isSaving || !editingLetter}

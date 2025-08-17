@@ -183,6 +183,46 @@
     "loading": "Chargement...",
     "selectPreferredCurrencyPlaceholder": "Choisir votre devise"
   },
+  "coverLetterGenerator": {
+    "title": "Générateur de Lettre de Motivation",
+    "buttons": {
+      "generate": "Générer la lettre",
+      "generating": "Génération en cours...",
+      "save": "Sauvegarder",
+      "saving": "Sauvegarde...",
+      "edit": "Éditer",
+      "preview": "Aperçu"
+    },
+    "labels": {
+      "jobTitle": "Intitulé du poste",
+      "companyName": "Nom de l'entreprise",
+      "jobDescription": "Description de l'offre d'emploi",
+      "cv": "Utiliser le CV",
+      "customInstructions": "Instructions personnalisées (optionnel)",
+      "language": "Langue de la lettre",
+      "generatedLetter": "Lettre de motivation générée"
+    },
+    "placeholders": {
+      "jobDescription": "Collez ici la description complète de l'offre...",
+      "selectCv": "Sélectionnez un CV",
+      "customInstructions": "Ex: Mettre l'accent sur mon expérience en gestion de projet...",
+      "letterOutput": "La lettre générée apparaîtra ici..."
+    },
+    "feedback": {
+      "generationSuccess": "Lettre de motivation générée avec succès !",
+      "saved": "Lettre sauvegardée avec succès."
+    },
+    "errors": {
+      "fetchCvError": "Erreur lors de la récupération des CVs.",
+      "generationError": "La génération de la lettre a échoué.",
+      "pollingError": "Erreur lors de la récupération du résultat.",
+      "formInvalid": "Veuillez sélectionner un CV et remplir la description de l'offre.",
+      "startGenerationError": "Erreur lors du lancement de la génération.",
+      "saveFailed": "La sauvegarde a échoué. Assurez-vous que la lettre n'est pas vide."
+    },
+    "generating": "Génération en cours, veuillez patienter...",
+    "notGeneratedYet": "La lettre n'a pas encore été générée."
+  },
   "pricing": {
     "title": "Nos Plans d'Abonnement",
     "footerText": "Tous les prix sont en EUR. Choisissez le plan qui vous convient le mieux et commencez dès aujourd'hui !",
