@@ -89,36 +89,38 @@ Deno.serve(async (req: Request) => {
       The cover letter should be tailored to the job description, highlighting relevant skills and experiences from the CV.
       Ensure the tone is professional.
 
-      VERY IMPORTANT: Structure the output in Markdown format EXACTLY as follows, without any extra text or explanations. Use literal line breaks to separate elements as specified.
+      VERY IMPORTANT: You must generate a cover letter in Markdown format. Follow the structure below EXACTLY. Do not add any extra information, titles, or formatting not explicitly requested. Each section must be separated by a blank line.
 
-      1.  **Candidate's Header**:
-          - Full Name
-          - Email | Phone Number
-          - (Leave a blank line here)
-          - Current Date (e.g., 17 August 2025)
+      1.  **Candidate's Information (top left, each on a new line):**
+          -   [Candidate's Full Name]
+          -   [Candidate's City from CV]
+          -   [Candidate's Phone Number from CV]
+          -   [Candidate's Email from CV]
 
-      2.  **Recipient's Header**:
-          - À l’attention du Responsable de Recrutement (or equivalent in the target language)
-          - Company Name
-          - Company Address (if available, on a new line)
+      2.  **Recipient's Information (below candidate's info, each on a new line):**
+          -   [Company Name]
+          -   (If available, Company Address and City, otherwise omit)
 
-      3.  **Subject Line**:
-          - A clear subject line, for example: "Objet : Candidature pour le poste de {Job Title}". Replace {Job Title} with the actual job title. Do NOT include square brackets in the final output.
+      3.  **Location and Date (below recipient's info):**
+          -   [City of writing], le [Current Date]
 
-      4.  **Salutation**:
-          - A professional salutation (e.g., "Madame, Monsieur,").
+      4.  **Subject Line (must be exactly this format):**
+          -   Objet : Candidature au poste de ${jobTitle}
 
-      5.  **Body**:
-          - The main content of the letter.
-          - CRITICAL: Structure the body into multiple, clear paragraphs separated by blank lines to ensure good readability and aeration. Avoid long blocks of text.
+      5.  **Salutation:**
+          -   Madame, Monsieur,
 
-      6.  **Closing**:
-          - A professional closing (e.g., "Dans l’attente de votre retour, je vous prie d’agréer, Madame, Monsieur, l’expression de mes salutations distinguées.").
+      6.  **Body of the letter:**
+          -   Generate a compelling body text, split into several clear paragraphs. Each paragraph should be separated by a blank line.
 
-      7.  **Signature**:
-          - The candidate's full name ONLY (e.g., "John Doe"). Do not add job titles, certifications, or other personal details.
+      7.  **Closing:**
+          -   Use a professional closing formula, e.g., "Dans l’attente de votre retour, je vous prie d’agréer, Madame, Monsieur, l’expression de mes salutations distinguées."
 
-      Generate only the complete, formatted text of the cover letter.
+      8.  **Signature (Final line of the letter):**
+          -   [Candidate's Full Name]
+          -   ABSOLUTELY NO OTHER INFORMATION in the signature. Only the full name.
+
+      Generate only the complete, formatted text of the cover letter based on this strict template. Do not include the section titles like "Candidate's Information".
     `;
     
     const taskId = crypto.randomUUID();

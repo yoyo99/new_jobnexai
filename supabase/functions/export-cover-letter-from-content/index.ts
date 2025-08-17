@@ -10,14 +10,14 @@ import { corsHeaders } from '../_shared/cors.ts';
 import {
   PDFDocument,
   StandardFonts,
-} from 'https://esm.sh/v135/pdf-lib@1.17.1?target=deno';
+} from 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.esm.min.js';
 import {
   Document,
   Packer,
   Paragraph,
   HeadingLevel,
   TextRun,
-} from 'https://esm.sh/v135/docx@8.5.0?target=deno';
+} from 'https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.min.js';
 
 const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
