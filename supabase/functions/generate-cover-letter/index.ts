@@ -3,7 +3,7 @@
 // supabase/functions/generate-cover-letter/index.ts
 import { createClient } from '../_shared/deps.ts';
 
-import { corsHeaders } from '../_shared/cors.ts';
+import { getCorsHeaders } from '../_shared/cors.ts';
 
 const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
@@ -19,22 +19,23 @@ const supabaseAdmin = createClient(
 
 
 Deno.serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+  const origin = req.headers.get('Origin');
+    if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: getCorsHeaders(origin) });
   }
 
   try {
     // JWT Authentication
     const authHeader = req.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ error: 'Missing or invalid Authorization header' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ error: 'Missing or invalid Authorization header' }), { status: 401, headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' } });
     }
 
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
     
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Invalid JWT token: ' + (authError?.message || 'User not found') }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ error: 'Invalid JWT token: ' + (authError?.message || 'User not found') }), { status: 401, headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' } });
     }
 
     const body = await req.json();
@@ -49,12 +50,12 @@ Deno.serve(async (req: Request) => {
     try { console.log('generate-cover-letter payload keys:', Object.keys(body)); } catch (_) { /* ignore logging errors */ }
 
     if (!cvText || !jobTitle || !companyName || !jobDescription || !targetLanguage) {
-      return new Response(JSON.stringify({ error: 'Missing required fields: cvText, jobTitle, companyName, jobDescription, targetLanguage.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ error: 'Missing required fields: cvText, jobTitle, companyName, jobDescription, targetLanguage.' }), { status: 400, headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' } });
     }
 
     const mistralApiKey = Deno.env.get('MISTRAL_API_KEY');
     if (!mistralApiKey) {
-      return new Response(JSON.stringify({ error: 'MISTRAL_API_KEY is not set in environment variables.' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ error: 'MISTRAL_API_KEY is not set in environment variables.' }), { status: 500, headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' } });
     }
 
     const systemMessage = `You are an expert cover letter writer. Your task is to generate a compelling and professional cover letter in ${targetLanguage}.`;
@@ -115,7 +116,7 @@ Deno.serve(async (req: Request) => {
     if (insertError) {
       console.error('Error inserting task:', insertError);
       return new Response(JSON.stringify({ error: 'Failed to create generation task.' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' },
         status: 500,
       });
     }
@@ -228,7 +229,7 @@ ${candidateFullName}
     return new Response(
       JSON.stringify({ taskId }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' },
         status: 202, // Accepted
       }
     );
@@ -260,7 +261,7 @@ ${candidateFullName}
     return new Response(
       JSON.stringify({ error: errorMessage }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' },
         status: isInputError ? 400 : 500
       }
     );

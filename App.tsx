@@ -94,7 +94,7 @@ function App() {
               } />
               <Route path="letters" element={<UserCoverLetters />} />
               <Route path="cover-letter-generator" element={
-                <ProtectedRoute requiresSubscription>
+                <ProtectedRoute>
                   <CoverLetterGenerator />
                 </ProtectedRoute>
               } />

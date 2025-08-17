@@ -4,7 +4,7 @@
 // or directly streams the file back when mode=download.
 
 import { createClient } from '../_shared/deps.ts';
-import { corsHeaders } from '../_shared/cors.ts';
+import { getCorsHeaders } from '../_shared/cors.ts';
 
 // ESM pinned deps for Edge/Deno runtime
 import {
@@ -29,10 +29,10 @@ const supabaseAdmin = createClient(
 
 const EXPORT_BUCKET = Deno.env.get('EXPORT_BUCKET') ?? 'generated_letters';
 
-function jsonResponse(body: unknown, status = 200) {
+function jsonResponse(body: unknown, origin: string | null, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' },
   });
 }
 
@@ -88,21 +88,23 @@ async function ensureBucketExists(): Promise<void> {
 }
 
 Deno.serve(async (req: Request) => {
+  const origin = req.headers.get('Origin');
+
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { headers: getCorsHeaders(origin) });
   }
 
   try {
     // Auth (user must be authenticated)
     const authHeader = req.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return jsonResponse({ error: 'Missing or invalid Authorization header' }, 401);
+      return jsonResponse({ error: 'Missing or invalid Authorization header' }, origin, 401);
     }
 
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
     if (authError || !user) {
-      return jsonResponse({ error: 'Invalid JWT token' }, 401);
+      return jsonResponse({ error: 'Invalid JWT token' }, origin, 401);
     }
 
     // Input
@@ -117,7 +119,7 @@ Deno.serve(async (req: Request) => {
     const filenameOverride = (body.filename ?? url.searchParams.get('filename')) as string | null;
 
     if (!rawContent || rawContent.trim().length === 0) {
-      return jsonResponse({ error: 'Missing content' }, 400);
+      return jsonResponse({ error: 'Missing content' }, origin, 400);
     }
 
     // Clean content from markdown for export
@@ -207,7 +209,7 @@ Deno.serve(async (req: Request) => {
 
     if (uploadRes.error) {
       console.error('Storage upload error:', uploadRes.error);
-      return jsonResponse({ error: 'Failed to store exported file' }, 500);
+      return jsonResponse({ error: 'Failed to store exported file' }, origin, 500);
     }
 
     if (mode === 'download') {
@@ -215,7 +217,7 @@ Deno.serve(async (req: Request) => {
       return new Response(fileBlob, {
         status: 200,
         headers: {
-          ...corsHeaders,
+          ...getCorsHeaders(origin),
           'Content-Type': mime,
           'Content-Disposition': `attachment; filename="${baseName}.${ext}"`,
         },
@@ -228,7 +230,7 @@ Deno.serve(async (req: Request) => {
 
     if (signErr) {
       console.error('Create signed URL error:', signErr);
-      return jsonResponse({ error: 'Failed to create signed URL', path: objectPath }, 500);
+      return jsonResponse({ error: 'Failed to create signed URL', path: objectPath }, origin, 500);
     }
 
     return jsonResponse({
@@ -237,10 +239,10 @@ Deno.serve(async (req: Request) => {
       signedUrl: signed.signedUrl,
       expiresIn: 3600,
       format: ext,
-    });
+    }, origin);
   } catch (e) {
     console.error('export-cover-letter-from-content error:', e);
     const msg = e instanceof Error ? e.message : String(e);
-    return jsonResponse({ error: msg }, 500);
+    return jsonResponse({ error: msg }, origin, 500);
   }
 });
