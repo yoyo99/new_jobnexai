@@ -87,6 +87,11 @@ function App() {
                   <JobSearch />
                 </ProtectedRoute>
               } />
+              <Route path="jobs-search" element={
+                <ProtectedRoute requiresSubscription>
+                  <JobSearch />
+                </ProtectedRoute>
+              } />
               <Route path="applications" element={
                 <ProtectedRoute requiresSubscription>
                   <JobApplications />

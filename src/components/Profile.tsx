@@ -15,7 +15,9 @@ import UserCVs from './UserCVs';
 import CoverLetterGenerator from './CoverLetterGenerator';
 import IMAPJobScraper from './IMAPJobScraper';
 import JobNotificationSettings from './JobNotificationSettings';
+import AdminProtection from './AdminProtection';
 import AdminSettings from './AdminSettings';
+import WebScrapingManager from './WebScrapingManager';
 import { StatusMessageType } from '../types/common';
 
 function Profile() {
@@ -29,7 +31,7 @@ function Profile() {
   const [website, setWebsite] = useState(user?.website || '');
   const [message, setMessage] = useState<StatusMessageType | null>(null)
   const { t } = useTranslation()
-  const [activeTab, setActiveTab] = useState<'profile' | 'preferences' | 'ai' | 'skills' | 'alerts' | 'subscription' | 'webhook' | 'cvs' | 'coverLetterGenerator' | 'imap' | 'notifications' | 'admin'>('profile')
+  const [activeTab, setActiveTab] = useState<'profile' | 'preferences' | 'ai' | 'skills' | 'alerts' | 'subscription' | 'webhook' | 'cvs' | 'coverLetterGenerator' | 'imap' | 'notifications' | 'web-scraping' | 'admin'>('profile')
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -168,21 +170,31 @@ function Profile() {
             onClick={() => setActiveTab('imap')}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'imap'
-                ? 'border-primary-400 text-primary-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+                ? 'bg-primary-600 text-white'
+                : 'bg-white/10 text-gray-300 hover:bg-white/20'
             }`}
           >
             Scraping Email
           </button>
           <button
             onClick={() => setActiveTab('notifications')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+            className={`px-4 py-2 rounded-lg transition-colors ${
               activeTab === 'notifications'
-                ? 'border-primary-400 text-primary-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+                ? 'bg-primary-600 text-white'
+                : 'bg-white/10 text-gray-300 hover:bg-white/20'
             }`}
           >
             Notifications
+          </button>
+          <button
+            onClick={() => setActiveTab('web-scraping')}
+            className={`px-4 py-2 rounded-lg transition-colors ${
+              activeTab === 'web-scraping'
+                ? 'bg-primary-600 text-white'
+                : 'bg-white/10 text-gray-300 hover:bg-white/20'
+            }`}
+          >
+            Scraping Web
           </button>
           {/* Onglet Admin visible uniquement pour les admins */}
           {(user?.is_admin || user?.user_type === 'admin') && (
@@ -418,6 +430,16 @@ function Profile() {
           className="card"
         >
           <JobNotificationSettings />
+        </motion.div>
+      )}
+
+      {activeTab === 'web-scraping' && user?.id && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="card"
+        >
+          <WebScrapingManager />
         </motion.div>
       )}
 
