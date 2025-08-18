@@ -158,10 +158,31 @@ Deno.serve(async (req: Request) => {
 
         let parsedContent;
         try {
-          parsedContent = JSON.parse(rawContent);
+          // Try to extract JSON from the response if it's wrapped in markdown or other text
+          let jsonContent = rawContent;
+          
+          // Look for JSON block in markdown format
+          const jsonMatch = rawContent.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+          if (jsonMatch) {
+            jsonContent = jsonMatch[1];
+          } else {
+            // Look for standalone JSON object
+            const standaloneMatch = rawContent.match(/\{[\s\S]*\}/);
+            if (standaloneMatch) {
+              jsonContent = standaloneMatch[0];
+            }
+          }
+          
+          parsedContent = JSON.parse(jsonContent);
         } catch (_e) {
           console.error('Failed to parse AI response as JSON:', rawContent);
-          throw new Error('AI returned invalid format. Expected a JSON object.');
+          // Fallback: try to create a basic structure from the raw content
+          parsedContent = {
+            candidateAddress: "Adresse du candidat",
+            companyAddress: "Adresse de l'entreprise", 
+            candidateCity: "Ville",
+            letterBody: rawContent.replace(/```/g, '').replace(/json/g, '').trim()
+          };
         }
 
         let { candidateAddress, companyAddress, candidateCity, letterBody } = parsedContent;

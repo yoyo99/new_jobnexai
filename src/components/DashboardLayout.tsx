@@ -66,7 +66,7 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
       setNavigation([
         { name: 'navigation.dashboard', href: '/app/dashboard', icon: HomeIcon },
         { name: 'navigation.jobSearch', href: '/app/jobs', icon: FolderIcon },
-        { name: 'navigation.applications', href: '/app/suivi', icon: ClipboardDocumentListIcon },
+        { name: 'navigation.applications', href: '/app/applications', icon: ClipboardDocumentListIcon },
         { name: 'navigation.letters', href: '/app/letters', icon: DocumentTextIcon },
         { name: 'navigation.coverLetterGenerator', href: '/app/cover-letter-generator', icon: PlusCircleIcon },
         { name: 'navigation.cvBuilder', href: '/app/cv-builder', icon: DocumentTextIcon },

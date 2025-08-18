@@ -21,8 +21,8 @@ const publicNavigation = [
 // Navigation pour les utilisateurs connectés (avant admin)
 const userCoreNavigation = [
   { name: 'navigation.dashboard', href: '/app/dashboard' },
-  { name: 'navigation.jobSearch', href: '/app/job-search' },
-  { name: 'navigation.applications', href: '/app/suivi' },
+  { name: 'navigation.jobSearch', href: '/app/jobs' },
+  { name: 'navigation.applications', href: '/app/applications' },
   { name: 'navigation.letters', href: '/app/letters' },
   { name: 'navigation.coverLetterGenerator', href: '/app/cover-letter-generator' },
   { name: 'navigation.cvBuilder', href: '/app/cv-builder' },
