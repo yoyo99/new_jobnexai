@@ -136,6 +136,9 @@ Deno.serve(async (req: Request) => {
     const backgroundTask = async () => {
       try {
         console.log(`Starting background task for task_id: ${taskId}`);
+        console.log('Sending request to Mammouth AI with CV content length:', cvText.length);
+        console.log('User prompt includes candidateName extraction:', userPrompt.includes('candidateName'));
+        
         const mammouthResponse = await fetch('https://api.mammouth.ai/v1/chat/completions', {
           method: 'POST',
           headers: {
@@ -157,23 +160,22 @@ Deno.serve(async (req: Request) => {
           throw new Error(`Mammouth API error: ${mammouthResponse.status} ${errorBody}`);
         }
 
-        const completion = await mammouthResponse.json();
-        const rawContent = completion.choices[0]?.message?.content?.trim();
-        if (!rawContent) {
-          throw new Error('AI returned empty content.');
-        }
+        const mammouthResult = await mammouthResponse.json();
+        const rawContent = mammouthResult.choices?.[0]?.message?.content || '';
+        
+        console.log('Raw AI response:', rawContent.substring(0, 500) + '...');
 
+        // Parse the AI response
         let parsedContent;
         try {
-          // Try to extract JSON from the response if it's wrapped in markdown or other text
           let jsonContent = rawContent;
           
-          // Look for JSON block in markdown format
-          const jsonMatch = rawContent.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
-          if (jsonMatch) {
-            jsonContent = jsonMatch[1];
+          // Try to extract JSON from markdown code blocks
+          const codeBlockMatch = rawContent.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+          if (codeBlockMatch) {
+            jsonContent = codeBlockMatch[1];
           } else {
-            // Look for standalone JSON object
+            // Try to find standalone JSON object
             const standaloneMatch = rawContent.match(/\{[\s\S]*\}/);
             if (standaloneMatch) {
               jsonContent = standaloneMatch[0];
@@ -181,6 +183,7 @@ Deno.serve(async (req: Request) => {
           }
           
           parsedContent = JSON.parse(jsonContent);
+          console.log('Parsed candidateName from AI:', parsedContent.candidateName);
         } catch (_e) {
           console.error('Failed to parse AI response as JSON:', rawContent);
           // Fallback: try to create a basic structure from the raw content
