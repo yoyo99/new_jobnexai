@@ -332,8 +332,10 @@ const CoverLetterGenerator: React.FC<CoverLetterGeneratorProps> = ({
                   <div className="text-right mb-4 text-gray-300">
                     {new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </div>
-                  <div className="prose prose-invert max-w-none">
-                    <ReactMarkdown>{editingLetter.replace(/\\[Date\\]/g, '').trim()}</ReactMarkdown>
+                  <div className="prose prose-invert max-w-none text-white/90">
+                    <div dangerouslySetInnerHTML={{ 
+                      __html: editingLetter.replace(/\\[Date\\]/g, '').trim()
+                    }} />
                   </div>
                 </div>
               )}
