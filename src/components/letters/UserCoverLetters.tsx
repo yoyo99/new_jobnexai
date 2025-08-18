@@ -292,4 +292,5 @@ function UserCoverLetters() {
   );
 }
 
+// Force rebuild - fix double export default issue
 export default UserCoverLetters;
