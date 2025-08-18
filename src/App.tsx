@@ -93,6 +93,7 @@ const JobApplications = React.lazy(() => import('./components/JobApplications'))
 const MarketAnalysis = React.lazy(() => import('./components/MarketAnalysis'));
 const CVBuilder = React.lazy(() => import('./components/cv/CVBuilder'));
 const UserCoverLetters = React.lazy(() => import('./components/letters/UserCoverLetters'));
+const CoverLetterGenerator = React.lazy(() => import('./components/CoverLetterGenerator'));
 const Settings = React.lazy(() => import('./components/Settings').then(module => ({ default: module.Settings }))); // AJOUTÉ POUR LA PAGE SETTINGS
 const NetworkPage = React.lazy(() => import('./components/NetworkPage'));
 const MarketTrendsPage = React.lazy(() => import('./components/pages/MarketTrendsPage'));
@@ -213,6 +214,7 @@ function App() {
                 <Route path="dashboard" element={<LazyComponentWrapper><Dashboard /></LazyComponentWrapper>} />
                 <Route path="profile" element={<LazyComponentWrapper><Profile /></LazyComponentWrapper>} />
                 <Route path="letters" element={<LazyComponentWrapper><UserCoverLetters /></LazyComponentWrapper>} />
+                <Route path="cover-letter-generator" element={<ProtectedRoute requiresSubscription><LazyComponentWrapper><CoverLetterGenerator /></LazyComponentWrapper></ProtectedRoute>} />
                 <Route path="billing" element={<LazyComponentWrapper><Billing /></LazyComponentWrapper>} />
                 <Route path="settings" element={<LazyComponentWrapper><Settings /></LazyComponentWrapper>} />
                 <Route path="admin" element={<LazyComponentWrapper><Admin /></LazyComponentWrapper>} />

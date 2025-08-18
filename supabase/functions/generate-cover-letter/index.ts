@@ -95,9 +95,10 @@ Deno.serve(async (req: Request) => {
 
       VERY IMPORTANT:
       - Respond ONLY with a valid JSON object containing four keys: "candidateAddress", "companyAddress", "candidateCity", and "letterBody".
-      - The "letterBody" must only contain the paragraphs of the letter. It must NOT include salutations, subject, date, or signature.
+      - The "letterBody" must only contain the paragraphs of the letter in PLAIN TEXT format. It must NOT include salutations, subject, date, or signature.
+      - DO NOT use HTML tags like <p>, <strong>, <br> in the letterBody. Use plain text with line breaks only.
       - "candidateAddress" and "companyAddress" must be full, multi-line addresses formatted as a single string with '\n' for newlines.
-      - Absolutely DO NOT use any placeholders like [Date], [Adresse de l’entreprise], [Your Name], etc. The content must be complete and ready to use.
+      - Absolutely DO NOT use any placeholders like [Date], [Adresse de l'entreprise], [Your Name], etc. The content must be complete and ready to use.
 
       Example response format:
       {
@@ -187,9 +188,11 @@ Deno.serve(async (req: Request) => {
 
         let { candidateAddress, companyAddress, candidateCity, letterBody } = parsedContent;
 
-        // Clean the letter body of any remaining placeholders
+        // Clean the letter body of any remaining placeholders and convert to HTML paragraphs
         if (letterBody) {
           letterBody = letterBody.replace(/\[.*?\]/g, '').trim();
+          // Convert plain text paragraphs to HTML
+          letterBody = letterBody.split('\n\n').map((paragraph: string) => `<p>${paragraph.trim()}</p>`).join('\n');
         }
 
         if (!letterBody || !candidateAddress || !candidateCity) {
