@@ -200,48 +200,59 @@ Deno.serve(async (req: Request) => {
         }
 
         // --- Assemble the full letter --- 
-        const candidateFullName = user.user_metadata?.full_name || user.user_metadata?.name || user.user_metadata?.first_name + ' ' + user.user_metadata?.last_name || 'Nom Prénom';
+        const candidateFullName = user.user_metadata?.full_name || user.user_metadata?.name || 
+          (user.user_metadata?.first_name && user.user_metadata?.last_name ? 
+            `${user.user_metadata.first_name} ${user.user_metadata.last_name}` : 
+            'Test_Sass');
         const candidateEmail = user.email || '';
         const candidatePhone = user.user_metadata?.phone || user.phone || '';
 
         const currentDate = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 
         const finalLetter = `
-<div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px;">
-  <div style="margin-bottom: 30px;">
-    <div style="margin-bottom: 5px; font-weight: bold;">${candidateFullName}</div>
-    <div style="margin-bottom: 5px;">${candidateEmail}</div>
-    <div style="margin-bottom: 5px;">${candidatePhone}</div>
-    <div style="margin-bottom: 20px;">${candidateAddress}</div>
+<div style="font-family: 'Times New Roman', serif; line-height: 1.8; max-width: 21cm; margin: 0 auto; padding: 2cm; background: white; color: black;">
+  <!-- En-tête candidat -->
+  <div style="margin-bottom: 2cm;">
+    <div style="font-weight: bold; font-size: 14px; margin-bottom: 8px;">${candidateFullName}</div>
+    <div style="font-size: 12px; margin-bottom: 4px;">${candidateEmail}</div>
+    <div style="font-size: 12px; margin-bottom: 4px;">${candidatePhone}</div>
+    <div style="font-size: 12px; white-space: pre-line;">${candidateAddress}</div>
   </div>
 
-  <div style="margin-bottom: 30px;">
-    <div style="margin-bottom: 20px;">${companyAddress || ''}</div>
-    <div style="margin-bottom: 5px;">À l'attention du service de recrutement</div>
-    <div style="margin-bottom: 20px; font-weight: bold;">${companyName}</div>
+  <!-- Adresse entreprise -->
+  <div style="margin-bottom: 2cm;">
+    <div style="font-size: 12px; white-space: pre-line; margin-bottom: 1cm;">${companyAddress || ''}</div>
+    <div style="font-size: 12px; margin-bottom: 4px;">À l'attention du service de recrutement</div>
+    <div style="font-size: 12px; font-weight: bold;">${companyName}</div>
   </div>
 
-  <div style="text-align: right; margin-bottom: 30px;">
+  <!-- Date et lieu -->
+  <div style="text-align: right; margin-bottom: 2cm; font-size: 12px;">
     Fait à ${candidateCity}, le ${currentDate}
   </div>
 
-  <div style="margin-bottom: 30px; font-weight: bold;">
-    Objet : Candidature au poste de ${jobTitle}
+  <!-- Objet -->
+  <div style="margin-bottom: 1.5cm; font-size: 12px;">
+    <strong>Objet : Candidature au poste de ${jobTitle}</strong>
   </div>
 
-  <div style="margin-bottom: 20px;">
+  <!-- Formule d'appel -->
+  <div style="margin-bottom: 1cm; font-size: 12px;">
     Madame, Monsieur,
   </div>
 
-  <div style="margin-bottom: 30px;">
+  <!-- Corps de la lettre -->
+  <div style="margin-bottom: 1.5cm; font-size: 12px; text-align: justify;">
     ${letterBody}
   </div>
 
-  <div style="margin-bottom: 20px;">
+  <!-- Formule de politesse -->
+  <div style="margin-bottom: 2cm; font-size: 12px;">
     Dans l'attente de votre retour, je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.
   </div>
 
-  <div style="margin-top: 40px; font-weight: bold;">
+  <!-- Signature -->
+  <div style="font-size: 12px; font-weight: bold;">
     ${candidateFullName}
   </div>
 </div>
