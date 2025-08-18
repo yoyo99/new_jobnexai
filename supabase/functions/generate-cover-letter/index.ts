@@ -213,9 +213,14 @@ Deno.serve(async (req: Request) => {
           letterBody = letterBody.split('\n\n').map((paragraph: string) => `<p>${paragraph.trim()}</p>`).join('\n');
         }
 
-        if (!letterBody || !candidateAddress || !candidateCity || !candidateName) {
-          throw new Error('AI response is missing required `letterBody`, `candidateAddress`, `candidateCity` or `candidateName` keys.');
+        if (!letterBody) {
+          throw new Error('AI response is missing required `letterBody` key.');
         }
+        
+        // Use fallback values if extraction failed
+        if (!candidateName) candidateName = "Nom Prénom";
+        if (!candidateAddress) candidateAddress = "Adresse du candidat";
+        if (!candidateCity) candidateCity = "Ville";
 
         // --- Assemble the full letter --- 
         const candidateFullName = candidateName || 'Test_Sass';
