@@ -206,24 +206,45 @@ Deno.serve(async (req: Request) => {
 
         const currentDate = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 
-        const finalLetter = `<p>${candidateFullName}<br>${candidateEmail}<br>${candidatePhone}<br>${candidateAddress}</p>
-<br>
-<p>${companyAddress || ''}</p>
+        const finalLetter = `
+<div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px;">
+  <div style="margin-bottom: 30px;">
+    <div style="margin-bottom: 5px; font-weight: bold;">${candidateFullName}</div>
+    <div style="margin-bottom: 5px;">${candidateEmail}</div>
+    <div style="margin-bottom: 5px;">${candidatePhone}</div>
+    <div style="margin-bottom: 20px;">${candidateAddress}</div>
+  </div>
 
-<p>À l'attention du service de recrutement<br>
-${companyName}</p>
+  <div style="margin-bottom: 30px;">
+    <div style="margin-bottom: 20px;">${companyAddress || ''}</div>
+    <div style="margin-bottom: 5px;">À l'attention du service de recrutement</div>
+    <div style="margin-bottom: 20px; font-weight: bold;">${companyName}</div>
+  </div>
 
-<p>Fait à ${candidateCity}, le ${currentDate}</p>
+  <div style="text-align: right; margin-bottom: 30px;">
+    Fait à ${candidateCity}, le ${currentDate}
+  </div>
 
-<p><strong>Objet : Candidature au poste de ${jobTitle}</strong></p>
+  <div style="margin-bottom: 30px; font-weight: bold;">
+    Objet : Candidature au poste de ${jobTitle}
+  </div>
 
-<p>Madame, Monsieur,</p>
+  <div style="margin-bottom: 20px;">
+    Madame, Monsieur,
+  </div>
 
-${letterBody}
+  <div style="margin-bottom: 30px;">
+    ${letterBody}
+  </div>
 
-<p>Dans l'attente de votre retour, je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.</p>
+  <div style="margin-bottom: 20px;">
+    Dans l'attente de votre retour, je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.
+  </div>
 
-<p>${candidateFullName}</p>
+  <div style="margin-top: 40px; font-weight: bold;">
+    ${candidateFullName}
+  </div>
+</div>
         `.trim();
 
         await supabaseAdmin
