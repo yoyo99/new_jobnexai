@@ -56,9 +56,9 @@ Deno.serve(async (req: Request) => {
       return new Response(JSON.stringify({ error: 'Missing required fields: cvText, jobTitle, companyName, jobDescription, targetLanguage.' }), { status: 400, headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' } });
     }
 
-    const mistralApiKey = Deno.env.get('MISTRAL_API_KEY');
-    if (!mistralApiKey) {
-      return new Response(JSON.stringify({ error: 'MISTRAL_API_KEY is not set in environment variables.' }), { status: 500, headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' } });
+    const mammouthApiKey = Deno.env.get('MAMMOUTH_API_KEY');
+    if (!mammouthApiKey) {
+      return new Response(JSON.stringify({ error: 'MAMMOUTH_API_KEY is not set in environment variables.' }), { status: 500, headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' } });
     }
 
     const systemMessage = `You are an expert cover letter writer. Your task is to generate a compelling and professional cover letter in ${targetLanguage}.`;
@@ -129,14 +129,14 @@ Deno.serve(async (req: Request) => {
     const backgroundTask = async () => {
       try {
         console.log(`Starting background task for task_id: ${taskId}`);
-        const mistralResponse = await fetch('https://api.mistral.ai/v1/chat/completions', {
+        const mammouthResponse = await fetch('https://api.mammouth.ai/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${mistralApiKey}`,
+            'Authorization': `Bearer ${mammouthApiKey}`,
           },
           body: JSON.stringify({
-            model: 'mistral-large-latest',
+            model: 'claude-3-sonnet',
             messages: [
               { role: 'system', content: systemMessage },
               { role: 'user', content: userPrompt }
@@ -145,12 +145,12 @@ Deno.serve(async (req: Request) => {
           }),
         });
 
-        if (!mistralResponse.ok) {
-          const errorBody = await mistralResponse.text();
-          throw new Error(`Mistral API error: ${mistralResponse.status} ${errorBody}`);
+        if (!mammouthResponse.ok) {
+          const errorBody = await mammouthResponse.text();
+          throw new Error(`Mammouth API error: ${mammouthResponse.status} ${errorBody}`);
         }
 
-        const completion = await mistralResponse.json();
+        const completion = await mammouthResponse.json();
         const rawContent = completion.choices[0]?.message?.content?.trim();
         if (!rawContent) {
           throw new Error('AI returned empty content.');
@@ -288,7 +288,7 @@ ${candidateFullName}
         console.error(errorStack);
     }
 
-    const isInputError = errorMessage === 'MISTRAL_API_KEY is not set in environment variables.' || errorMessage.startsWith('Missing required fields');
+    const isInputError = errorMessage === 'MAMMOUTH_API_KEY is not set in environment variables.' || errorMessage.startsWith('Missing required fields');
 
     return new Response(
       JSON.stringify({ error: errorMessage }),
@@ -302,7 +302,7 @@ ${candidateFullName}
 
 /*
 Variables d'environnement à configurer dans Supabase Dashboard > Edge Functions > generate-cover-letter > Settings:
-- MISTRAL_API_KEY: Votre clé API Mistral.
+- MAMMOUTH_API_KEY: Votre clé API Mammouth.
 
 Pour invoquer localement (après supabase start) :
   curl -i --location --request POST 'http://127.0.0.1:54321/functions/v1/generate-cover-letter' \
