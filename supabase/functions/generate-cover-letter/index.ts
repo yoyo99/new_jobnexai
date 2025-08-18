@@ -90,11 +90,16 @@ Deno.serve(async (req: Request) => {
     }
 
     userPrompt += `
-      Based on the provided CV and job offer, identify the candidate's full address and the company's full address.
-      Then, generate a compelling body for a cover letter, tailored to the job description and highlighting relevant skills from the CV.
+      Based on the provided CV and job offer, extract the following information:
+      1. Extract the candidate's full name (first name + last name) from the CV content
+      2. Extract the candidate's full address from the CV content
+      3. Extract the candidate's city from the CV content or address
+      4. Identify the company's full address (if available in job description, otherwise leave empty)
+      5. Generate a compelling body for a cover letter, tailored to the job description and highlighting relevant skills from the CV
 
       VERY IMPORTANT:
-      - Respond ONLY with a valid JSON object containing four keys: "candidateAddress", "companyAddress", "candidateCity", and "letterBody".
+      - Respond ONLY with a valid JSON object containing five keys: "candidateName", "candidateAddress", "companyAddress", "candidateCity", and "letterBody".
+      - The "candidateName" must be the full name extracted from the CV (e.g., "Jean Dupont")
       - The "letterBody" must only contain the paragraphs of the letter in PLAIN TEXT format. It must NOT include salutations, subject, date, or signature.
       - DO NOT use HTML tags like <p>, <strong>, <br> in the letterBody. Use plain text with line breaks only.
       - "candidateAddress" and "companyAddress" must be full, multi-line addresses formatted as a single string with '\n' for newlines.
@@ -102,6 +107,7 @@ Deno.serve(async (req: Request) => {
 
       Example response format:
       {
+        "candidateName": "Jean Dupont",
         "candidateAddress": "123 Rue de la République\n75001 Paris",
         "companyAddress": "456 Avenue des Champs-Élysées\n75008 Paris",
         "candidateCity": "Paris",
@@ -179,6 +185,7 @@ Deno.serve(async (req: Request) => {
           console.error('Failed to parse AI response as JSON:', rawContent);
           // Fallback: try to create a basic structure from the raw content
           parsedContent = {
+            candidateName: "Test_Sass",
             candidateAddress: "Adresse du candidat",
             companyAddress: "Adresse de l'entreprise", 
             candidateCity: "Ville",
@@ -186,7 +193,7 @@ Deno.serve(async (req: Request) => {
           };
         }
 
-        let { candidateAddress, companyAddress, candidateCity, letterBody } = parsedContent;
+        let { candidateName, candidateAddress, companyAddress, candidateCity, letterBody } = parsedContent;
 
         // Clean the letter body of any remaining placeholders and convert to HTML paragraphs
         if (letterBody) {
@@ -195,15 +202,12 @@ Deno.serve(async (req: Request) => {
           letterBody = letterBody.split('\n\n').map((paragraph: string) => `<p>${paragraph.trim()}</p>`).join('\n');
         }
 
-        if (!letterBody || !candidateAddress || !candidateCity) {
-          throw new Error('AI response is missing required `letterBody`, `candidateAddress` or `candidateCity` keys.');
+        if (!letterBody || !candidateAddress || !candidateCity || !candidateName) {
+          throw new Error('AI response is missing required `letterBody`, `candidateAddress`, `candidateCity` or `candidateName` keys.');
         }
 
         // --- Assemble the full letter --- 
-        const candidateFullName = user.user_metadata?.full_name || user.user_metadata?.name || 
-          (user.user_metadata?.first_name && user.user_metadata?.last_name ? 
-            `${user.user_metadata.first_name} ${user.user_metadata.last_name}` : 
-            'Test_Sass');
+        const candidateFullName = candidateName || 'Test_Sass';
         const candidateEmail = user.email || '';
         const candidatePhone = user.user_metadata?.phone || user.phone || '';
 
