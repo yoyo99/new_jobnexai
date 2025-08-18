@@ -13,6 +13,9 @@ import { StripeWebhookInfo } from './StripeWebhookInfo'
 import UserAISettings from './UserAISettings';
 import UserCVs from './UserCVs';
 import CoverLetterGenerator from './CoverLetterGenerator';
+import IMAPJobScraper from './IMAPJobScraper';
+import JobNotificationSettings from './JobNotificationSettings';
+import AdminSettings from './AdminSettings';
 import { StatusMessageType } from '../types/common';
 
 function Profile() {
@@ -26,7 +29,7 @@ function Profile() {
   const [website, setWebsite] = useState(user?.website || '');
   const [message, setMessage] = useState<StatusMessageType | null>(null)
   const { t } = useTranslation()
-  const [activeTab, setActiveTab] = useState<'profile' | 'preferences' | 'ai' | 'skills' | 'alerts' | 'subscription' | 'webhook' | 'cvs' | 'coverLetterGenerator'>('profile')
+  const [activeTab, setActiveTab] = useState<'profile' | 'preferences' | 'ai' | 'skills' | 'alerts' | 'subscription' | 'webhook' | 'cvs' | 'coverLetterGenerator' | 'imap' | 'notifications' | 'admin'>('profile')
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -161,6 +164,39 @@ function Profile() {
           >
             {t('profile.tabs.coverLetterGenerator')}
           </button>
+          <button
+            onClick={() => setActiveTab('imap')}
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'imap'
+                ? 'border-primary-400 text-primary-400'
+                : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+            }`}
+          >
+            Scraping Email
+          </button>
+          <button
+            onClick={() => setActiveTab('notifications')}
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'notifications'
+                ? 'border-primary-400 text-primary-400'
+                : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+            }`}
+          >
+            Notifications
+          </button>
+          {/* Onglet Admin visible uniquement pour les admins */}
+          {(user?.is_admin || user?.user_type === 'admin') && (
+            <button
+              onClick={() => setActiveTab('admin')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'admin'
+                  ? 'border-primary-400 text-primary-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+              }`}
+            >
+              Administration
+            </button>
+          )}
         </nav>
       </div>
 
@@ -362,6 +398,36 @@ function Profile() {
           className="card"
         >
           <CoverLetterGenerator />
+        </motion.div>
+      )}
+
+      {activeTab === 'imap' && user?.id && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="card"
+        >
+          <IMAPJobScraper />
+        </motion.div>
+      )}
+
+      {activeTab === 'notifications' && user?.id && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="card"
+        >
+          <JobNotificationSettings />
+        </motion.div>
+      )}
+
+      {activeTab === 'admin' && user?.id && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="card"
+        >
+          <AdminSettings />
         </motion.div>
       )}
     </div>
