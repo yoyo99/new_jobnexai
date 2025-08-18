@@ -200,7 +200,7 @@ Deno.serve(async (req: Request) => {
         }
 
         // --- Assemble the full letter --- 
-        const candidateFullName = user.user_metadata?.full_name || user.user_metadata?.name || 'Candidat';
+        const candidateFullName = user.user_metadata?.full_name || user.user_metadata?.name || user.user_metadata?.first_name + ' ' + user.user_metadata?.last_name || 'Nom Prénom';
         const candidateEmail = user.email || '';
         const candidatePhone = user.user_metadata?.phone || user.phone || '';
 
