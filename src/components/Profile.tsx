@@ -170,31 +170,31 @@ function Profile() {
             onClick={() => setActiveTab('imap')}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'imap'
-                ? 'bg-primary-600 text-white'
-                : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                ? 'border-primary-400 text-primary-400'
+                : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
             }`}
           >
             Scraping Email
           </button>
           <button
-            onClick={() => setActiveTab('notifications')}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              activeTab === 'notifications'
-                ? 'bg-primary-600 text-white'
-                : 'bg-white/10 text-gray-300 hover:bg-white/20'
-            }`}
-          >
-            Notifications
-          </button>
-          <button
             onClick={() => setActiveTab('web-scraping')}
-            className={`px-4 py-2 rounded-lg transition-colors ${
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'web-scraping'
-                ? 'bg-primary-600 text-white'
-                : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                ? 'border-primary-400 text-primary-400'
+                : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
             }`}
           >
             Scraping Web
+          </button>
+          <button
+            onClick={() => setActiveTab('notifications')}
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'notifications'
+                ? 'border-primary-400 text-primary-400'
+                : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+            }`}
+          >
+            Notifications
           </button>
           {/* Onglet Admin visible uniquement pour les admins */}
           {(user?.is_admin || user?.user_type === 'admin') && (
