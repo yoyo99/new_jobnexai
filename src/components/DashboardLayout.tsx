@@ -14,7 +14,8 @@ import {
   MagnifyingGlassIcon,
   PlusCircleIcon,
   CreditCardIcon,
-  Cog6ToothIcon, // Ajout de l'icône Paramètres
+  Cog6ToothIcon,
+  GlobeAltIcon, // Ajout de l'icône pour Scraping Web
 } from '@heroicons/react/24/outline'
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom' // Already v6 compatible
 import { useTranslation } from 'react-i18next'
@@ -66,6 +67,7 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
       setNavigation([
         { name: 'navigation.dashboard', href: '/app/dashboard', icon: HomeIcon },
         { name: 'navigation.jobSearch', href: '/app/jobs', icon: FolderIcon },
+        { name: 'Scraping Web', href: '/app/web-scraping', icon: GlobeAltIcon },
         { name: 'navigation.applications', href: '/app/applications', icon: ClipboardDocumentListIcon },
         { name: 'navigation.letters', href: '/app/letters', icon: DocumentTextIcon },
         { name: 'navigation.coverLetterGenerator', href: '/app/cover-letter-generator', icon: PlusCircleIcon },

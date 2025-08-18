@@ -291,3 +291,5 @@ export default function UserCoverLetters() {
     </div>
   );
 }
+
+export default UserCoverLetters;

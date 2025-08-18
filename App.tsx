@@ -1,3 +1,4 @@
+import React from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { DashboardLayout } from './components/DashboardLayout'
 import { JobSearch } from './components/JobSearch'
@@ -28,12 +29,13 @@ import { CandidateSearch } from './components/recruiter/CandidateSearch'
 import { JobPostings } from './components/recruiter/JobPostings'
 import { CreateJobPosting } from './components/recruiter/CreateJobPosting'
 import { UserTypeSelection } from './components/UserTypeSelection'
+import { WebScrapingManager } from './components/WebScrapingManager'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { StripeCheckoutStatus } from './components/StripeCheckoutStatus'
 import { Billing } from './components/Billing'
 import { SubscriptionBanner } from './components/SubscriptionBanner'
-import UserCoverLetters from '@/components/letters/UserCoverLetters'
-import CoverLetterGenerator from '@/components/CoverLetterGenerator'
+import UserCoverLetters from './components/letters/UserCoverLetters'
+import { CoverLetterGenerator } from './components/applications/CoverLetterGenerator'
 
 function App() {
   return (
@@ -153,6 +155,11 @@ function App() {
               <Route path="recruiter/create-job" element={
                 <ProtectedRoute requiresSubscription>
                   <CreateJobPosting />
+                </ProtectedRoute>
+              } />
+              <Route path="web-scraping" element={
+                <ProtectedRoute requiresSubscription>
+                  <WebScrapingManager />
                 </ProtectedRoute>
               } />
             </Route>
