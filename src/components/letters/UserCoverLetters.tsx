@@ -30,7 +30,7 @@ function formatDate(iso: string) {
   }
 }
 
-export default function UserCoverLetters() {
+function UserCoverLetters() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [letters, setLetters] = useState<CoverLetterMetadata[]>([]);
