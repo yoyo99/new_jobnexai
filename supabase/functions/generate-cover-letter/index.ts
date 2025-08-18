@@ -136,7 +136,7 @@ Deno.serve(async (req: Request) => {
             'Authorization': `Bearer ${mammouthApiKey}`,
           },
           body: JSON.stringify({
-            model: 'claude-3-sonnet',
+            model: 'claude-3-5-sonnet-20241022',
             messages: [
               { role: 'system', content: systemMessage },
               { role: 'user', content: userPrompt }

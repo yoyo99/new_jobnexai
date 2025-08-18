@@ -8,7 +8,7 @@ function autoSelectModel(prompt) {
   const lowerPrompt = prompt.toLowerCase();
 
   if (lowerPrompt.includes('résume') || lowerPrompt.includes('résumé') || lowerPrompt.includes('résumer')) {
-    return 'claude-3-sonnet'; // rapide et économique
+    return 'claude-3-5-sonnet-20241022'; // rapide et économique
   }
 
   if (lowerPrompt.includes('code') || lowerPrompt.includes('javascript') || lowerPrompt.includes('react')) {
@@ -16,10 +16,10 @@ function autoSelectModel(prompt) {
   }
 
   if (lowerPrompt.includes('philosophie') || lowerPrompt.includes('analyse profonde') || lowerPrompt.length > 1000) {
-    return 'claude-3-sonnet'; // pour les prompts longs, profonds, argumentés
+    return 'claude-3-5-sonnet-20241022'; // pour les prompts longs, profonds, argumentés
   }
 
-  return 'claude-3-sonnet'; // fallback par défaut
+  return 'claude-3-5-sonnet-20241022'; // fallback par défaut
 }
 
 // 🦣 Fonction pour envoyer le prompt à Mammouth.ai

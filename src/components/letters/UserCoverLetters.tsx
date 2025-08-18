@@ -230,7 +230,17 @@ export default function UserCoverLetters() {
                 <Dialog.Panel className="card max-w-3xl w-full p-6">
                   <Dialog.Title className="text-lg font-semibold mb-3">{viewing?.job_title || 'Lettre de motivation'}</Dialog.Title>
                   <div className="prose prose-invert max-w-none text-white/90">
-                    <div dangerouslySetInnerHTML={{ __html: viewing?.cover_letter_content || '' }} />
+                    <div dangerouslySetInnerHTML={{ 
+                      __html: (viewing?.cover_letter_content || '')
+                        .replace(/###\s*/g, '<h3>')
+                        .replace(/##\s*/g, '<h2>')
+                        .replace(/#\s*/g, '<h1>')
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                        .replace(/\n\n/g, '</p><p>')
+                        .replace(/^\s*/, '<p>')
+                        .replace(/\s*$/, '</p>')
+                    }} />
                   </div>
                   <div className="mt-6 flex justify-end">
                     <button className="btn-secondary" onClick={() => setViewing(null)}>Fermer</button>
