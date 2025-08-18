@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../stores/auth';
 import { supabase } from '../lib/supabase';
+import { toast } from 'react-hot-toast';
 import { EnvelopeIcon, ServerIcon, CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 
 interface IMAPConfig {
@@ -106,21 +107,33 @@ const IMAPJobScraper: React.FC = () => {
     }
   };
 
-  const startScraping = async () => {
-    if (!user?.id) return;
+  const handleStartScraping = async () => {
+    if (!imapConfig.host || !imapConfig.username || !imapConfig.password) {
+      toast.error('Veuillez remplir tous les champs de configuration IMAP');
+      return;
+    }
 
     setLoading(true);
     setMessage(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke('imap-job-scraper', {
-        body: {
-          userId: user.id,
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/imap-job-scraper`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
+          userId: user?.id,
           imapConfig
-        }
+        })
       });
 
-      if (error) throw error;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erreur lors du scraping IMAP');
+      }
 
       setMessage({ 
         type: 'success', 
@@ -129,12 +142,14 @@ const IMAPJobScraper: React.FC = () => {
       
       // Recharger les offres
       await loadJobOffers();
-    } catch (error) {
-      console.error('Error during IMAP scraping:', error);
+    } catch (err: any) {
+      console.error('Erreur scraping IMAP:', err);
+      const errorMessage = err.message || 'Erreur inconnue lors du scraping IMAP';
       setMessage({ 
         type: 'error', 
-        text: 'Erreur lors du scraping IMAP' 
+        text: errorMessage 
       });
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -271,7 +286,7 @@ const IMAPJobScraper: React.FC = () => {
 
         <div className="flex space-x-3">
           <button
-            onClick={startScraping}
+            onClick={handleStartScraping}
             disabled={loading || !imapConfig.host || !imapConfig.username}
             className="btn-primary flex items-center space-x-2"
           >

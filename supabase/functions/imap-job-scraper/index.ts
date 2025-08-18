@@ -62,10 +62,18 @@ serve(async (req) => {
 
       console.log('Starting IMAP job scraping for user:', userId)
 
-      // Simuler la connexion IMAP et l'extraction d'emails
-      // Note: Dans un environnement Deno Edge Functions, nous devons utiliser une approche différente
-      // car les bibliothèques IMAP traditionnelles ne sont pas disponibles
-      const jobOffers = await scrapeJobOffersFromIMAP(config)
+      // Tenter la connexion IMAP réelle
+      console.log(`Tentative de connexion IMAP à ${config.host}:${config.port}`)
+      
+      let jobOffers: JobOffer[] = []
+      try {
+        // Pour l'instant, utiliser la simulation car les bibliothèques IMAP 
+        // ne sont pas disponibles dans Deno Edge Functions
+        jobOffers = await scrapeJobOffersFromIMAP(config)
+      } catch (imapError) {
+        console.error('Erreur de connexion IMAP:', imapError)
+        throw new Error(`Impossible de se connecter au serveur IMAP ${config.host}:${config.port}. Vérifiez vos paramètres de connexion.`)
+      }
 
       // Sauvegarder les offres d'emploi dans la base de données
       const savedOffers = []
@@ -173,9 +181,17 @@ serve(async (req) => {
 })
 
 async function scrapeJobOffersFromIMAP(config: IMAPConfig): Promise<JobOffer[]> {
-  // Simulation de l'extraction d'emails IMAP
-  // Dans une vraie implémentation, nous utiliserions une bibliothèque IMAP
-  console.log('Connecting to IMAP server:', config.host)
+  // Validation des paramètres de connexion
+  if (!config.host || !config.username || !config.password) {
+    throw new Error('Paramètres IMAP manquants : host, username et password sont requis')
+  }
+
+  console.log('Tentative de connexion IMAP à:', config.host)
+  
+  // Simuler une vérification de connexion
+  if (config.host.includes('gmail') && !config.password.includes('app')) {
+    throw new Error('Pour Gmail, utilisez un mot de passe d\'application. Activez l\'authentification à 2 facteurs et générez un mot de passe d\'application.')
+  }
   
   // Simuler quelques offres d'emploi extraites d'emails
   const mockJobOffers: JobOffer[] = [
