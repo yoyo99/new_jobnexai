@@ -157,10 +157,12 @@ export function generateInterviewQuestion(jobDescription: string): string {
       level: "all",
       difficulty: "medium",
     },
+    {
       question:"Parlez-moi d'un défi que vous avez rencontré et comment vous l'avez surmonté.",
       keywords: ["défi", "problème", "solution", "résolution"],
       type: "behavioral",
-      level: "all", difficulty: "hard"
+      level: "all", 
+      difficulty: "hard"
     },
     {
       question:"Quelles sont vos attentes salariales ?",
@@ -685,7 +687,6 @@ export function getNextQuestion(conversationId: string): string {
            level: "senior",
           },          {           
             question: "Quelles sont vos principales forces et faiblesses ?",
-            difficulty: "hard",
             keywords: ["forces", "faiblesses"],
            type: "general",
            difficulty: "hard",
@@ -700,9 +701,14 @@ export function getNextQuestion(conversationId: string): string {
            {
            question:"Comment vous améliorerez-vous en communication ?",
            keywords: ["communication"],
-           type: "general",            
+           type: "general",
+           level: "all",
+           difficulty: "medium"
+          }
+  ];
 
   // On adapte la difficulté des questions en fonction de la moyenne.
+  const averageNote = getAverageNote(conversationId);
   let difficulty = "medium";
   if (averageNote >= 4) {
     difficulty = "hard";

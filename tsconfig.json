@@ -1,50 +1,34 @@
 {
   "compilerOptions": {
-    "allowSyntheticDefaultImports": true,
-    "module": "esnext",
-    "target": "ES6",
-
-    "strict": true,
-    "esModuleInterop": true,
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
     "jsx": "react-jsx",
-    "allowJs": true,
-    "noImplicitAny": false,
+    "strict": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
-    },
-    "resolveJsonModule": true,
-    "moduleResolution": "node",
-    "outDir": "dist",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
-    "types": [
-      "jest",
-      "@testing-library/jest-dom",
-      "node"
-    ]
+    }
   },
-  "include": [
-    "src/**/*",
-    "components/**/*",
-    "lib/**/*",
-    "tests/**/*",
-    "App.tsx",
-    "main.tsx",
-    "./*.d.ts"
-  ],
+  "include": ["src"],
   "exclude": [
     "node_modules",
     "supabase/functions/**/*",
     "JobNexAI-WindSurf/**/*",
-    "components/applications/**/*",
-    "lib/ai.ts"
+    "__tests__/**/*",
+    "tests/**/*",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts"
   ]
 }
