@@ -232,11 +232,21 @@ export default function UserCoverLetters() {
                   <div className="prose prose-invert max-w-none text-white/90">
                     <div dangerouslySetInnerHTML={{ 
                       __html: (viewing?.cover_letter_content || '')
+                        // Nettoyer le JSON brut qui pourrait être affiché
+                        .replace(/\{[\s\S]*?"candidateAddress"[\s\S]*?\}/g, '')
+                        // Convertir Markdown vers HTML
                         .replace(/###\s*/g, '<h3>')
                         .replace(/##\s*/g, '<h2>')
                         .replace(/#\s*/g, '<h1>')
                         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                         .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                        // Nettoyer les balises HTML brutes qui s'affichent
+                        .replace(/&lt;p&gt;/g, '<p>')
+                        .replace(/&lt;\/p&gt;/g, '</p>')
+                        .replace(/&lt;br&gt;/g, '<br>')
+                        .replace(/&lt;strong&gt;/g, '<strong>')
+                        .replace(/&lt;\/strong&gt;/g, '</strong>')
+                        // Gérer les paragraphes
                         .replace(/\n\n/g, '</p><p>')
                         .replace(/^\s*/, '<p>')
                         .replace(/\s*$/, '</p>')

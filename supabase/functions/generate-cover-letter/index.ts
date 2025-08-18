@@ -197,31 +197,30 @@ Deno.serve(async (req: Request) => {
         }
 
         // --- Assemble the full letter --- 
-        const candidateFullName = user.user_metadata?.full_name || 'Candidat';
+        const candidateFullName = user.user_metadata?.full_name || user.user_metadata?.name || 'Candidat';
         const candidateEmail = user.email || '';
-        const candidatePhone = user.phone || ''; // Assuming phone is available
+        const candidatePhone = user.user_metadata?.phone || user.phone || '';
 
         const currentDate = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 
-        const finalLetter = `
-<p>${candidateFullName}<br>${candidateEmail}<br>${candidatePhone}<br>${candidateAddress}</p>
-        <br>
-        <p>${companyAddress || ''}</p>
+        const finalLetter = `<p>${candidateFullName}<br>${candidateEmail}<br>${candidatePhone}<br>${candidateAddress}</p>
+<br>
+<p>${companyAddress || ''}</p>
 
-À l'attention du service de recrutement
-${companyName}
+<p>À l'attention du service de recrutement<br>
+${companyName}</p>
 
-Fait à ${candidateCity}, le ${currentDate}
+<p>Fait à ${candidateCity}, le ${currentDate}</p>
 
-**Objet : Candidature au poste de ${jobTitle}**
+<p><strong>Objet : Candidature au poste de ${jobTitle}</strong></p>
 
-Madame, Monsieur,
+<p>Madame, Monsieur,</p>
 
 ${letterBody}
 
-Dans l’attente de votre retour, je vous prie d’agréer, Madame, Monsieur, l’expression de mes salutations distinguées.
+<p>Dans l'attente de votre retour, je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.</p>
 
-${candidateFullName}
+<p>${candidateFullName}</p>
         `.trim();
 
         await supabaseAdmin
