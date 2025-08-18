@@ -90,28 +90,36 @@ Deno.serve(async (req: Request) => {
     }
 
     userPrompt += `
-      Based on the provided CV and job offer, extract the following information:
-      1. Extract the candidate's full name (first name + last name) from the CV content
+      CRITICAL TASK: You MUST extract the candidate's name from the CV content provided above.
+
+      Look carefully in the CV content for:
+      - Full name (first name + last name)
+      - Contact information section
+      - Header/title section
+      - Any personal information
+
+      Based on the provided CV and job offer, you must:
+      1. EXTRACT the candidate's EXACT full name from the CV content (this is MANDATORY)
       2. Extract the candidate's full address from the CV content
       3. Extract the candidate's city from the CV content or address
       4. Identify the company's full address (if available in job description, otherwise leave empty)
-      5. Generate a compelling body for a cover letter, tailored to the job description and highlighting relevant skills from the CV
+      5. Generate a compelling body for a cover letter
 
-      VERY IMPORTANT:
-      - Respond ONLY with a valid JSON object containing five keys: "candidateName", "candidateAddress", "companyAddress", "candidateCity", and "letterBody".
-      - The "candidateName" must be the full name extracted from the CV (e.g., "Jean Dupont")
-      - The "letterBody" must only contain the paragraphs of the letter in PLAIN TEXT format. It must NOT include salutations, subject, date, or signature.
-      - DO NOT use HTML tags like <p>, <strong>, <br> in the letterBody. Use plain text with line breaks only.
-      - "candidateAddress" and "companyAddress" must be full, multi-line addresses formatted as a single string with '\n' for newlines.
-      - Absolutely DO NOT use any placeholders like [Date], [Adresse de l'entreprise], [Your Name], etc. The content must be complete and ready to use.
+      ABSOLUTELY CRITICAL REQUIREMENTS:
+      - You MUST respond with ONLY a valid JSON object
+      - The JSON must contain exactly these 5 keys: "candidateName", "candidateAddress", "companyAddress", "candidateCity", "letterBody"
+      - "candidateName" MUST be the EXACT name found in the CV (NOT a placeholder, NOT "Test_Sass", but the REAL name from the CV)
+      - If you cannot find a name in the CV, use "Nom Prénom" as fallback
+      - "letterBody" must be plain text paragraphs separated by double line breaks
+      - NO HTML tags, NO placeholders, NO markdown
 
-      Example response format:
+      MANDATORY JSON FORMAT:
       {
-        "candidateName": "Jean Dupont",
-        "candidateAddress": "123 Rue de la République\n75001 Paris",
-        "companyAddress": "456 Avenue des Champs-Élysées\n75008 Paris",
-        "candidateCity": "Paris",
-        "letterBody": "Paragraph 1...\n\nParagraph 2..."
+        "candidateName": "REAL_NAME_FROM_CV",
+        "candidateAddress": "Full address with \\n for line breaks",
+        "companyAddress": "Company address or empty string",
+        "candidateCity": "City name",
+        "letterBody": "Paragraph 1\\n\\nParagraph 2\\n\\nParagraph 3"
       }
     `;
     
