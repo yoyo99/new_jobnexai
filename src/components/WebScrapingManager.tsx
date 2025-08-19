@@ -78,16 +78,23 @@ const WebScrapingManager: React.FC = () => {
 
   const loadAvailableSites = async () => {
     try {
+      console.log('Chargement des sites disponibles...');
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/web-scraper`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'get_available_sites' })
       });
 
+      console.log('Response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('Sites reçus:', data);
         setAvailableSites(data.sites || []);
         setSelectedSites(data.sites?.slice(0, 3).map((s: JobSite) => s.id) || []);
+      } else {
+        const errorText = await response.text();
+        console.error('Erreur response:', response.status, errorText);
       }
     } catch (error) {
       console.error('Erreur lors du chargement des sites:', error);
