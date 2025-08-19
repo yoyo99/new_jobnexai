@@ -78,7 +78,7 @@ const WebScrapingManager: React.FC = () => {
 
   const loadAvailableSites = async () => {
     try {
-      const response = await fetch('/supabase/functions/v1/web-scraper', {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/web-scraper`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'get_available_sites' })
@@ -101,7 +101,7 @@ const WebScrapingManager: React.FC = () => {
     const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     try {
-      const response = await fetch('/supabase/functions/v1/web-scraper', {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/web-scraper`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -136,7 +136,7 @@ const WebScrapingManager: React.FC = () => {
     if (!currentSession) return;
 
     try {
-      const response = await fetch('/supabase/functions/v1/web-scraper', {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/web-scraper`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -160,7 +160,7 @@ const WebScrapingManager: React.FC = () => {
 
   const loadScrapedJobs = async (sessionId: string) => {
     try {
-      const response = await fetch('/supabase/functions/v1/web-scraper', {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/web-scraper`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -343,7 +343,7 @@ const WebScrapingManager: React.FC = () => {
         <div className="flex items-center gap-4">
           <button
             onClick={startScraping}
-            disabled={loading || currentSession?.status === 'running' || selectedSites.length === 0}
+            disabled={loading || currentSession?.status === 'running' || selectedSites.length === 0 || criteria.jobTitles.length === 0}
             className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
           >
             <PlayIcon className="h-5 w-5" />

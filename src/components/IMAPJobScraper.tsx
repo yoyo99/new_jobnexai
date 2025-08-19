@@ -109,24 +109,26 @@ const IMAPJobScraper: React.FC = () => {
 
   const handleStartScraping = async () => {
     if (!imapConfig.host || !imapConfig.username || !imapConfig.password) {
-      toast.error('Veuillez remplir tous les champs de configuration IMAP');
+      toast.error('Veuillez remplir tous les champs obligatoires');
       return;
     }
 
     setLoading(true);
-    setMessage(null);
+    setMessage({ type: 'success', text: '' });
 
     try {
+      // Sauvegarder la configuration avant de lancer le scraping
+      await saveIMAPConfig();
+
+      const { data: { session } } = await supabase.auth.getSession();
+      
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/imap-job-scraper`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Authorization': `Bearer ${session?.access_token}`,
         },
-        body: JSON.stringify({
-          userId: user?.id,
-          imapConfig
-        })
+        body: JSON.stringify(imapConfig),
       });
 
       const data = await response.json();
@@ -135,20 +137,10 @@ const IMAPJobScraper: React.FC = () => {
         throw new Error(data.error || 'Erreur lors du scraping IMAP');
       }
 
-      setMessage({ 
-        type: 'success', 
-        text: data.message || 'Scraping terminé avec succès' 
-      });
-      
-      // Recharger les offres
-      await loadJobOffers();
+      toast.success(`Scraping terminé ! ${data.jobsFound || 0} offres trouvées`);
     } catch (err: any) {
-      console.error('Erreur scraping IMAP:', err);
-      const errorMessage = err.message || 'Erreur inconnue lors du scraping IMAP';
-      setMessage({ 
-        type: 'error', 
-        text: errorMessage 
-      });
+      const errorMessage = err.message || 'Erreur lors du scraping IMAP';
+      setMessage({ type: 'error', text: errorMessage });
       toast.error(errorMessage);
     } finally {
       setLoading(false);
