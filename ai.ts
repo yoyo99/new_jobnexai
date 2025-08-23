@@ -133,33 +133,42 @@ export function generateInterviewQuestion(jobDescription: string): string {
       keywords: ["motivation", "intérêt", "raison"],
       type: "motivation",
       level: "all",
-      difficulty:"easy"
-    },{      question: "Comment gérez-vous le stress et la pression ?",
+      difficulty: "easy"
+    },
+    {
+      question: "Comment gérez-vous le stress et la pression ?",
       keywords: ["stress", "pression", "gestion", "adaptation"],
       type: "behavioral",
-      level: "all", difficulty: "medium",
-
+      level: "all",
+      difficulty: "medium"
+    },
+    {
       question: "Où vous voyez-vous dans cinq ans ?",
       keywords: ["projection", "avenir", "ambition", "objectif"],
-      type: "motivation", //Type motivation
-      level: "all", difficulty: "medium",
+      type: "motivation",
+      level: "all",
+      difficulty: "medium"
+    },
     {      
       question:"Parlez-moi d'un défi que vous avez rencontré et comment vous l'avez surmonté.",
       keywords: ["défi", "problème", "solution", "résolution"],
       type: "behavioral",
-      level: "all", difficulty: "hard"
+      level: "all",
+      difficulty: "hard"
     },
     {
       question:"Quelles sont vos attentes salariales ?",
       keywords: ["salaire", "rémunération", "compensation"],
       type: "general",
-      level: "all", difficulty: "easy"
+      level: "all",
+      difficulty: "easy"
     },
     {
       question:"Avez-vous des questions ?",
       keywords: ["question", "curiosité", "éclaircissement"],
       type: "general",
-      level: "all", difficulty: "easy"
+      level: "all",
+      difficulty: "easy"
       
     },
     {
@@ -167,7 +176,7 @@ export function generateInterviewQuestion(jobDescription: string): string {
       keywords: ["javascript"],
       type: "technical",
       level: "all",
-      difficulty:"medium"
+      difficulty: "medium"
     },    
      {
       question: "Décrivez votre expérience avec React.",
@@ -201,7 +210,8 @@ export function generateInterviewQuestion(jobDescription: string): string {
       question: "Comment avez-vous communiqué avec une équipe dans un projet ?",
       keywords: ["communication"],
       type: "behavioral",
-      level: "all", difficulty: "hard",
+      level: "all",
+      difficulty: "hard",
     },    
     {
       question: "Comment avez vous gérez un projet ?",
@@ -213,7 +223,8 @@ export function generateInterviewQuestion(jobDescription: string): string {
       question: "Parlez-moi de vos qualités analytiques.", 
       keywords: ["analyse"],
       type: "behavioral",
-      level: "all", difficulty: "hard",
+      level: "all",
+      difficulty: "hard",
     },
 
   ];;

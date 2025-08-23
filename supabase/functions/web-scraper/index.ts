@@ -75,7 +75,7 @@ const JOB_SITES: JobSite[] = [
   }
 ];
 
-serve(async (req) => {
+serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -116,7 +116,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Erreur dans web-scraper:', error);
     return new Response(
-      JSON.stringify({ error: 'Erreur interne du serveur', details: error.message }),
+      JSON.stringify({ error: 'Erreur interne du serveur', details: (error as Error).message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -160,7 +160,7 @@ async function startScraping(criteria: ScrapingCriteria, siteIds: string[], sess
   } catch (error) {
     console.error('Erreur lors du démarrage du scraping:', error);
     return new Response(
-      JSON.stringify({ error: 'Impossible de démarrer le scraping', details: error.message }),
+      JSON.stringify({ error: 'Impossible de démarrer le scraping', details: (error as Error).message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -194,7 +194,7 @@ async function scrapeJobsAsync(criteria: ScrapingCriteria, siteIds: string[], se
 
       } catch (siteError) {
         console.error(`Erreur lors du scraping de ${site.name}:`, siteError);
-        errors.push(`${site.name}: ${siteError.message}`);
+        errors.push(`${site.name}: ${(siteError as Error).message}`);
       }
     }
 
@@ -257,7 +257,7 @@ async function scrapeJobsAsync(criteria: ScrapingCriteria, siteIds: string[], se
         status: 'failed',
         completed_at: new Date().toISOString(),
         total_jobs: scrapedJobs.length,
-        errors: [...errors, error.message]
+        errors: [...errors, (error as Error).message]
       })
       .eq('id', sessionId);
   }
@@ -275,7 +275,7 @@ function buildSearchUrls(site: JobSite, criteria: ScrapingCriteria): string[] {
   
   for (const keywords of keywordCombinations) {
     for (const location of locations) {
-      let url = site.searchUrl
+      const url = site.searchUrl
         .replace('{keywords}', encodeURIComponent(keywords))
         .replace('{location}', encodeURIComponent(location));
       
@@ -286,7 +286,7 @@ function buildSearchUrls(site: JobSite, criteria: ScrapingCriteria): string[] {
   return urls.slice(0, 10); // Limiter à 10 URLs par site
 }
 
-async function scrapeSite(site: JobSite, searchUrl: string, criteria: ScrapingCriteria): Promise<any[]> {
+function scrapeSite(site: JobSite, searchUrl: string, criteria: ScrapingCriteria): any[] {
   try {
     // Simulation du scraping (remplacer par du vrai scraping avec Puppeteer/Playwright)
     console.log(`Scraping URL: ${searchUrl}`);
@@ -432,7 +432,7 @@ async function getSessionStatus(sessionId: string) {
 
   } catch (error) {
     return new Response(
-      JSON.stringify({ error: 'Session non trouvée', details: error.message }),
+      JSON.stringify({ error: 'Session non trouvée', details: (error as Error).message }),
       { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -455,13 +455,13 @@ async function getScrapedJobs(sessionId: string) {
 
   } catch (error) {
     return new Response(
-      JSON.stringify({ error: 'Impossible de récupérer les offres', details: error.message }),
+      JSON.stringify({ error: 'Impossible de récupérer les offres', details: (error as Error).message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 }
 
-async function getAvailableSites() {
+function getAvailableSites() {
   const activeSites = JOB_SITES.filter(site => site.active);
   
   return new Response(

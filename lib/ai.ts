@@ -1,6 +1,7 @@
-import OpenAI from 'openai';;
+import OpenAI from 'openai';
 // Importation de la librairie compromise pour la lemmatisation
-import nlp from 'compromise';;
+import nlp from 'compromise';
+// @ts-ignore - Vite handles import.meta.env
 const apiKey = import.meta.env.VITE_OPENAI_API_KEY as string | undefined;
 /**z
  * Effectue une analyse sémantique d'un texte donné.
@@ -98,7 +99,7 @@ function analyzeJobDescription(jobDescription: string): JobDescriptionAnalysis {
       technologies.push(keyword);
     }
   }
-  return { type, level, skills, technologies };;
+  return { type, level, skills, technologies };
 }
 
 /**
@@ -122,13 +123,11 @@ export function generateInterviewQuestion(jobDescription: string): string {
   const questions = [
     {
       question: "Pouvez-vous me parler de votre expérience dans ce domaine ?",
-
       keywords: ["expérience", "parcours", "domaine"],
       type: "general",
       level: "all",
-      difficulty: "easy",
+      difficulty: "easy"
     },
-
     {
       question: "Quelles sont vos principales compétences pour ce poste ?",
       keywords: ["compétences", "aptitudes", "qualifications"],
@@ -141,40 +140,42 @@ export function generateInterviewQuestion(jobDescription: string): string {
       keywords: ["motivation", "intérêt", "raison"],
       type: "motivation",
       level: "all",
-      difficulty:"easy"
+      difficulty: "easy"
     },
-    {      
+    {
       question: "Comment gérez-vous le stress et la pression ?",
       keywords: ["stress", "pression", "gestion", "adaptation"],
       type: "behavioral",
       level: "all",
-      difficulty: "medium",
+      difficulty: "medium"
     },
     {
       question: "Où vous voyez-vous dans cinq ans ?",
       keywords: ["projection", "avenir", "ambition", "objectif"],
       type: "motivation",
       level: "all",
-      difficulty: "medium",
+      difficulty: "medium"
     },
     {
-      question:"Parlez-moi d'un défi que vous avez rencontré et comment vous l'avez surmonté.",
+      question: "Parlez-moi d'un défi que vous avez rencontré et comment vous l'avez surmonté.",
       keywords: ["défi", "problème", "solution", "résolution"],
       type: "behavioral",
       level: "all", 
       difficulty: "hard"
     },
     {
-      question:"Quelles sont vos attentes salariales ?",
+      question: "Quelles sont vos attentes salariales ?",
       keywords: ["salaire", "rémunération", "compensation"],
       type: "general",
-      level: "all", difficulty: "easy"
+      level: "all",
+      difficulty: "easy"
     },
     {
-      question:"Avez-vous des questions ?",
+      question: "Avez-vous des questions ?",
       keywords: ["question", "curiosité", "éclaircissement"],
       type: "general",
-      level: "all", difficulty: "easy"
+      level: "all",
+      difficulty: "easy"
       
     },
     {
@@ -182,7 +183,7 @@ export function generateInterviewQuestion(jobDescription: string): string {
       keywords: ["javascript"],
       type: "technical",
       level: "all",
-      difficulty:"medium"
+      difficulty: "medium"
     },    
      {
       question: "Décrivez votre expérience avec React.",
@@ -195,7 +196,8 @@ export function generateInterviewQuestion(jobDescription: string): string {
       question: "Décrivez votre expérience avec Python.",
       keywords: ["python"],
       type: "technical",
-      level: "all",      difficulty: "medium",
+      level: "all",
+      difficulty: "medium"
     },    
    
      {
