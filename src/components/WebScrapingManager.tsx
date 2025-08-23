@@ -25,6 +25,11 @@ interface ScrapingCriteria {
   contractTypes: string[];
   remote: boolean | null;
   keywords: string[];
+  freshnessFilter: {
+    enabled: boolean;
+    maxDays: number;
+    preset: 'today' | 'week' | 'month' | 'custom';
+  };
 }
 
 interface JobSite {
@@ -54,7 +59,12 @@ const WebScrapingManager: React.FC = () => {
     experienceLevel: 'all',
     contractTypes: ['CDI', 'CDD'],
     remote: null,
-    keywords: []
+    keywords: [],
+    freshnessFilter: {
+      enabled: true,
+      maxDays: 7,
+      preset: 'week'
+    }
   });
 
   const [availableSites, setAvailableSites] = useState<JobSite[]>([]);
@@ -287,6 +297,93 @@ const WebScrapingManager: React.FC = () => {
               placeholder="80000"
               className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+          </div>
+
+          {/* Fraîcheur des offres */}
+          <div className="md:col-span-2 lg:col-span-3">
+            <div className="flex items-center gap-2 mb-3">
+              <ClockIcon className="h-5 w-5 text-blue-400" />
+              <label className="block text-sm font-medium text-gray-300">Fraîcheur des offres</label>
+            </div>
+            
+            <div className="flex items-center gap-4 mb-3">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={criteria.freshnessFilter.enabled}
+                  onChange={(e) => setCriteria({
+                    ...criteria,
+                    freshnessFilter: {...criteria.freshnessFilter, enabled: e.target.checked}
+                  })}
+                  className="rounded bg-white/5 border-white/10 text-blue-500 focus:ring-blue-500"
+                />
+                <span className="text-gray-300">Filtrer par date de publication</span>
+              </label>
+            </div>
+
+            {criteria.freshnessFilter.enabled && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Période</label>
+                  <select
+                    value={criteria.freshnessFilter.preset}
+                    onChange={(e) => {
+                      const preset = e.target.value as 'today' | 'week' | 'month' | 'custom';
+                      let maxDays = criteria.freshnessFilter.maxDays;
+                      
+                      switch (preset) {
+                        case 'today': maxDays = 1; break;
+                        case 'week': maxDays = 7; break;
+                        case 'month': maxDays = 30; break;
+                      }
+                      
+                      setCriteria({
+                        ...criteria,
+                        freshnessFilter: { ...criteria.freshnessFilter, preset, maxDays }
+                      });
+                    }}
+                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="today">Aujourd'hui</option>
+                    <option value="week">Cette semaine (7 jours)</option>
+                    <option value="month">Ce mois (30 jours)</option>
+                    <option value="custom">Personnalisé</option>
+                  </select>
+                </div>
+
+                {criteria.freshnessFilter.preset === 'custom' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Nombre de jours max</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="365"
+                      value={criteria.freshnessFilter.maxDays}
+                      onChange={(e) => setCriteria({
+                        ...criteria,
+                        freshnessFilter: {
+                          ...criteria.freshnessFilter,
+                          maxDays: parseInt(e.target.value) || 7
+                        }
+                      })}
+                      placeholder="7"
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {criteria.freshnessFilter.enabled && (
+              <div className="mt-3 p-3 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+                <p className="text-sm text-blue-300">
+                  ℹ️ Seules les offres publiées dans les {criteria.freshnessFilter.maxDays} derniers jours seront affichées.
+                  {criteria.freshnessFilter.maxDays === 1 && " Les offres d'aujourd'hui uniquement."}
+                  {criteria.freshnessFilter.maxDays === 7 && " Offres de la semaine en cours."}
+                  {criteria.freshnessFilter.maxDays === 30 && " Offres du mois en cours."}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Niveau d'expérience */}
