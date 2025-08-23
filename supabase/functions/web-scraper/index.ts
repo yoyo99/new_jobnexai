@@ -76,7 +76,22 @@ serve(async (req) => {
   }
 
   try {
-    const { action, criteria, sites, sessionId } = await req.json();
+    console.log('Request method:', req.method);
+    console.log('Request URL:', req.url);
+    
+    let requestData;
+    try {
+      requestData = await req.json();
+      console.log('Request data:', requestData);
+    } catch (parseError) {
+      console.error('Error parsing JSON:', parseError);
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON in request body' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { action, criteria, sites, sessionId } = requestData;
 
     switch (action) {
       case 'start_scraping':
@@ -89,7 +104,7 @@ serve(async (req) => {
         return await getAvailableSites();
       default:
         return new Response(
-          JSON.stringify({ error: 'Action non supportée' }),
+          JSON.stringify({ error: 'Action non supportée', receivedAction: action }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
     }
