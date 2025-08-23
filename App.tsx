@@ -42,7 +42,7 @@ const CoverLetterGenerator = React.lazy(() => import('./components/applications/
 const UserCoverLetters = React.lazy(() => import('./src/components/letters/UserCoverLetters'))
 
 // Utility components
-const WebScrapingManager = React.lazy(() => import('./src/components/WebScrapingManager'))
+const WebScrapingManager = React.lazy(() => import('./components/WebScrapingManager').then(module => ({ default: module.WebScrapingManager })))
 const UserTypeSelection = React.lazy(() => import('./components/UserTypeSelection').then(module => ({ default: module.UserTypeSelection })))
 
 // Static pages
