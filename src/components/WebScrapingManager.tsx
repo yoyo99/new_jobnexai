@@ -89,9 +89,15 @@ const WebScrapingManager: React.FC = () => {
   const loadAvailableSites = async () => {
     try {
       console.log('Chargement des sites disponibles...');
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/web-scraper`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`
+        },
         body: JSON.stringify({ action: 'get_available_sites' })
       });
 
@@ -112,15 +118,20 @@ const WebScrapingManager: React.FC = () => {
   };
 
   const startScraping = async () => {
-    if (!user || selectedSites.length === 0) return;
+    if (!user || selectedSites.length === 0 || criteria.jobTitles.length === 0) return;
 
     setLoading(true);
     const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/web-scraper`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`
+        },
         body: JSON.stringify({
           action: 'start_scraping',
           criteria,
