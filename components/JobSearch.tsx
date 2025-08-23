@@ -449,6 +449,14 @@ export function JobSearch() {
                     Suggestions
                   </button>
                 )}
+
+                <a
+                  href="/app/web-scraping"
+                  className="btn-secondary flex items-center gap-2"
+                >
+                  <GlobeAltIcon className="h-5 w-5" />
+                  Scraping Web
+                </a>
               </div>
 
               <button type="submit" className="btn-primary">
