@@ -1,0 +1,1161 @@
+openapi: 3.0.3
+info:
+  title: JobNexAI API
+  description: |
+    The JobNexAI API provides comprehensive job search, application tracking, and career optimization services.
+    
+    # Authentication
+    
+    The API uses JWT Bearer tokens for authentication. Include your token in the Authorization header:
+    
+    ```
+    Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+    ```
+    
+    # Rate Limiting
+    
+    API requests are rate limited based on your subscription:
+    - Free: 100 requests/minute
+    - Pro: 500 requests/minute  
+    - Enterprise: 2000 requests/minute
+    
+    # Error Handling
+    
+    All errors follow RFC 7807 Problem Details format with additional context.
+    
+  version: 1.0.0
+  contact:
+    name: JobNexAI Support
+    url: https://jobnexai.com/support
+    email: support@jobnexai.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: https://jobnexai.com/terms
+
+servers:
+  - url: https://api.jobnexai.com
+    description: Production server
+  - url: https://staging-api.jobnexai.com
+    description: Staging server
+
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: Create a new user account with email and password
+      operationId: registerUser
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            examples:
+              job_seeker:
+                summary: Job Seeker Registration
+                value:
+                  email: "john.doe@example.com"
+                  password: "secure_password123"
+                  full_name: "John Doe"
+                  user_type: "job_seeker"
+              recruiter:
+                summary: Recruiter Registration  
+                value:
+                  email: "recruiter@company.com"
+                  password: "secure_password123"
+                  full_name: "Jane Smith"
+                  user_type: "recruiter"
+                  company_name: "TechCorp Inc."
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login user
+      description: Authenticate user and return JWT tokens
+      operationId: loginUser
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Logout user
+      description: Invalidate the current session
+      operationId: logoutUser
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Logout successful"
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh access token
+      description: Get a new access token using refresh token
+      operationId: refreshToken
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              required:
+                - refresh_token
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+
+  /user/profile:
+    get:
+      tags:
+        - User Profile
+      summary: Get user profile
+      description: Retrieve the current user's profile information
+      operationId: getUserProfile
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+
+    put:
+      tags:
+        - User Profile
+      summary: Update user profile
+      description: Update the current user's profile information
+      operationId: updateUserProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+
+  /user/skills:
+    get:
+      tags:
+        - User Profile
+      summary: Get user skills
+      description: Retrieve the current user's skills and experience
+      operationId: getUserSkills
+      parameters:
+        - name: category
+          in: query
+          description: Filter skills by category
+          schema:
+            type: string
+            example: "Programming Languages"
+      responses:
+        '200':
+          description: User skills retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  skills:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserSkill'
+                  total:
+                    type: integer
+                    example: 15
+
+    post:
+      tags:
+        - User Profile
+      summary: Add user skill
+      description: Add a new skill to the user's profile
+      operationId: addUserSkill
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddSkillRequest'
+      responses:
+        '201':
+          description: Skill added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSkill'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /jobs/search:
+    get:
+      tags:
+        - Jobs
+      summary: Search jobs
+      description: Search for job opportunities with advanced filters
+      operationId: searchJobs
+      parameters:
+        - name: q
+          in: query
+          description: Search query
+          schema:
+            type: string
+            example: "software engineer"
+        - name: location
+          in: query
+          description: Location filter
+          schema:
+            type: string
+            example: "San Francisco, CA"
+        - name: remote_type
+          in: query
+          description: Remote work preference
+          schema:
+            type: string
+            enum: [remote, hybrid, onsite]
+            example: "remote"
+        - name: job_type
+          in: query
+          description: Employment type
+          schema:
+            type: string
+            enum: [full_time, part_time, contract, internship]
+            example: "full_time"
+        - name: experience_level
+          in: query
+          description: Experience level
+          schema:
+            type: string
+            enum: [junior, mid, senior, lead, executive]
+            example: "senior"
+        - name: salary_min
+          in: query
+          description: Minimum salary
+          schema:
+            type: integer
+            example: 100000
+        - name: salary_max
+          in: query
+          description: Maximum salary
+          schema:
+            type: integer
+            example: 200000
+        - name: page
+          in: query
+          description: Page number for pagination
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of results per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: sort_by
+          in: query
+          description: Sort order
+          schema:
+            type: string
+            enum: [date, salary, relevance]
+            default: "relevance"
+      responses:
+        '200':
+          description: Jobs retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobSearchResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /jobs/{jobId}:
+    get:
+      tags:
+        - Jobs
+      summary: Get job details
+      description: Retrieve detailed information about a specific job
+      operationId: getJobDetails
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          description: Job ID
+          schema:
+            type: string
+            example: "job_123"
+      responses:
+        '200':
+          description: Job details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job:
+                    $ref: '#/components/schemas/JobDetails'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /jobs/recommendations:
+    get:
+      tags:
+        - Jobs
+      summary: Get job recommendations
+      description: Get personalized job recommendations based on user profile
+      operationId: getJobRecommendations
+      parameters:
+        - name: limit
+          in: query
+          description: Number of recommendations
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        '200':
+          description: Recommendations retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recommendations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/JobRecommendation'
+                  total:
+                    type: integer
+
+  /applications:
+    get:
+      tags:
+        - Applications
+      summary: Get user applications
+      description: Retrieve user's job applications with filters
+      operationId: getUserApplications
+      parameters:
+        - name: status
+          in: query
+          description: Filter by application status
+          schema:
+            type: string
+            enum: [draft, applied, interviewing, offer, rejected, accepted, withdrawn]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Applications retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationsResponse'
+
+    post:
+      tags:
+        - Applications
+      summary: Create job application
+      description: Apply for a job position
+      operationId: createApplication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateApplicationRequest'
+      responses:
+        '201':
+          description: Application created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobApplication'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '403':
+          $ref: '#/components/responses/SubscriptionError'
+
+  /applications/{applicationId}:
+    get:
+      tags:
+        - Applications
+      summary: Get application details
+      description: Retrieve detailed information about a specific application
+      operationId: getApplicationDetails
+      parameters:
+        - name: applicationId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "app_123"
+      responses:
+        '200':
+          description: Application details retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  application:
+                    $ref: '#/components/schemas/JobApplication'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    put:
+      tags:
+        - Applications
+      summary: Update application
+      description: Update application status and details
+      operationId: updateApplication
+      parameters:
+        - name: applicationId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateApplicationRequest'
+      responses:
+        '200':
+          description: Application updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobApplication'
+
+  /matching/analyze:
+    post:
+      tags:
+        - Matching
+      summary: Analyze job match
+      description: Analyze how well the user matches a specific job
+      operationId: analyzeJobMatch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                job_id:
+                  type: string
+                  example: "job_123"
+              required:
+                - job_id
+      responses:
+        '200':
+          description: Match analysis completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchAnalysis'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '403':
+          $ref: '#/components/responses/SubscriptionError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - full_name
+        - user_type
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        password:
+          type: string
+          minLength: 8
+          example: "secure_password123"
+        full_name:
+          type: string
+          minLength: 2
+          example: "John Doe"
+        user_type:
+          type: string
+          enum: [job_seeker, recruiter]
+          example: "job_seeker"
+        company_name:
+          type: string
+          description: Required for recruiters
+          example: "TechCorp Inc."
+
+    RegisterResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        message:
+          type: string
+          example: "Registration successful. Please check your email for verification."
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    LoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refresh_token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        expires_in:
+          type: integer
+          example: 3600
+        user:
+          $ref: '#/components/schemas/User'
+
+    TokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        expires_in:
+          type: integer
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        email:
+          type: string
+          format: email
+        full_name:
+          type: string
+        user_type:
+          type: string
+          enum: [job_seeker, recruiter]
+        email_verified:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    UserProfile:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            avatar_url:
+              type: string
+              format: uri
+              nullable: true
+            location:
+              type: string
+              nullable: true
+            bio:
+              type: string
+              nullable: true
+            phone:
+              type: string
+              nullable: true
+            linkedin_url:
+              type: string
+              format: uri
+              nullable: true
+            github_url:
+              type: string
+              format: uri
+              nullable: true
+            updated_at:
+              type: string
+              format: date-time
+            subscription:
+              $ref: '#/components/schemas/Subscription'
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        full_name:
+          type: string
+        location:
+          type: string
+        bio:
+          type: string
+        phone:
+          type: string
+        linkedin_url:
+          type: string
+          format: uri
+        github_url:
+          type: string
+          format: uri
+
+    UserSkill:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        proficiency_level:
+          type: integer
+          minimum: 1
+          maximum: 5
+        years_experience:
+          type: integer
+          minimum: 0
+        verified:
+          type: boolean
+        added_at:
+          type: string
+          format: date-time
+
+    AddSkillRequest:
+      type: object
+      required:
+        - skill_name
+        - proficiency_level
+      properties:
+        skill_name:
+          type: string
+        category:
+          type: string
+        proficiency_level:
+          type: integer
+          minimum: 1
+          maximum: 5
+        years_experience:
+          type: integer
+          minimum: 0
+
+    Job:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        company:
+          type: string
+        company_logo:
+          type: string
+          format: uri
+          nullable: true
+        location:
+          type: string
+        remote_type:
+          type: string
+          enum: [remote, hybrid, onsite]
+        job_type:
+          type: string
+          enum: [full_time, part_time, contract, internship]
+        experience_level:
+          type: string
+          enum: [junior, mid, senior, lead, executive]
+        salary_min:
+          type: integer
+          nullable: true
+        salary_max:
+          type: integer
+          nullable: true
+        currency:
+          type: string
+          nullable: true
+        description:
+          type: string
+        required_skills:
+          type: array
+          items:
+            type: string
+        preferred_skills:
+          type: array
+          items:
+            type: string
+        posted_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        url:
+          type: string
+          format: uri
+        match_score:
+          type: integer
+          minimum: 0
+          maximum: 100
+          nullable: true
+
+    JobDetails:
+      allOf:
+        - $ref: '#/components/schemas/Job'
+        - type: object
+          properties:
+            company_details:
+              $ref: '#/components/schemas/Company'
+            responsibilities:
+              type: array
+              items:
+                type: string
+            requirements:
+              type: array
+              items:
+                type: string
+            benefits:
+              type: array
+              items:
+                type: string
+            application_count:
+              type: integer
+            similar_jobs:
+              type: array
+              items:
+                type: string
+
+    Company:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        size:
+          type: string
+        industry:
+          type: string
+        website:
+          type: string
+          format: uri
+        logo:
+          type: string
+          format: uri
+
+    JobSearchResponse:
+      type: object
+      properties:
+        jobs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Job'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+        filters:
+          type: object
+          properties:
+            applied:
+              type: object
+            available:
+              type: object
+
+    JobRecommendation:
+      allOf:
+        - $ref: '#/components/schemas/Job'
+        - type: object
+          properties:
+            recommendation_reason:
+              type: string
+            confidence_score:
+              type: integer
+              minimum: 0
+              maximum: 100
+
+    JobApplication:
+      type: object
+      properties:
+        id:
+          type: string
+        job_id:
+          type: string
+        status:
+          type: string
+          enum: [draft, applied, interviewing, offer, rejected, accepted, withdrawn]
+        applied_at:
+          type: string
+          format: date-time
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        next_step_date:
+          type: string
+          format: date-time
+          nullable: true
+        next_step_type:
+          type: string
+          enum: [phone, technical, hr, final, other]
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        job:
+          $ref: '#/components/schemas/Job'
+        timeline:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date-time
+              status:
+                type: string
+              description:
+                type: string
+
+    CreateApplicationRequest:
+      type: object
+      required:
+        - job_id
+      properties:
+        job_id:
+          type: string
+        cover_letter:
+          type: string
+        cv_id:
+          type: string
+        notes:
+          type: string
+
+    UpdateApplicationRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [draft, applied, interviewing, offer, rejected, accepted, withdrawn]
+        notes:
+          type: string
+        next_step_date:
+          type: string
+          format: date-time
+        next_step_type:
+          type: string
+          enum: [phone, technical, hr, final, other]
+
+    ApplicationsResponse:
+      type: object
+      properties:
+        applications:
+          type: array
+          items:
+            $ref: '#/components/schemas/JobApplication'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    MatchAnalysis:
+      type: object
+      properties:
+        match_analysis:
+          type: object
+          properties:
+            overall_score:
+              type: integer
+              minimum: 0
+              maximum: 100
+            matching_skills:
+              type: array
+              items:
+                type: object
+                properties:
+                  skill:
+                    type: string
+                  user_level:
+                    type: integer
+                  required_level:
+                    type: integer
+                  match:
+                    type: string
+                    enum: [strong, good, weak]
+            missing_skills:
+              type: array
+              items:
+                type: object
+                properties:
+                  skill:
+                    type: string
+                  importance:
+                    type: string
+                    enum: [required, preferred]
+                  recommendation:
+                    type: string
+            recommendations:
+              type: array
+              items:
+                type: string
+            skill_gaps:
+              type: object
+              properties:
+                critical:
+                  type: array
+                  items:
+                    type: string
+                important:
+                  type: array
+                  items:
+                    type: string
+                nice_to_have:
+                  type: array
+                  items:
+                    type: string
+
+    Subscription:
+      type: object
+      properties:
+        plan:
+          type: string
+          enum: [free, pro, enterprise]
+        status:
+          type: string
+          enum: [active, canceled, expired, trialing]
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        total_pages:
+          type: integer
+        has_next:
+          type: boolean
+        has_prev:
+          type: boolean
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+            request_id:
+              type: string
+
+  responses:
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "VALIDATION_ERROR"
+              message: "The provided email address is invalid"
+              details:
+                field: "email"
+                value: "invalid-email"
+              request_id: "req_123456789"
+
+    AuthenticationError:
+      description: Authentication error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "AUTHENTICATION_ERROR"
+              message: "Invalid or expired token"
+              request_id: "req_123456789"
+
+    AuthorizationError:
+      description: Authorization error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    ConflictError:
+      description: Resource conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    SubscriptionError:
+      description: Subscription required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "SUBSCRIPTION_REQUIRED"
+              message: "This feature requires a Pro subscription"
+              request_id: "req_123456789"
+
+    RateLimitError:
+      description: Rate limit exceeded
+      headers:
+        X-RateLimit-Limit:
+          schema:
+            type: integer
+          description: Request limit per time window
+        X-RateLimit-Remaining:
+          schema:
+            type: integer
+          description: Remaining requests in current window
+        X-RateLimit-Reset:
+          schema:
+            type: integer
+          description: Time when rate limit resets (Unix timestamp)
+        Retry-After:
+          schema:
+            type: integer
+          description: Seconds to wait before retrying
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  headers:
+    X-Request-ID:
+      description: Unique request identifier
+      schema:
+        type: string
+        example: "req_123456789"
+
+    X-RateLimit-Limit:
+      description: Request limit per time window
+      schema:
+        type: integer
+        example: 100
+
+    X-RateLimit-Remaining:
+      description: Remaining requests in current window
+      schema:
+        type: integer
+        example: 95
+
+    X-RateLimit-Reset:
+      description: Time when rate limit resets (Unix timestamp)
+      schema:
+        type: integer
+        example: 1640995200

@@ -10,6 +10,7 @@ import { Features } from './Features'
 import { HowItWorks } from './HowItWorks'
 import { Testimonials } from './Testimonials'
 import { Footer } from './Footer'
+import { SEO } from '../src/lib/seo'
 
 // Navigation pour les utilisateurs non connectés
 const publicNavigation = [
@@ -26,6 +27,11 @@ export function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO 
+        title="AI-Powered Job Search Platform"
+        description="Transform your job search with AI. Automated applications, intelligent matching, and career optimization tools."
+        keywords={['job search', 'ai jobs', 'career', 'employment', 'automated applications']}
+      />
       {/* Header */}
       <header className="fixed inset-x-0 top-0 z-50 backdrop-blur-sm border-b border-white/10">
         <nav className="flex items-center justify-between p-6 lg:px-8" aria-label="Global">

@@ -2342,6 +2342,7 @@
     "packageJson": {
       "dependencies": [
         "npm:@apollo/client@^3.13.8",
+        "npm:@axe-core/react@^4.10.2",
         "npm:@babel/preset-env@^7.27.1",
         "npm:@babel/preset-react@^7.27.1",
         "npm:@babel/preset-typescript@^7.27.1",
@@ -2385,6 +2386,7 @@
         "npm:@typescript-eslint/parser@^7.18.0",
         "npm:@vimeo/player@^2.21.0",
         "npm:@vitejs/plugin-react@^4.2.1",
+        "npm:@vueuse/core@^13.7.0",
         "npm:autoprefixer@^10.4.21",
         "npm:babel-jest@^29.7.0",
         "npm:browserslist@^4.24.5",
@@ -2434,6 +2436,7 @@
         "npm:react-chartjs-2@^5.3.0",
         "npm:react-dom@^18.2.0",
         "npm:react-dropzone@^14.2.3",
+        "npm:react-helmet-async@^2.0.5",
         "npm:react-hot-toast@^2.5.2",
         "npm:react-i18next@^14.1.0",
         "npm:react-icons@^5.2.1",
@@ -2442,6 +2445,7 @@
         "npm:react-share@^5.2.2",
         "npm:react@^18.2.0",
         "npm:rimraf@^6.0.1",
+        "npm:rollup-plugin-visualizer@^6.0.3",
         "npm:socket.io-client@^4.7.5",
         "npm:socket.io@^4.8.1",
         "npm:spdy@^4.0.2",
@@ -2454,6 +2458,8 @@
         "npm:typescript@^5.4.0",
         "npm:uuid@^11.1.0",
         "npm:vite-plugin-compression@~0.5.1",
+        "npm:vite-plugin-imagemin@~0.6.1",
+        "npm:vite-plugin-pwa@^1.0.3",
         "npm:vite@^7.1.2",
         "npm:web-vitals@^3.5.2",
         "npm:zustand@^4.5.2"
