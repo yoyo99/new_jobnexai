@@ -2460,7 +2460,7 @@
         "npm:vite-plugin-compression@~0.5.1",
         "npm:vite-plugin-imagemin@~0.6.1",
         "npm:vite-plugin-pwa@^1.0.3",
-        "npm:vite@^7.1.2",
+        "npm:vite@^4.5.14",
         "npm:web-vitals@^3.5.2",
         "npm:zustand@^4.5.2"
       ]
