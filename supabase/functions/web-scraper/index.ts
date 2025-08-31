@@ -83,6 +83,8 @@ serve(async (req: Request) => {
   try {
     console.log('Request method:', req.method);
     console.log('Request URL:', req.url);
+    const authHeader = req.headers.get('Authorization') || '';
+    console.log('Auth header present:', authHeader.startsWith('Bearer '));
     
     let requestData;
     try {
@@ -100,11 +102,11 @@ serve(async (req: Request) => {
 
     switch (action) {
       case 'start_scraping':
-        return await startScraping(criteria, sites, sessionId);
+        return await startScraping(criteria, sites, sessionId, req);
       case 'get_session_status':
-        return await getSessionStatus(sessionId);
+        return await getSessionStatus(sessionId, req);
       case 'get_scraped_jobs':
-        return await getScrapedJobs(sessionId);
+        return await getScrapedJobs(sessionId, req);
       case 'get_available_sites':
         return await getAvailableSites();
       default:
@@ -122,12 +124,24 @@ serve(async (req: Request) => {
   }
 });
 
-async function startScraping(criteria: ScrapingCriteria, siteIds: string[], sessionId: string) {
+async function startScraping(criteria: ScrapingCriteria, siteIds: string[], sessionId: string, req: Request) {
   try {
-    // Récupérer l'utilisateur authentifié
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    // Récupérer l'utilisateur authentifié depuis le header Authorization
+    const authHeader = req.headers.get('Authorization') || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.substring('Bearer '.length) : '';
+    if (!token) {
+      return new Response(
+        JSON.stringify({ error: 'Non autorisé', details: 'Jeton manquant' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) {
-      throw new Error('Utilisateur non authentifié');
+      return new Response(
+        JSON.stringify({ error: 'Non autorisé', details: 'Utilisateur non authentifié' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Créer une session de scraping
@@ -419,15 +433,40 @@ function generateMockJobs(site: JobSite, criteria: ScrapingCriteria): any[] {
   return jobs;
 }
 
-async function getSessionStatus(sessionId: string) {
+async function getSessionStatus(sessionId: string, req: Request) {
   try {
+    // Authentifier l'utilisateur via le header Authorization
+    const authHeader = req.headers.get('Authorization') || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.substring('Bearer '.length) : '';
+    if (!token) {
+      return new Response(
+        JSON.stringify({ error: 'Non autorisé', details: 'Jeton manquant' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Non autorisé', details: 'Utilisateur non authentifié' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Récupérer la session appartenant à l'utilisateur
     const { data, error } = await supabase
       .from('scraping_sessions')
       .select('*')
       .eq('id', sessionId)
+      .eq('user_id', user.id)
       .single();
 
-    if (error) throw error;
+    if (error || !data) {
+      return new Response(
+        JSON.stringify({ error: 'Session non trouvée' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     return new Response(
       JSON.stringify({ session: data }),
@@ -436,14 +475,47 @@ async function getSessionStatus(sessionId: string) {
 
   } catch (error) {
     return new Response(
-      JSON.stringify({ error: 'Session non trouvée', details: (error as Error).message }),
-      { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: 'Erreur lors de la récupération du statut', details: (error as Error).message }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 }
 
-async function getScrapedJobs(sessionId: string) {
+async function getScrapedJobs(sessionId: string, req: Request) {
   try {
+    // Authentifier l'utilisateur via le header Authorization
+    const authHeader = req.headers.get('Authorization') || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.substring('Bearer '.length) : '';
+    if (!token) {
+      return new Response(
+        JSON.stringify({ error: 'Non autorisé', details: 'Jeton manquant' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Non autorisé', details: 'Utilisateur non authentifié' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Vérifier que la session appartient à l'utilisateur
+    const { data: session, error: sessionError } = await supabase
+      .from('scraping_sessions')
+      .select('id, user_id')
+      .eq('id', sessionId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (sessionError || !session) {
+      return new Response(
+        JSON.stringify({ error: 'Session non trouvée' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { data, error } = await supabase
       .from('scraped_jobs')
       .select('*')

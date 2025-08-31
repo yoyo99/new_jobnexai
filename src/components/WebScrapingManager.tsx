@@ -172,9 +172,13 @@ const WebScrapingManager: React.FC = () => {
     if (!currentSession) return;
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/web-scraper`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`
+        },
         body: JSON.stringify({
           action: 'get_session_status',
           sessionId: currentSession.id
@@ -196,9 +200,13 @@ const WebScrapingManager: React.FC = () => {
 
   const loadScrapedJobs = async (sessionId: string) => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/web-scraper`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`
+        },
         body: JSON.stringify({
           action: 'get_scraped_jobs',
           sessionId
