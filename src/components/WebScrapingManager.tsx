@@ -142,6 +142,7 @@ const WebScrapingManager: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('Scraping démarré avec succès:', data);
         setCurrentSession({
           id: sessionId,
           status: 'running',
@@ -150,7 +151,9 @@ const WebScrapingManager: React.FC = () => {
           errors: []
         });
       } else {
-        throw new Error('Erreur lors du démarrage du scraping');
+        const errorText = await response.text();
+        console.error('Erreur response scraping:', response.status, errorText);
+        throw new Error(`Erreur ${response.status}: ${errorText}`);
       }
     } catch (error) {
       console.error('Erreur:', error);
