@@ -356,7 +356,7 @@ const WebScrapingManager: React.FC = () => {
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="today">Aujourd'hui</option>
-                    <option value="week">Moins d'une semaine (7 jours)</option>
+                    <option value="week">7 derniers jours</option>
                     <option value="month">Ce mois (30 jours)</option>
                     <option value="custom">Personnalisé</option>
                   </select>
@@ -390,7 +390,7 @@ const WebScrapingManager: React.FC = () => {
                 <p className="text-sm text-blue-300">
                   ℹ️ Seules les offres publiées dans les {criteria.freshnessFilter.maxDays} derniers jours seront affichées.
                   {criteria.freshnessFilter.maxDays === 1 && " Les offres d'aujourd'hui uniquement."}
-                  {criteria.freshnessFilter.maxDays === 7 && " Offres de moins d'une semaine."}
+                  {criteria.freshnessFilter.maxDays === 7 && " Offres des 7 derniers jours."}
                   {criteria.freshnessFilter.maxDays === 30 && " Offres du mois en cours."}
                 </p>
               </div>
