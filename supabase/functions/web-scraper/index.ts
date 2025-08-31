@@ -127,12 +127,10 @@ async function startScraping(criteria: ScrapingCriteria, siteIds: string[], sess
     // Créer une session de scraping
     const session = {
       id: sessionId,
-      // criteria, // Retiré car la colonne n'existe pas dans la BDD
-      sites: siteIds,
+      criteria,
+      selected_sites: siteIds,
       status: 'running',
-      started_at: new Date().toISOString(),
       total_jobs: 0,
-      errors: [],
       user_id: 'system' // TODO: Récupérer l'ID utilisateur depuis le token
     };
 
