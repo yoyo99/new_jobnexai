@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { 
   GlobeAltIcon, 
   PlayIcon, 
-  StopIcon, 
   ClockIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
@@ -84,6 +83,7 @@ const WebScrapingManager: React.FC = () => {
       }, 5000);
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [currentSession]);
 
   const loadAvailableSites = async () => {
@@ -289,10 +289,19 @@ const WebScrapingManager: React.FC = () => {
             <input
               type="number"
               value={criteria.salaryRange.min || ''}
-              onChange={(e) => setCriteria({
-                ...criteria, 
-                salaryRange: {...criteria.salaryRange, min: parseInt(e.target.value) || undefined}
-              })}
+              onChange={(e) => {
+                const value = e.target.value;
+                const newSalaryRange = {...criteria.salaryRange};
+                if (value) {
+                  newSalaryRange.min = parseInt(value);
+                } else {
+                  delete newSalaryRange.min;
+                }
+                setCriteria({
+                  ...criteria, 
+                  salaryRange: newSalaryRange
+                });
+              }}
               placeholder="30000"
               className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
@@ -304,10 +313,19 @@ const WebScrapingManager: React.FC = () => {
             <input
               type="number"
               value={criteria.salaryRange.max || ''}
-              onChange={(e) => setCriteria({
-                ...criteria, 
-                salaryRange: {...criteria.salaryRange, max: parseInt(e.target.value) || undefined}
-              })}
+              onChange={(e) => {
+                const value = e.target.value;
+                const newSalaryRange = {...criteria.salaryRange};
+                if (value) {
+                  newSalaryRange.max = parseInt(value);
+                } else {
+                  delete newSalaryRange.max;
+                }
+                setCriteria({
+                  ...criteria, 
+                  salaryRange: newSalaryRange
+                });
+              }}
               placeholder="80000"
               className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
