@@ -126,6 +126,11 @@ const WebScrapingManager: React.FC = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
+      console.log('Session ID généré:', sessionId);
+      console.log('Critères envoyés:', criteria);
+      console.log('Sites sélectionnés:', selectedSites);
+      console.log('Token d\'authentification:', session?.access_token ? 'Présent' : 'Absent');
+      
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/web-scraper`, {
         method: 'POST',
         headers: { 
