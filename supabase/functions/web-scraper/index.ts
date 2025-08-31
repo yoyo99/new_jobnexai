@@ -127,7 +127,7 @@ async function startScraping(criteria: ScrapingCriteria, siteIds: string[], sess
     // Créer une session de scraping
     const session = {
       id: sessionId,
-      criteria,
+      // criteria, // Retiré car la colonne n'existe pas dans la BDD
       sites: siteIds,
       status: 'running',
       started_at: new Date().toISOString(),
