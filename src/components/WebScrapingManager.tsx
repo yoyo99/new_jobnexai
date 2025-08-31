@@ -121,7 +121,7 @@ const WebScrapingManager: React.FC = () => {
     if (!user || selectedSites.length === 0 || criteria.jobTitles.length === 0) return;
 
     setLoading(true);
-    const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const sessionId = crypto.randomUUID();
 
     try {
       const { data: { session } } = await supabase.auth.getSession();

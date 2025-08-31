@@ -124,6 +124,12 @@ serve(async (req: Request) => {
 
 async function startScraping(criteria: ScrapingCriteria, siteIds: string[], sessionId: string) {
   try {
+    // Récupérer l'utilisateur authentifié
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      throw new Error('Utilisateur non authentifié');
+    }
+
     // Créer une session de scraping
     const session = {
       id: sessionId,
@@ -131,7 +137,7 @@ async function startScraping(criteria: ScrapingCriteria, siteIds: string[], sess
       selected_sites: siteIds,
       status: 'running',
       total_jobs: 0,
-      user_id: 'system' // TODO: Récupérer l'ID utilisateur depuis le token
+      user_id: user.id
     };
 
     const { error: sessionError } = await supabase
