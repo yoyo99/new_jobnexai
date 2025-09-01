@@ -169,7 +169,14 @@ async function startScraping(criteria: ScrapingCriteria, siteIds: string[], sess
       user_id: user.id
     };
 
-    const { error: sessionError } = await supabase
+    // Créer un client Supabase authentifié pour cette requête spécifique
+    const userSupabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: `Bearer ${token}` } } }
+    );
+
+    const { error: sessionError } = await userSupabaseClient
       .from('scraping_sessions')
       .upsert(session);
 
