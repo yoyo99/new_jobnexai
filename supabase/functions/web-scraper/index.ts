@@ -181,14 +181,16 @@ async function startScraping(criteria: ScrapingCriteria, siteIds: string[], sess
       .upsert(session);
 
     if (sessionError) {
-      console.error('Supabase session upsert error:', sessionError);
+      console.error('Supabase session upsert error (raw):', sessionError);
+      console.error('Supabase session upsert error (stringified):', JSON.stringify(sessionError, null, 2));
       return new Response(
         JSON.stringify({
           error: 'Database error during session creation.',
-          details: sessionError.message,
-          code: sessionError.code,
+          details: sessionError.message || 'No details available',
+          code: sessionError.code || 'N/A',
+          rawError: sessionError,
         }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 500, headers: corsHeaders }
       );
     }
 
