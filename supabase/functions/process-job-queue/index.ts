@@ -125,11 +125,9 @@ async function processScraping(payload: any) {
       const jobsToInsert = sortedJobs.map(job => ({
         ...job,
         session_id: sessionId,
-        user_id: payload.user_id,
         scraped_at: new Date().toISOString()
       }));
 
-      console.log('Sample job to insert:', JSON.stringify(jobsToInsert[0], null, 2));
       const { error: jobsError } = await supabase.from('scraped_jobs').insert(jobsToInsert);
       if (jobsError) {
         console.error(`[Job ${sessionId}] Error saving scraped jobs:`, jobsError);
