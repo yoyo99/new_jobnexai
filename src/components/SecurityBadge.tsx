@@ -1,9 +1,14 @@
 import { motion } from 'framer-motion'
 import { ShieldCheckIcon } from '@heroicons/react/24/outline'
-import { useTranslation } from 'react-i18next'
+import { useLocation } from 'react-router-dom'
 
 export function SecurityBadge() {
-  const { t } = useTranslation()
+  const location = useLocation()
+
+  // Ne pas afficher le badge sur la page de scraping pour éviter le chevauchement
+  if (location.pathname === '/app/web-scraping') {
+    return null
+  }
 
   return (
     <motion.div
