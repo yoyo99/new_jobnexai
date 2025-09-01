@@ -125,7 +125,7 @@ async function processScraping(payload: any) {
       const jobsToInsert = sortedJobs.map(job => ({
         ...job,
         session_id: sessionId,
-        user_id: user_id,
+        user_id: payload.user_id,
         scraped_at: new Date().toISOString()
       }));
 
