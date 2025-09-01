@@ -216,6 +216,15 @@ async function startScraping(criteria: ScrapingCriteria, siteIds: string[], sess
       );
     }
 
+    // Déclencher le worker de manière asynchrone (fire and forget)
+    const processUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/process-job-queue`;
+    fetch(processUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+      }
+    }).catch(err => console.error('[web-scraper] Failed to trigger process-job-queue:', err));
+
     return new Response(
       JSON.stringify({
         success: true,
