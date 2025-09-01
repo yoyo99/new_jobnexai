@@ -114,21 +114,27 @@ serve(async (req: Request) => {
     const { action, criteria, sites, sessionId } = requestData;
 
     switch (action) {
-      case 'start_scraping':
+      case 'start_scraping': {
         return await startScraping(criteria, sites, sessionId, req);
-      case 'get_session_status':
-        return await getSessionStatus(sessionId, req);
-      case 'get_scraped_jobs':
+      }
+      case 'get_scraped_jobs': {
         return await getScrapedJobs(sessionId, req);
-      case 'get_available_sites':
+      }
+      case 'get_session_status': {
+        return await getSessionStatus(sessionId, req);
+      }
+      case 'get_available_sites': {
         return await getAvailableSites();
-      case 'health_check':
+      }
+      case 'health_check': {
         return new Response(JSON.stringify({ status: 'ok', timestamp: new Date().toISOString() }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-      default:
+      }
+      default: {
         return new Response(
           JSON.stringify({ error: 'Action non supportée', receivedAction: action }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
+      }
     }
   } catch (error) {
     console.error('Erreur dans web-scraper:', error);
@@ -336,18 +342,19 @@ async function getScrapedJobs(sessionId: string, req: Request) {
       );
     }
 
-    const { data, error } = await supabase
+    // Récupérer les offres associées à la session
+    const { data: jobs, error: jobsError } = await supabase
       .from('scraped_jobs')
       .select('*')
       .eq('session_id', sessionId)
-      .order('scraped_at', { ascending: false });
+      .order('posted_date', { ascending: false });
 
-    if (error) throw error;
+    if (jobsError) {
+      console.error('Erreur get_scraped_jobs:', jobsError);
+      return new Response(JSON.stringify({ error: 'Impossible de récupérer les offres' }), { status: 500, headers: corsHeaders });
+    }
 
-    return new Response(
-      JSON.stringify({ jobs: data || [] }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ jobs }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (error) {
     return new Response(
