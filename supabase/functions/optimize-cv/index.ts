@@ -1,4 +1,4 @@
-import OpenAI from 'openai'
+import OpenAI from 'npm:openai@4'
 import { createClient } from 'npm:@supabase/supabase-js@2.39.3'
 
 const openai = new OpenAI({
