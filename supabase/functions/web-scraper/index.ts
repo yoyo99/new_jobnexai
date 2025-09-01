@@ -132,6 +132,7 @@ function filterJobsByFreshness(jobs: any[], criteria: ScrapingCriteria): any[] {
 }
 
 serve(async (req: Request) => {
+  console.log(`[web-scraper] RUNNING LATEST VERSION - ${new Date().toISOString()}`);
   console.log(`[web-scraper] Received request: ${req.method} ${req.url}`);
 
   if (req.method === 'OPTIONS') {
