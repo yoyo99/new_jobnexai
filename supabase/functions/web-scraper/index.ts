@@ -195,15 +195,18 @@ async function startScraping(criteria: ScrapingCriteria, siteIds: string[], sess
     }
 
     // Insérer une tâche dans la file d'attente des tâches
-    const { error: jobQueueError } = await userSupabaseClient.from('job_queue').insert({
-      type: 'scraping',
-      payload: {
-        criteria,
-        siteIds,
-        sessionId,
+    const { data: jobQueueData, error: jobQueueError } = await userSupabaseClient
+      .from('job_queue')
+      .insert({
         user_id: user.id,
-      },
-    });
+        session_id: sessionId,
+        type: 'scraping',
+        payload: { criteria, siteIds, sessionId, user_id: user.id },
+        status: 'pending',
+        scheduled_for: new Date().toISOString(),
+      })
+      .select('id')
+      .single();
 
     if (jobQueueError) {
       console.error('Supabase job_queue insert error:', jobQueueError);
@@ -218,12 +221,16 @@ async function startScraping(criteria: ScrapingCriteria, siteIds: string[], sess
 
     // Déclencher le worker de manière asynchrone (fire and forget)
     const processUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/process-job-queue`;
-    fetch(processUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-      }
-    }).catch(err => console.error('[web-scraper] Failed to trigger process-job-queue:', err));
+    if (jobQueueData) {
+      fetch(processUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ jobId: jobQueueData.id })
+      }).catch(err => console.error('[web-scraper] Failed to trigger process-job-queue:', err));
+    }
 
     return new Response(
       JSON.stringify({

@@ -244,19 +244,51 @@ Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
+
+  let processedCount = 0;
+
   try {
+    // Tenter de traiter un job spécifique passé en paramètre (pour les déclenchements immédiats)
+    if (req.body) {
+      try {
+        const { jobId } = await req.json();
+        if (jobId) {
+          console.log(`[Worker] Triggered for specific job ID: ${jobId}`);
+          const { data: specificJob, error: specificJobError } = await supabase
+            .from('job_queue')
+            .select('*')
+            .eq('id', jobId)
+            .single();
+          
+          if (specificJobError) console.error(`[Worker] Error fetching specific job ${jobId}:`, specificJobError);
+
+          if (specificJob && specificJob.status === 'pending') {
+            await processJob(specificJob);
+            processedCount++;
+          }
+        }
+      } catch (_e) {
+        // Ignorer l'erreur si le body est vide ou mal formé, et continuer normalement
+      }
+    }
+
+    // Traiter le reste de la file d'attente (batch normal)
     const { data: pendingJobs, error: fetchError } = await supabase
       .from('job_queue')
       .select('*')
       .eq('status', 'pending')
       .lte('scheduled_for', new Date().toISOString())
       .limit(10);
+
     if (fetchError) throw fetchError;
+
     for (const job of pendingJobs || []) {
       await processJob(job);
+      processedCount++;
     }
-    return new Response(JSON.stringify({ processed: pendingJobs?.length || 0 }), { 
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+
+    return new Response(JSON.stringify({ processed: processedCount }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
     const error = e instanceof Error ? e : new Error(String(e));
