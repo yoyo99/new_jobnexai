@@ -195,7 +195,7 @@ const WebScrapingManager: React.FC = () => {
           setCurrentSession(data.session);
 
           if (data.session.status === 'completed') {
-            loadScrapedJobs(currentSession.id);
+            loadScrapedJobs(data.session.id);
           }
         }
       }
