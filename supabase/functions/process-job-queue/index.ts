@@ -1,3 +1,4 @@
+console.log('[process-job-queue] Running version: 2025-09-01 21:00');
 import { createClient } from '../_shared/deps.ts';
 import { corsHeaders } from "../_shared/cors.ts";
 
