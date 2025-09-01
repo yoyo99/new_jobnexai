@@ -10,8 +10,9 @@ import { useAuth } from '../stores/auth';
  * @returns {string[]} - Une liste de suggestions pour améliorer le texte.
  **/
 
-export function semanticAnalysis(_text: string): string[] {
+export function semanticAnalysis(text: string): string[] {
   // Dans cette première version, nous retournons des suggestions en dur..
+  // TODO: Implémenter l'analyse sémantique réelle du texte: ${text}
   return ["Améliorer la structure de la phrase.", "Ajouter des mots clés pertinents pour le poste.", "Mettre en avant vos expériences les plus significatives."];
 }
 
@@ -132,8 +133,7 @@ export function addAnswer(conversationId: string, answer: string): string[] {
     }
     const lastExchange = conversation.history[conversation.history.length - 1];
     if (!lastExchange || !lastExchange.question) return [];
-    const jobDescription = conversation.jobDescription;
-    const { feedbacks, note, weakPoints } = analyzeAnswer(answer, lastExchange.question,);
+    const { feedbacks, note, weakPoints } = analyzeAnswer(answer, lastExchange.question);
     lastExchange.answer = answer;// On ajoute la réponse
     lastExchange.feedbacks = feedbacks;
     lastExchange.note = note;
@@ -341,7 +341,7 @@ export async function translateTextsBatch(texts: string[], targetLanguage: strin
 }
 
 export async function generateBulkApplicationMessages(
-  cv: any,
+  _cv: any,
   jobDescriptions: { id: string; description: string }[]
 ): Promise<{ jobId: string; message: string | null }[]> {
   // Stub impl. renvoyant un objet vide pour chaque description
@@ -364,7 +364,7 @@ function getOpenAIClient(): OpenAI {
       throw new Error('La clé API OpenAI (VITE_OPENAI_API_KEY) n\'est pas configurée dans les variables d\'environnement.');
     }
     openai = new OpenAI({
-      apiKey: apiKey,
+      apiKey,
       dangerouslyAllowBrowser: true // AVERTISSEMENT: Pour la production, utilisez une fonction Edge sécurisée.
     });
   }

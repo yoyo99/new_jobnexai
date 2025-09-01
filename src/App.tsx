@@ -1,5 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import React, { Suspense, useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { Suspense, useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 import ToastContainer from './ToastContainer';
 
@@ -15,10 +15,11 @@ import { PrivacyConsent } from './components/PrivacyConsent'
 import { SecurityBadge } from './components/SecurityBadge'
 import { SubscriptionBanner } from './components/SubscriptionBanner'
 import { ErrorBoundary } from './components/ErrorBoundary'
-import { useAuth } from './stores/auth'; // Added for LandingPageRouteHandler
+// import { useAuth } from './stores/auth'; // (unused)
 import { AuthProvider } from './components/AuthProvider';
 import { PublicRoute } from './components/PublicRoute';
 import { LoadingFallback } from './components/LoadingFallback';
+import { PWAInstall, ConnectionStatus, UpdateNotification } from './components/PWAInstall'
 
 // Wrapper pour les composants lazy-loaded avec ErrorBoundary spécifique
 const LazyComponentWrapper = ({ children }: { children: React.ReactNode }) => {
@@ -46,24 +47,11 @@ const LandingPageRouteHandler = () => {
 };
 
 // Handler for dashboard redirect (for authenticated users)
-const DashboardRedirectHandler = () => {
-  const { user, loading } = useAuth();
-  const location = useLocation();
-
-  if (loading) {
-    return <LoadingFallback message="Vérification de la session..." />;
-  }
-
-  if (user) {
-    return <Navigate to="/app/dashboard" state={{ from: location }} replace />;
-  }
-
-  return <Navigate to="/" replace />;
-};
+// (Removed unused DashboardRedirectHandler)
 
 // Code splitting (React.lazy) pour les pages principales
 const JobNexAILanding = React.lazy(() => import('./pages/LandingPage'));
-const Auth = React.lazy(() => import('./components/Auth'));
+// (Removed unused Auth import)
 const SupabaseAuth = React.lazy(() => import('./components/SupabaseAuth')); // Nouveau composant d'auth avec Supabase
 const Pricing = React.lazy(() => import('./pages/PricingPage')); 
 const PrivacyPolicy = React.lazy(() => import('./components/PrivacyPolicy'));
@@ -104,7 +92,7 @@ const RecruiterDashboard = React.lazy(() => import('./components/recruiter/Recru
 const CandidateSearch = React.lazy(() => import('./components/recruiter/CandidateSearch'));
 const JobPostings = React.lazy(() => import('./components/recruiter/JobPostings'));
 const CreateJobPosting = React.lazy(() => import('./components/recruiter/CreateJobPosting'));
-const UserTypeSelection = React.lazy(() => import('./components/UserTypeSelection'));
+// (Removed unused UserTypeSelection import)
 const ModernComponentsDemo = React.lazy(() => import('./components/ModernComponentsDemo').then(module => ({ default: module.ModernComponentsDemo })));
 
 import { I18nextProvider } from 'react-i18next';
@@ -146,6 +134,10 @@ function App() {
       <I18nextProvider i18n={i18n}>
         <AuthProvider>
           <Router>
+            {/* PWA Components */}
+            <PWAInstall variant="banner" />
+            <ConnectionStatus />
+            <UpdateNotification />
         <Toaster
           position="bottom-right"
           toastOptions={{

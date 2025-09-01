@@ -76,24 +76,37 @@ const JOB_SITES: JobSite[] = [
 ];
 
 serve(async (req: Request) => {
+  console.log(`[web-scraper] Received request: ${req.method} ${req.url}`);
+
   if (req.method === 'OPTIONS') {
+    console.log('[web-scraper] Handling OPTIONS preflight request.');
     return new Response('ok', { headers: corsHeaders });
   }
 
+  // Log all headers for debugging
+    const headersObject: { [key: string]: string } = {};
+  req.headers.forEach((value, key) => {
+    headersObject[key] = value;
+  });
+  console.log('[web-scraper] Request headers:', JSON.stringify(headersObject, null, 2));
+
   try {
-    console.log('Request method:', req.method);
-    console.log('Request URL:', req.url);
-    const authHeader = req.headers.get('Authorization') || '';
-    console.log('Auth header present:', authHeader.startsWith('Bearer '));
-    
     let requestData;
     try {
-      requestData = await req.json();
-      console.log('Request data:', requestData);
+      const textBody = await req.text();
+      console.log('[web-scraper] Received raw body:', textBody);
+      if (!textBody) {
+        throw new Error('Request body is empty.');
+      }
+      requestData = JSON.parse(textBody);
+      console.log('[web-scraper] Successfully parsed JSON body:', requestData);
     } catch (parseError) {
-      console.error('Error parsing JSON:', parseError);
+      console.error('[web-scraper] Error parsing JSON body:', parseError);
       return new Response(
-        JSON.stringify({ error: 'Invalid JSON in request body' }),
+        JSON.stringify({ 
+          error: 'Invalid or empty JSON in request body.',
+          details: (parseError as Error).message 
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -109,6 +122,8 @@ serve(async (req: Request) => {
         return await getScrapedJobs(sessionId, req);
       case 'get_available_sites':
         return await getAvailableSites();
+      case 'health_check':
+        return new Response(JSON.stringify({ status: 'ok', timestamp: new Date().toISOString() }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       default:
         return new Response(
           JSON.stringify({ error: 'Action non supportée', receivedAction: action }),
@@ -159,7 +174,15 @@ async function startScraping(criteria: ScrapingCriteria, siteIds: string[], sess
       .upsert(session);
 
     if (sessionError) {
-      throw sessionError;
+      console.error('Supabase session upsert error:', sessionError);
+      return new Response(
+        JSON.stringify({
+          error: 'Database error during session creation.',
+          details: sessionError.message,
+          code: sessionError.code,
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Lancer le scraping en arrière-plan

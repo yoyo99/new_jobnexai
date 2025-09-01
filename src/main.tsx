@@ -6,7 +6,7 @@ import './i18n'
 import './minimal.css'
 import App from './App';
 import { initMonitoring } from './lib/monitoring'
-import { initPerformanceMonitoring } from './lib/performance-monitoring'
+import { pwaManager } from './lib/pwa'
 import { ThemeProvider } from './contexts/ThemeContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
@@ -14,11 +14,11 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 // Initialiser le monitoring
 initMonitoring()
 
-// Initialiser le monitoring des performances
-// initPerformanceMonitoring()
+// Initialiser le monitoring des performances (désactivé pour l'instant)
 
 // Créer un client React Query
 const queryClient = new QueryClient();
+console.log('PWA Manager initialized:', pwaManager);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
