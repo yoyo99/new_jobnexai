@@ -174,12 +174,12 @@ const WebScrapingManager: React.FC = () => {
     if (!currentSession) return;
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session: authSession } } = await supabase.auth.getSession();
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/web-scraper`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token}`
+          'Authorization': `Bearer ${authSession?.access_token}`
         },
         body: JSON.stringify({
           action: 'get_session_status',
@@ -189,10 +189,14 @@ const WebScrapingManager: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
-        setCurrentSession(data.session);
+        
+        // Empêche la boucle de re-render si les données de session n'ont pas changé
+        if (JSON.stringify(currentSession) !== JSON.stringify(data.session)) {
+          setCurrentSession(data.session);
 
-        if (data.session.status === 'completed') {
-          loadScrapedJobs(currentSession.id);
+          if (data.session.status === 'completed') {
+            loadScrapedJobs(currentSession.id);
+          }
         }
       }
     } catch (error) {
