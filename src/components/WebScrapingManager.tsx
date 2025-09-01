@@ -158,11 +158,13 @@ const WebScrapingManager: React.FC = () => {
       } else {
         const errorText = await response.text();
         console.error('Erreur response scraping:', response.status, errorText);
+        alert(`Erreur ${response.status}: ${errorText}`);
         throw new Error(`Erreur ${response.status}: ${errorText}`);
       }
     } catch (error) {
-      console.error('Erreur:', error);
-      alert('Erreur lors du démarrage du scraping');
+      console.error('Erreur détaillée startScraping:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+      alert(`Erreur lors du démarrage du scraping: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -390,7 +392,7 @@ const WebScrapingManager: React.FC = () => {
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="today">Aujourd'hui</option>
-                    <option value="week">7 derniers jours</option>
+                    <option value="week">Cette semaine</option>
                     <option value="month">Ce mois (30 jours)</option>
                     <option value="custom">Personnalisé</option>
                   </select>
@@ -424,7 +426,7 @@ const WebScrapingManager: React.FC = () => {
                 <p className="text-sm text-blue-300">
                   ℹ️ Seules les offres publiées dans les {criteria.freshnessFilter.maxDays} derniers jours seront affichées.
                   {criteria.freshnessFilter.maxDays === 1 && " Les offres d'aujourd'hui uniquement."}
-                  {criteria.freshnessFilter.maxDays === 7 && " Offres des 7 derniers jours."}
+                  {criteria.freshnessFilter.maxDays === 7 && " Offres de cette semaine."}
                   {criteria.freshnessFilter.maxDays === 30 && " Offres du mois en cours."}
                 </p>
               </div>
