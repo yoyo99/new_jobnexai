@@ -207,6 +207,7 @@ async function scrapeSite(site: JobSite, searchUrl: string, criteria: ScrapingCr
     const jobTitle = criteria.jobTitles[i % criteria.jobTitles.length] || 'Développeur';
 
     return {
+      id: crypto.randomUUID(),
       title: `${jobTitle} - ${site.name} (${i + 1})`,
       company: `Entreprise ${String.fromCharCode(65 + i)}`,
       location: criteria.cities[i % criteria.cities.length] || 'Paris',
