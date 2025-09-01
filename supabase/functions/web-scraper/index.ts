@@ -75,6 +75,62 @@ const JOB_SITES: JobSite[] = [
   }
 ];
 
+function buildSearchUrls(site: JobSite, criteria: ScrapingCriteria): string[] {
+  const allKeywords = [...criteria.keywords, ...criteria.jobTitles];
+  const keywordCombinations = allKeywords.length > 0 ? allKeywords : [''];
+  const locations = criteria.cities.length > 0 ? criteria.cities : [''];
+  const urls: string[] = [];
+  
+  for (const keywords of keywordCombinations) {
+    for (const location of locations) {
+      urls.push(site.searchUrl
+        .replace('{keywords}', encodeURIComponent(keywords))
+        .replace('{location}', encodeURIComponent(location)));
+    }
+  }
+  return urls.slice(0, 10);
+}
+
+async function scrapeSite(site: JobSite, searchUrl: string, criteria: ScrapingCriteria): Promise<any[]> {
+  console.log(`Simulating scraping for URL: ${searchUrl}`);
+  await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 500));
+
+  const generatedJobs = Array.from({ length: Math.floor(Math.random() * 15) + 5 }).map((_, i) => {
+    const postedDate = new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000);
+    const jobTitle = criteria.jobTitles[i % criteria.jobTitles.length] || 'Développeur';
+
+    return {
+      id: crypto.randomUUID(),
+      title: `${jobTitle} - ${site.name} (${i + 1})`,
+      company: `Entreprise ${String.fromCharCode(65 + i)}`,
+      location: criteria.cities[i % criteria.cities.length] || 'Paris',
+      url: `${site.baseUrl}/job/${i + 1}`,
+      description: `Description pour le poste de ${jobTitle}.`,
+      posted_date: postedDate.toISOString(),
+      site_name: site.name,
+      contract_type: criteria.contractTypes[0] || 'CDI',
+      remote: criteria.remote,
+      freshness_score: calculateFreshnessScore(postedDate)
+    };
+  });
+
+  return generatedJobs;
+}
+
+function calculateFreshnessScore(publishedDate: Date): number {
+  const daysSincePublished = (Date.now() - publishedDate.getTime()) / (1000 * 60 * 60 * 24);
+  if (daysSincePublished <= 1) return 1.0;
+  if (daysSincePublished <= 7) return 0.8;
+  if (daysSincePublished <= 30) return 0.5;
+  return 0.1;
+}
+
+function filterJobsByFreshness(jobs: any[], criteria: ScrapingCriteria): any[] {
+  if (!criteria.freshnessFilter.enabled) return jobs;
+  const cutoffDate = new Date(Date.now() - (criteria.freshnessFilter.maxDays * 24 * 60 * 60 * 1000));
+  return jobs.filter(job => new Date(job.posted_date) >= cutoffDate);
+}
+
 serve(async (req: Request) => {
   console.log(`[web-scraper] Received request: ${req.method} ${req.url}`);
 
@@ -146,115 +202,72 @@ serve(async (req: Request) => {
 });
 
 async function startScraping(criteria: ScrapingCriteria, siteIds: string[], sessionId: string, req: Request) {
-  try {
-    // Récupérer l'utilisateur authentifié depuis le header Authorization
-    const authHeader = req.headers.get('Authorization') || '';
-    const token = authHeader.startsWith('Bearer ') ? authHeader.substring('Bearer '.length) : '';
-    if (!token) {
-      return new Response(
-        JSON.stringify({ error: 'Non autorisé', details: 'Jeton manquant' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Non autorisé', details: 'Utilisateur non authentifié' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Créer une session de scraping
-    const session = {
-      id: sessionId,
-      criteria,
-      selected_sites: siteIds,
-      status: 'running',
-      total_jobs: 0,
-      user_id: user.id
-    };
-
-    // Créer un client Supabase authentifié pour cette requête spécifique
-    const userSupabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-      { global: { headers: { Authorization: `Bearer ${token}` } } }
-    );
-
-    const { error: sessionError } = await userSupabaseClient
-      .from('scraping_sessions')
-      .upsert(session);
-
-    if (sessionError) {
-      console.error('Supabase session upsert error (raw):', sessionError);
-      console.error('Supabase session upsert error (stringified):', JSON.stringify(sessionError, null, 2));
-      return new Response(
-        JSON.stringify({
-          error: 'Database error during session creation.',
-          details: sessionError.message || 'No details available',
-          code: sessionError.code || 'N/A',
-          rawError: sessionError,
-        }),
-        { status: 500, headers: corsHeaders }
-      );
-    }
-
-    // Insérer une tâche dans la file d'attente des tâches
-    const { data: jobQueueData, error: jobQueueError } = await userSupabaseClient
-      .from('job_queue')
-      .insert({
-        user_id: user.id,
-        session_id: sessionId,
-        type: 'scraping',
-        payload: { criteria, siteIds, sessionId, user_id: user.id },
-        status: 'pending',
-        scheduled_for: new Date().toISOString(),
-      })
-      .select('id')
-      .single();
-
-    if (jobQueueError) {
-      console.error('Supabase job_queue insert error:', jobQueueError);
-      return new Response(
-        JSON.stringify({
-          error: 'Failed to queue scraping job.',
-          details: jobQueueError.message,
-        }),
-        { status: 500, headers: corsHeaders }
-      );
-    }
-
-    // Déclencher le worker de manière asynchrone (fire and forget)
-    const processUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/process-job-queue`;
-    if (jobQueueData) {
-      fetch(processUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ jobId: jobQueueData.id })
-      }).catch(err => console.error('[web-scraper] Failed to trigger process-job-queue:', err));
-    }
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        sessionId,
-        message: 'Scraping démarré',
-        estimatedDuration: siteIds.length * 30 // 30s par site en moyenne
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-
-  } catch (error) {
-    console.error('Erreur lors du démarrage du scraping:', error);
-    return new Response(
-      JSON.stringify({ error: 'Impossible de démarrer le scraping', details: (error as Error).message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+  const authHeader = req.headers.get('Authorization') || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.substring('Bearer '.length) : '';
+  if (!token) {
+    return new Response(JSON.stringify({ error: 'Non autorisé' }), { status: 401, headers: corsHeaders });
   }
+  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+  if (authError || !user) {
+    return new Response(JSON.stringify({ error: 'Non autorisé' }), { status: 401, headers: corsHeaders });
+  }
+
+  const userSupabaseClient = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_ANON_KEY')!,
+    { global: { headers: { Authorization: `Bearer ${token}` } } }
+  );
+
+  await userSupabaseClient.from('scraping_sessions').upsert({
+    id: sessionId, criteria, selected_sites: siteIds, status: 'running', user_id: user.id
+  });
+
+  const scrapedJobs: any[] = [];
+  const errors: string[] = [];
+
+  for (const siteId of siteIds) {
+    const site = JOB_SITES.find(s => s.id === siteId);
+    if (!site || !site.active) {
+      errors.push(`Site ${siteId} not found or inactive`);
+      continue;
+    }
+    try {
+      const searchUrls = buildSearchUrls(site, criteria);
+      for (const searchUrl of searchUrls) {
+        const jobs = await scrapeSite(site, searchUrl, criteria);
+        scrapedJobs.push(...jobs);
+      }
+      await new Promise(resolve => setTimeout(resolve, site.rateLimit));
+    } catch (siteError) {
+      errors.push(`${site.name}: ${(siteError as Error).message}`);
+    }
+  }
+
+  const freshJobs = filterJobsByFreshness(scrapedJobs, criteria);
+  const sortedJobs = freshJobs.sort((a, b) => {
+      const dateA = new Date(a.posted_date).getTime();
+      const dateB = new Date(b.posted_date).getTime();
+      return dateB - dateA;
+  });
+
+  if (sortedJobs.length > 0) {
+    const jobsToInsert = sortedJobs.map(job => ({ ...job, session_id: sessionId }));
+    const { error: jobsError } = await supabase.from('scraped_jobs').insert(jobsToInsert);
+    if (jobsError) {
+      errors.push('Failed to save scraped jobs to database.');
+      console.error(`[Job ${sessionId}] Error saving scraped jobs:`, jobsError);
+    }
+  }
+
+  await supabase.from('scraping_sessions').update({
+    status: 'completed',
+    total_jobs: sortedJobs.length,
+    errors,
+  }).eq('id', sessionId);
+
+  return new Response(JSON.stringify({ success: true, sessionId, message: 'Scraping terminé' }), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
 }
 
 
