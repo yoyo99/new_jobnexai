@@ -214,7 +214,7 @@ async function scrapeSite(site: JobSite, searchUrl: string, criteria: ScrapingCr
       url: `${site.baseUrl}/job/${i + 1}`,
       description: `Description pour le poste de ${jobTitle}.`,
       posted_date: postedDate.toISOString(),
-      source: site.name,
+      site_name: site.name,
       contract_type: criteria.contractTypes[0] || 'CDI',
       remote: criteria.remote,
       freshness_score: calculateFreshnessScore(postedDate)
