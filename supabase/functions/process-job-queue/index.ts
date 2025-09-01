@@ -102,8 +102,9 @@ async function processScraping(payload: any) {
         for (const searchUrl of searchUrls) {
           const jobs = await scrapeSite(site, searchUrl, criteria);
           scrapedJobs.push(...jobs);
-          await new Promise(resolve => setTimeout(resolve, site.rateLimit));
         }
+        // Appliquer le rate limit une seule fois par site, pas par page
+        await new Promise(resolve => setTimeout(resolve, site.rateLimit));
       } catch (siteError) {
         console.error(`[Job ${sessionId}] Error scraping site ${site.name}:`, siteError);
         errors.push(`${site.name}: ${(siteError as Error).message}`);
