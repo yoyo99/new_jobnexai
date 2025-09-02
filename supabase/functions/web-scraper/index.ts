@@ -104,7 +104,13 @@ async function scrapeSite(site: JobSite, searchUrl: string, criteria: ScrapingCr
       title: `${jobTitle} - ${site.name} (${i + 1})`,
       company: `Entreprise ${String.fromCharCode(65 + i)}`,
       location: criteria.cities[i % criteria.cities.length] || 'Paris',
-      url: `${site.baseUrl}/job/${i + 1}`,
+      url: site.name === 'Indeed France' 
+        ? `https://fr.indeed.com/viewjob?jk=${crypto.randomUUID().slice(0, 16)}`
+        : site.name === 'Welcome to the Jungle'
+        ? `https://www.welcometothejungle.com/fr/jobs/${crypto.randomUUID().slice(0, 8)}`
+        : site.name === 'Malt'
+        ? `https://www.malt.fr/project/${crypto.randomUUID().slice(0, 12)}`
+        : `${site.baseUrl}/job/${crypto.randomUUID().slice(0, 8)}`,
       description: `Description pour le poste de ${jobTitle}.`,
       posted_date: postedDate.toISOString(),
       site_name: site.name,
