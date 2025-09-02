@@ -5,7 +5,7 @@
  */
 
 import { createClient } from 'npm:@supabase/supabase-js@2.39.3'
-import OpenAI from 'openai'
+import OpenAI from 'npm:openai@4'
 import { create, getNumericDate, verify } from "https://deno.land/x/djwt@v2.9.1/mod.ts";
 import { v4 as uuidv4 } from "https://deno.land/std@0.224.0/uuid/mod.ts";
 import { getEnv } from "../../../src/lib/env.ts";
