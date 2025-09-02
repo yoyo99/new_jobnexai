@@ -544,7 +544,7 @@ const WebScrapingManager: React.FC = () => {
                     {job.salary && (
                       <p className="text-sm text-green-400">{job.salary}</p>
                     )}
-                    <p className="text-xs text-gray-400 mt-1">Source: {job.source}</p>
+                    <p className="text-xs text-gray-400 mt-1">Source: {job.site_name}</p>
                   </div>
                   <a
                     href={job.url}

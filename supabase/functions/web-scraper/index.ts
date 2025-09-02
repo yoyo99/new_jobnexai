@@ -104,13 +104,8 @@ async function scrapeSite(site: JobSite, searchUrl: string, criteria: ScrapingCr
       title: `${jobTitle} - ${site.name} (${i + 1})`,
       company: `Entreprise ${String.fromCharCode(65 + i)}`,
       location: criteria.cities[i % criteria.cities.length] || 'Paris',
-      url: site.name === 'Indeed France' 
-        ? `https://fr.indeed.com/viewjob?jk=${crypto.randomUUID().slice(0, 16)}`
-        : site.name === 'Welcome to the Jungle'
-        ? `https://www.welcometothejungle.com/fr/jobs/${crypto.randomUUID().slice(0, 8)}`
-        : site.name === 'Malt'
-        ? `https://www.malt.fr/project/${crypto.randomUUID().slice(0, 12)}`
-        : `${site.baseUrl}/job/${crypto.randomUUID().slice(0, 8)}`,
+      // Important: utilise l'URL de recherche (valide) plutôt qu'une URL de détail aléatoire pour éviter les 404
+      url: searchUrl,
       description: `Description pour le poste de ${jobTitle}.`,
       posted_date: postedDate.toISOString(),
       site_name: site.name,
@@ -269,7 +264,9 @@ async function startScraping(criteria: ScrapingCriteria, siteIds: string[], sess
   await supabase.from('scraping_sessions').update({
     status: 'completed',
     total_jobs: sortedJobs.length,
-    errors,
+    scraped_jobs: sortedJobs.length,
+    error_message: errors.length ? JSON.stringify(errors) : null,
+    completed_at: new Date().toISOString(),
   }).eq('id', sessionId);
 
   return new Response(JSON.stringify({ success: true, sessionId, message: 'Scraping terminé' }), {
