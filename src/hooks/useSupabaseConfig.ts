@@ -16,12 +16,12 @@ export function getSupabase(): SupabaseClient {
   // --- DÉBUT LOGS DE DÉBOGAGE ---
   console.log("--- JOBNEXAI DEBUG ---");
   console.log("Tentative d'initialisation de Supabase avec la configuration suivante :");
-  console.log("URL (VITE_SUPABASE_URL):", import.meta.env.VITE_SUPABASE_URL);
-  console.log("Clé Anon (VITE_SUPABASE_ANON_KEY):", import.meta.env.VITE_SUPABASE_ANON_KEY ? 'Présente' : 'Manquante !');
+  console.log("URL (VITE_SUPABASE_URL):", process.env.VITE_SUPABASE_URL);
+  console.log("Clé Anon (VITE_SUPABASE_ANON_KEY):", process.env.VITE_SUPABASE_ANON_KEY ? 'Présente' : 'Manquante !');
   console.log("--- FIN LOGS DE DÉBOGAGE ---");
 
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const supabaseUrl = process.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
     console.error('Supabase URL or Anon Key is missing. Make sure to set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.');
@@ -34,7 +34,7 @@ export function getSupabase(): SupabaseClient {
   }
 
   // En développement, réutilise l'instance globale pour éviter les avertissements HMR
-  if (import.meta.env.DEV && globalThis.__supabase_client) {
+  if (process.env.NODE_ENV === 'development' && globalThis.__supabase_client) {
     supabase = globalThis.__supabase_client;
     return supabase;
   }
@@ -43,7 +43,7 @@ export function getSupabase(): SupabaseClient {
   supabase = createClient(supabaseUrl, supabaseAnonKey);
 
   // Stocke l'instance dans la variable globale en développement
-  if (import.meta.env.DEV) {
+  if (process.env.NODE_ENV === 'development') {
     globalThis.__supabase_client = supabase;
   }
 

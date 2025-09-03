@@ -1,6 +1,6 @@
 # Configuration Netlify simplifiée
 [build]
-  command = "npm install --no-audit --no-fund --loglevel=error && export NODE_OPTIONS=\"--max-old-space-size=4096\" && npm run build:netlify && echo '--- ENV VARS ---' && printenv && echo '--- VITE BUILT CODE INSPECTION ---' && grep -r 'VITE_SUPABASE' dist/assets/ || echo 'VITE_SUPABASE keys not found in built files'"
+  command = "npm install --no-audit --no-fund --loglevel=error && export NODE_OPTIONS=\"--max-old-space-size=4096\" && npm run build:netlify"
   publish = "dist"
   functions = "netlify/functions"
 

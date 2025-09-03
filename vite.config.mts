@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import { sentryVitePlugin } from '@sentry/vite-plugin'
 import viteCompression from 'vite-plugin-compression'
@@ -33,7 +33,18 @@ if (process.env.VITE_SENTRY_AUTH_TOKEN) {
   )
 }
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  // Charge les variables d'environnement en fonction du mode (development, production)
+  const env = loadEnv(mode, process.cwd(), '');
+
+  return {
+    // Définit les variables à remplacer dans le code client
+    define: {
+      'process.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL),
+      'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY),
+      'process.env.VITE_STRIPE_PUBLIC_KEY': JSON.stringify(env.VITE_STRIPE_PUBLIC_KEY),
+      'process.env.VITE_MISTRAL_API_KEY': JSON.stringify(env.VITE_MISTRAL_API_KEY),
+    },
   plugins,
   optimizeDeps: {
     include: ['@tanstack/react-virtual'],
@@ -73,5 +84,5 @@ export default defineConfig({
         },
       },
     },
-  },
-})
+  }
+}})
