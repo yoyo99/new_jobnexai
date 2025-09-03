@@ -1,7 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.39.3'
-import pdfMake from 'npm:pdfmake@0.2.10'
-import { TDocumentDefinitions } from 'npm:@types/pdfmake@0.2.9'
-import { verify } from 'npm:djwt@3.0.1'
+import { PDFDocument, rgb, StandardFonts, PDFFont as _PDFFont } from 'https://esm.sh/pdf-lib@1.17.1';
+import { verify } from 'https://deno.land/x/djwt@v3.0.1/mod.ts'
 import { Status } from 'https://deno.land/std@0.177.0/http/http_status.ts'
 import { isHttpError } from 'https://deno.land/std@0.177.0/http/http_errors.ts';
 
@@ -17,11 +16,85 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-interface CVSection {
-  type: CVSectionType
-  title: string
-  content: any
+// --- START: Type Definitions ---
+interface HeaderContent {
+  name: string;
+  title: string;
+  email: string;
+  phone: string;
+  location: string;
 }
+
+interface ExperienceItem {
+  title: string;
+  date: string;
+  company: string;
+  location: string;
+  description: string;
+}
+interface ExperienceContent {
+  items: ExperienceItem[];
+}
+
+interface EducationItem {
+  degree: string;
+  date: string;
+  school: string;
+  location: string;
+}
+interface EducationContent {
+  items: EducationItem[];
+}
+
+interface SkillCategory {
+  name: string;
+  skills: string[];
+}
+interface SkillsContent {
+  categories: SkillCategory[];
+}
+
+interface ProjectItem {
+  name: string;
+  description: string;
+  technologies: string[];
+}
+interface ProjectsContent {
+  items: ProjectItem[];
+}
+
+interface CVSectionBase {
+  type: CVSectionType;
+  title: string;
+  order_index: number;
+}
+
+interface HeaderSection extends CVSectionBase {
+  type: CVSectionType.HEADER;
+  content: HeaderContent;
+}
+
+interface ExperienceSection extends CVSectionBase {
+  type: CVSectionType.EXPERIENCE;
+  content: ExperienceContent;
+}
+
+interface EducationSection extends CVSectionBase {
+  type: CVSectionType.EDUCATION;
+  content: EducationContent;
+}
+
+interface SkillsSection extends CVSectionBase {
+  type: CVSectionType.SKILLS;
+  content: SkillsContent;
+}
+
+interface ProjectsSection extends CVSectionBase {
+  type: CVSectionType.PROJECTS;
+  content: ProjectsContent;
+}
+
+type CVSection = HeaderSection | ExperienceSection | EducationSection | SkillsSection | ProjectsSection;
 
 enum CVSectionType {
     HEADER = 'header',
@@ -38,30 +111,6 @@ interface CV {
   language: string
 }
 
-const STANDARD_TEMPLATE_STYLE = {
-  header: {
-    fontSize: 24,
-    bold: true,
-    margin: [0, 0, 0, 10],
-  },
-  subheader: {
-    fontSize: 18,
-    margin: [0, 0, 0, 5],
-  },
-  sectionHeader: {
-    fontSize: 14,
-    bold: true,
-    margin: [0, 15, 0, 10],
-  },
-  contact: {
-    fontSize: 10,
-    color: '#666666',
-  },
-}
-
-interface TemplateStyle {
-    [key: string]: any;
-}
 interface ResponseBody {
   pdf?: string;
   error?: string;
@@ -70,7 +119,19 @@ interface ResponseBody {
 
 const JWT_SECRET = Deno.env.get("JWT_SECRET")!;
 
-async function validateInput(data: any): Promise<string> {
+async function prepareKey(secret: string): Promise<CryptoKey> {
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(secret);
+    return await crypto.subtle.importKey(
+      "raw",
+      keyData,
+      { name: "HMAC", hash: "SHA-512" },
+      false,
+      ["sign", "verify"],
+    );
+}
+
+function validateInput(data: any): string {
   if (!data.cv_id) {
     throw new Error('cv_id is required')
   }
@@ -94,12 +155,13 @@ async function verifyJWT(req: Request): Promise<string> {
   }
 
   try {
-    const payload = await verify(token, JWT_SECRET, 'HS512')
+        const key = await prepareKey(JWT_SECRET);
+    const payload = await verify(token, key);
     if (typeof payload !== "object" || payload === null || !payload.sub) {
         throw new Error("Invalid token payload");
     }
     return payload.sub
-  } catch (error) {
+  } catch (_error) {
     throw new Error('Invalid token')
   }
 }
@@ -114,7 +176,6 @@ Deno.serve(async (req) => {
 
   try {
     const userId = await verifyJWT(req);
-    await verifyJWT(req);
 
     const data = await req.json()
 
@@ -129,6 +190,7 @@ Deno.serve(async (req) => {
         sections:cv_sections(*)
       `)
       .eq('id', cv_id)
+      .eq('user_id', userId)
       .single()
 
     if (cvError) {
@@ -141,70 +203,50 @@ Deno.serve(async (req) => {
         throw new Error("CV not found");
     }
 
-    // Get template style
-    const templateStyle = getTemplateStyle(cv.template.category)
 
-    // Create PDF definition
-    const docDefinition: TDocumentDefinitions = {
-      content: [],
-      defaultStyle: {
-        font: 'Helvetica',
-      },
-      pageSize: 'A4',
-      pageMargins: [40, 60, 40, 60],
-      info: {
-        title: 'CV',
-      },
-      styles: templateStyle.styles,
-    }
-
-    // Add header
-    if (cv.sections.find(s => s.type === CVSectionType.HEADER)) {
-      const header = cv.sections.find(s => s.type === 'header')
-      docDefinition.content.push({
-        stack: [
-          { text: header.content.name, style: 'header' },
-          { text: header.content.title, style: 'subheader' },
-          {
-            columns: [
-              { text: header.content.email, style: 'contact' },
-              { text: header.content.phone, style: 'contact' },
-              { text: header.content.location, style: 'contact' },
-            ],
-          },
-        ],
-        margin: [0, 0, 0, 20],
-      })
-    }
-
-    // Add other sections
-    cv.sections
-      .filter(s => s.type !== CVSectionType.HEADER)
-      .sort((a, b) => a.order_index - b.order_index)
-      .forEach(section => {
-        docDefinition.content.push(
-          { text: section.title, style: 'sectionHeader' },
-          getSectionContent(section),
-          { text: '', margin: [0, 10] }
-        )
-      })
-
-    // Generate PDF
+    // Generate PDF with pdf-lib
     try {
-        const pdfDoc = pdfMake.createPdf(docDefinition);
+      const pdfDoc = await PDFDocument.create();
+      let page = pdfDoc.addPage();
+      const { width: _width, height } = page.getSize();
+      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-        const pdfBase64 = await new Promise<string>((resolve, reject) => {
-          pdfDoc.getBase64((data: string) => {
-            if (data) {
-                resolve(data);
-            } else {
-                reject(new Error('Failed to generate PDF data'));
-            }
-          });
-        });
-        response = { pdf: pdfBase64 }
+      let y = height - 60;
+
+      const headerSection = cv.sections.find((s: CVSection): s is HeaderSection => s.type === CVSectionType.HEADER);
+      if (headerSection) {
+        const header = headerSection.content;
+        page.drawText(header.name, { x: 40, y, font: boldFont, size: 24 });
+        y -= 30;
+        page.drawText(header.title, { x: 40, y, font, size: 18 });
+        y -= 20;
+        page.drawText(`${header.email} | ${header.phone} | ${header.location}`, { x: 40, y, font, size: 10, color: rgb(0.4, 0.4, 0.4) });
+        y -= 40;
+      }
+
+      const sections = cv.sections
+        .filter((s: CVSection) => s.type !== CVSectionType.HEADER)
+        .sort((a: CVSection, b: CVSection) => a.order_index - b.order_index);
+
+      for (const section of sections) {
+        if (y < 80) { // Add new page if space is running out
+            const newPage = pdfDoc.addPage();
+            page = newPage;
+            y = page.getSize().height - 60;
+        }
+        page.drawText(section.title, { x: 40, y, font: boldFont, size: 16, color: rgb(0.02, 0.59, 0.41) });
+        y -= 25;
+        y = drawSectionContent(page, section, { font, boldFont }, y);
+        y -= 20; // Margin after section
+      }
+
+      const pdfBytes = await pdfDoc.save();
+      const base64String = btoa(String.fromCharCode(...new Uint8Array(pdfBytes)));
+      response = { pdf: base64String };
+
     } catch (pdfError) {
-        console.error('pdfMake Error:', pdfError);
+        console.error('pdf-lib Error:', pdfError);
         throw new Error("Error while generating the PDF")
     }
 
@@ -212,152 +254,107 @@ Deno.serve(async (req) => {
 
     status = Status.OK
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error generating PDF:', error);
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     response = {
-      error: error.message,
-    }
-    if (error.message === 'Authorization header is missing' || error.message === "Invalid token" || error.message === "Token is missing"){        
-        status = Status.Unauthorized;
-    } else if (isHttpError(error)){
-        status = error.status;
+      error: errorMessage,
+    };
+    if (errorMessage === 'Authorization header is missing' || errorMessage === "Invalid token" || errorMessage === "Token is missing") {
+      status = Status.Unauthorized;
+    } else if (isHttpError(error)) {
+      status = error.status;
     } else {
-        status = Status.BadRequest;
+      status = Status.BadRequest;
     }
   }
   return new Response(JSON.stringify(response), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status,
       });
-  }
 });
 
-const CREATIVE_TEMPLATE_STYLE: TemplateStyle = {
-    header: {
-        fontSize: 28,
-        bold: true,
-        color: '#2563eb',
-        margin: [0, 0, 0, 10],
-    },
-    subheader: {
-        fontSize: 20,
-        color: '#4b5563',
-        margin: [0, 0, 0, 5],
-    },
-    sectionHeader: {
-        fontSize: 16,
-        bold: true,
-        color: '#2563eb',
-        margin: [0, 20, 0, 10],
-    },
-    contact: {
-        fontSize: 12,
-        color: '#4b5563',
-    },
-}
+// Helper function to draw section content with pdf-lib
+function drawSectionContent(page: any, section: CVSection, fonts: { font: any; boldFont: any }, y: number): number {
+    let currentY = y;
+    const { font, boldFont } = fonts;
+    const contentLeft = 50;
+    const page_width = page.getSize().width;
 
-const FREELANCE_TEMPLATE_STYLE: TemplateStyle = {
-    header: {
-        fontSize: 26,
-        bold: true,
-        color: '#059669',
-        margin: [0, 0, 0, 10],
-    },
-    subheader: {
-        fontSize: 19,
-        color: '#374151',
-        margin: [0, 0, 0, 5],
-    },
-    sectionHeader: {
-        fontSize: 15,
-        bold: true,
-        color: '#059669',
-        margin: [0, 20, 0, 10],
-    },
-    contact: {
-        fontSize: 11,
-        color: '#374151',
-    },
-}
-
-function getSectionContent(section: CVSection) {
-    switch (section.type) {
-        case CVSectionType.EXPERIENCE:
-            return section.content.items.map(item => ({
-                stack: [
-                    {
-                        columns: [
-                            { text: item.title, bold: true },
-                            { text: item.date, alignment: 'right' },
-                        ],
-                    },
-                    {
-                        columns: [
-                            { text: item.company },
-                            { text: item.location, alignment: 'right' },
-                        ],
-                        margin: [0, 2],
-                    },
-                    { text: item.description, margin: [0, 5] },
-                ],
-                margin: [0, 0, 0, 10],
-            }))
-
-        case CVSectionType.EDUCATION:
-      return section.content.items.map(item => ({
-        stack: [
-          {
-            columns: [
-              { text: item.degree, bold: true },
-              { text: item.date, alignment: 'right' },
-            ],
-          },
-          {
-            columns: [
-              { text: item.school },
-              { text: item.location, alignment: 'right' },
-            ],
-            margin: [0, 2],
-          },
-        ],
-        margin: [0, 0, 0, 10],
-      }))
-
-        case CVSectionType.SKILLS:
-      return {
-            columns: section.content.categories.map(category => ({
-          stack: [
-            { text: category.name, bold: true, margin: [0, 0, 0, 5] },
-            { ul: category.skills },
-          ],
-        })),
-      }
-
-        case CVSectionType.PROJECTS:
-      return section.content.items.map(item => ({
-        stack: [
-          { text: item.name, bold: true },
-          { text: item.description, margin: [0, 2] },
-          { text: item.technologies.join(', '), italics: true, margin: [0, 2] },
-        ],
-        margin: [0, 0, 0, 10],
-      }))
-
-    default:
-      return { text: JSON.stringify(section.content, null, 2) }
-  }
-}
-
-function getTemplateStyle(category: string): { styles: TemplateStyle } {
-    const styles: { [key: string]: TemplateStyle } = {
-        standard: STANDARD_TEMPLATE_STYLE,
-        creative: CREATIVE_TEMPLATE_STYLE,
-        freelance: FREELANCE_TEMPLATE_STYLE,
+    const wrapText = (text: string, maxWidth: number, font: any, size: number): string[] => {
+        const words = text.split(' ');
+        const lines: string[] = [];
+        let currentLine = '';
+        for (const word of words) {
+            const testLine = currentLine + (currentLine ? ' ' : '') + word;
+            const testWidth = font.widthOfTextAtSize(testLine, size);
+            if (testWidth > maxWidth) {
+                lines.push(currentLine);
+                currentLine = word;
+            } else {
+                currentLine = testLine;
+            }
+        }
+        lines.push(currentLine);
+        return lines;
     };
 
-    if (category in styles) {
-        return { styles: styles[category] };
-    } else {
-        return { styles: styles.standard };
+    switch (section.type) {
+        case CVSectionType.EXPERIENCE: {
+            for (const item of (section.content as ExperienceContent).items) {
+                page.drawText(item.title, { x: contentLeft, y: currentY, font: boldFont, size: 12 });
+                const dateWidth = font.widthOfTextAtSize(item.date, 11);
+                page.drawText(item.date, { x: page_width - dateWidth - 40, y: currentY, font: font, size: 11, color: rgb(0.3, 0.3, 0.3) });
+                currentY -= 18;
+                page.drawText(item.company, { x: contentLeft, y: currentY, font: font, size: 11 });
+                currentY -= 18;
+                if (item.description) {
+                    const lines = wrapText(item.description, page_width - 100, font, 10);
+                    for (const line of lines) {
+                        page.drawText(line, { x: contentLeft + 10, y: currentY, font: font, size: 10 });
+                        currentY -= 14;
+                    }
+                }
+                currentY -= 10;
+            }
+            break;
+        }
+        case CVSectionType.EDUCATION: {
+            for (const item of (section.content as EducationContent).items) {
+                page.drawText(item.degree, { x: contentLeft, y: currentY, font: boldFont, size: 12 });
+                const dateWidth = font.widthOfTextAtSize(item.date, 11);
+                page.drawText(item.date, { x: page_width - dateWidth - 40, y: currentY, font: font, size: 11, color: rgb(0.3, 0.3, 0.3) });
+                currentY -= 18;
+                page.drawText(item.school, { x: contentLeft, y: currentY, font: font, size: 11 });
+                currentY -= 25;
+            }
+            break;
+        }
+        case CVSectionType.SKILLS: {
+            const skillsContent = section.content as SkillsContent;
+            const allSkills = skillsContent.categories.flatMap((category: SkillCategory) => category.skills).join(' · ');
+            const lines = wrapText(allSkills, page_width - 100, font, 10);
+            for (const line of lines) {
+                page.drawText(line, { x: contentLeft, y: currentY, font: font, size: 10 });
+                currentY -= 14;
+            }
+            break;
+        }
+        case CVSectionType.PROJECTS: {
+             for (const item of (section.content as ProjectsContent).items) {
+                page.drawText(item.name, { x: contentLeft, y: currentY, font: boldFont, size: 12 });
+                currentY -= 18;
+                if (item.description) {
+                    const lines = wrapText(item.description, page_width - 100, font, 10);
+                    for (const line of lines) {
+                        page.drawText(line, { x: contentLeft + 10, y: currentY, font: font, size: 10 });
+                        currentY -= 14;
+                    }
+                }
+                currentY -= 10;
+            }
+            break;
+        }
     }
+    return currentY;
 }
