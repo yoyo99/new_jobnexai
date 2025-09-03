@@ -1,6 +1,6 @@
 # Configuration Netlify simplifiée
 [build]
-  command = "npm install --no-optional --no-audit --no-fund --loglevel=error && export NODE_OPTIONS=\"--max-old-space-size=4096\" && npm run build:netlify"
+  command = "npm install --no-audit --no-fund --loglevel=error && export NODE_OPTIONS=\"--max-old-space-size=4096\" && npm run build:netlify"
   publish = "dist"
   functions = "netlify/functions"
 
