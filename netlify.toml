@@ -1,6 +1,6 @@
 # Configuration Netlify simplifiée
 [build]
-  command = "npm ci --no-audit --no-fund --loglevel=error && export NODE_OPTIONS=\"--max-old-space-size=4096\" && npm run build:netlify"
+  command = "npm install --no-optional --no-audit --no-fund --loglevel=error && export NODE_OPTIONS=\"--max-old-space-size=4096\" && npm run build:netlify"
   publish = "dist"
   functions = "netlify/functions"
 
@@ -17,7 +17,7 @@
 [functions]
   directory = "functions"
   node_bundler = "esbuild"
-  external_node_modules = ["langchain"]
+  external_node_modules = ["langchain", "@rollup/rollup-android-arm-eabi"]
   included_files = ["src/lib/ai_logic/**", "functions/rome-search/rome_appellations.csv", "data/unix_arborescence_competences_v459_utf8.csv"]
   # node_bundler et external_node_modules sont maintenant sous [build.functions]
 
