@@ -49,18 +49,7 @@ function App() {
   }, []);
 
   return (
-    <ErrorBoundary fallback={<div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
-      <div className="card max-w-lg mx-auto w-full bg-gradient-to-b from-background to-background/80 border-primary-500/20">
-        <h2 className="text-2xl font-bold text-primary-400 mb-4">Un problème critique est survenu</h2>
-        <p className="text-white/80 mb-6">L'application a rencontré une erreur et n'a pas pu charger correctement.</p>
-        <button 
-          onClick={() => window.location.reload()}
-          className="btn-primary w-full"
-        >
-          Recharger l'application
-        </button>
-      </div>
-    </div>}>
+    <ErrorBoundary>
       <I18nextProvider i18n={i18n}>
         <AuthProvider>
           <Router>

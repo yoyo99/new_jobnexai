@@ -1,11 +1,11 @@
 // JobNexAI Service Worker
 // Implements advanced caching strategies for optimal performance
 
-const CACHE_NAME = 'jobnexai-v1.0.0'
-const STATIC_CACHE = 'jobnexai-static-v1.0.0'
-const DYNAMIC_CACHE = 'jobnexai-dynamic-v1.0.0'
-const API_CACHE = 'jobnexai-api-v1.0.0'
-const IMAGE_CACHE = 'jobnexai-images-v1.0.0'
+const CACHE_NAME = 'jobnexai-v1.0.1'
+const STATIC_CACHE = 'jobnexai-static-v1.0.1'
+const DYNAMIC_CACHE = 'jobnexai-dynamic-v1.0.1'
+const API_CACHE = 'jobnexai-api-v1.0.1'
+const IMAGE_CACHE = 'jobnexai-images-v1.0.1'
 
 // Static assets to cache immediately
 const STATIC_ASSETS = [
@@ -116,8 +116,12 @@ async function handleRequest(request) {
       return await cacheFirstStrategy(request, CACHE_STRATEGIES.images)
     }
     
-    // Static assets - Cache first
-    if (url.pathname.match(/\.(js|css|woff|woff2|ttf|eot)$/)) {
+    // Static assets - NETWORK FIRST for JS/CSS to always pick the latest build
+    if (url.pathname.match(/\.(js|css)$/)) {
+      return await networkFirstStrategy(request, CACHE_STRATEGIES.static)
+    }
+    // Fonts and others - Cache first
+    if (url.pathname.match(/\.(woff|woff2|ttf|eot)$/)) {
       return await cacheFirstStrategy(request, CACHE_STRATEGIES.static)
     }
     

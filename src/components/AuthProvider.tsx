@@ -17,11 +17,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
     loadUser();
 
     // 2. S'abonner aux changements d'état d'authentification de Supabase.
-    const { data: { subscription } } = getSupabase().auth.onAuthStateChange((event, session) => {
-      console.log(`AuthProvider: Événement d'authentification Supabase - ${event}`);
-      // Recharger les données utilisateur à chaque événement pour garder l'état synchronisé.
-      loadUser();
-    });
+    let subscription: { unsubscribe: () => void } | undefined;
+    try {
+      const client = getSupabase();
+      const result = client.auth.onAuthStateChange((event, session) => {
+        console.log(`AuthProvider: Événement d'authentification Supabase - ${event}`);
+        // Recharger les données utilisateur à chaque événement pour garder l'état synchronisé.
+        loadUser();
+      });
+      subscription = result.data.subscription;
+    } catch (error) {
+      console.error('[AuthProvider] -> Impossible d\'initialiser onAuthStateChange:', error);
+      // On continue sans abonnement pour ne pas bloquer le rendu de l'application
+    }
 
     // 3. Écouter les changements de stockage pour la synchronisation entre onglets.
     const handleStorageChange = (event: StorageEvent) => {
@@ -34,7 +42,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     // 4. Fonction de nettoyage pour se désabonner lors du démontage du composant.
     return () => {
-      subscription?.unsubscribe();
+      try {
+        subscription?.unsubscribe?.();
+      } catch (e) {
+        console.warn('[AuthProvider] -> Erreur lors de la désinscription onAuthStateChange:', e);
+      }
       window.removeEventListener('storage', handleStorageChange);
     };
   }, [loadUser]); // `loadUser` est stable, donc cet effet ne s'exécute qu'une seule fois.

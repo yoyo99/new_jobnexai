@@ -6,7 +6,6 @@ import './i18n'
 import './minimal.css'
 import App from './App';
 import { initMonitoring } from './lib/monitoring'
-import { pwaManager } from './lib/pwa'
 import { ThemeProvider } from './contexts/ThemeContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
@@ -18,7 +17,34 @@ initMonitoring()
 
 // Créer un client React Query
 const queryClient = new QueryClient();
-console.log('PWA Manager initialized:', pwaManager);
+
+// Enregistrer le Service Worker uniquement si activé explicitement
+if (import.meta.env.VITE_ENABLE_PWA === 'true') {
+  import('./lib/pwa').then(({ pwaManager }) => {
+    console.log('PWA Manager initialized:', pwaManager)
+  }).catch((err) => {
+    console.warn('PWA initialization skipped or failed:', err)
+  })
+} else {
+  console.log('PWA disabled (VITE_ENABLE_PWA !== "true").')
+  // Forcer la désinscription des SW existants et la purge du cache si la PWA est désactivée
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations()
+      .then((regs) => {
+        if (regs.length) console.log(`[PWA] Unregistering ${regs.length} service worker(s)`)
+        regs.forEach(r => r.unregister())
+      })
+      .catch((err) => console.warn('[PWA] Failed to enumerate SW registrations', err))
+  }
+  if (typeof caches !== 'undefined' && caches.keys) {
+    caches.keys()
+      .then((names) => {
+        if (names.length) console.log(`[PWA] Deleting ${names.length} cache(s)`) 
+        return Promise.all(names.map(n => caches.delete(n)))
+      })
+      .catch((err) => console.warn('[PWA] Failed to delete caches', err))
+  }
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
