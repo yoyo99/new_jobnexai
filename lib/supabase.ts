@@ -1,15 +1,25 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+// Supporte à la fois process.env (injecté par vite.config.mts) et import.meta.env
+const envSupabaseUrl = (typeof process !== 'undefined' ? (process.env.VITE_SUPABASE_URL as string | undefined) : undefined) ?? import.meta.env.VITE_SUPABASE_URL
+const envSupabaseAnon = (typeof process !== 'undefined' ? (process.env.VITE_SUPABASE_ANON_KEY as string | undefined) : undefined) ?? import.meta.env.VITE_SUPABASE_ANON_KEY
 
-const defaultUrl = 'http://localhost:54321'
-const defaultAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0'
+const isDev = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV) || (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development')
 
-export const supabase = createClient(
-  supabaseUrl || defaultUrl,
-  supabaseAnonKey || defaultAnonKey
-)
+// En dev, on autorise un fallback local explicite; en prod on exige la config
+const DEV_FALLBACK_URL = 'http://localhost:54321'
+const DEV_FALLBACK_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0'
+
+const effectiveUrl = envSupabaseUrl ?? (isDev ? DEV_FALLBACK_URL : undefined)
+const effectiveAnon = envSupabaseAnon ?? (isDev ? DEV_FALLBACK_ANON : undefined)
+
+if (!effectiveUrl || !effectiveAnon) {
+  // Log minimal pour aider au diagnostic sans exposer les clés
+  console.error('[Supabase] Configuration manquante. VITE_SUPABASE_URL ou VITE_SUPABASE_ANON_KEY absents.')
+  throw new Error('Supabase configuration is missing. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.')
+}
+
+export const supabase = createClient(effectiveUrl, effectiveAnon)
 
 export interface Profile {
   id: string
