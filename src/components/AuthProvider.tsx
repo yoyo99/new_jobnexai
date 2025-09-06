@@ -20,7 +20,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     let subscription: { unsubscribe: () => void } | undefined;
     try {
       const client = getSupabase();
-      const result = client.auth.onAuthStateChange((event, session) => {
+      const result = client.auth.onAuthStateChange((event) => {
         console.log(`AuthProvider: Événement d'authentification Supabase - ${event}`);
         // Recharger les données utilisateur à chaque événement pour garder l'état synchronisé.
         loadUser();
