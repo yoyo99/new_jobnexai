@@ -2,7 +2,6 @@ console.log('main.tsx is loaded');
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
-import './i18n'
 import './minimal.css'
 import App from './App';
 import { initMonitoring } from './lib/monitoring'
