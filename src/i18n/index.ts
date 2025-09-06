@@ -3,7 +3,7 @@ import { initReactI18next } from 'react-i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
 import HttpBackend from 'i18next-http-backend'
 
-i18n
+const i18nInit = i18n
   .use(HttpBackend)
   .use(LanguageDetector)
   .use(initReactI18next)
@@ -11,7 +11,7 @@ i18n
     fallbackLng: 'fr',
     supportedLngs: ['fr', 'en', 'de', 'es', 'it'],
     ns: ['common', 'translation'],
-    defaultNS: 'translation',
+    defaultNS: 'common',
     interpolation: {
       escapeValue: false,
     },
@@ -33,8 +33,12 @@ i18n
     debug: true,
   })
 
-// Pour le debug : log la langue courante et les namespaces chargés
-console.log('[i18n] Langue détectée:', i18n.language, '| Namespaces:', i18n.options.ns)
+// Pour le debug : log la langue courante et les namespaces une fois initialisé
+i18nInit.then(() => {
+  console.log('[i18n] Init OK | Langue:', i18n.language, '| Namespaces:', i18n.options.ns)
+}).catch((e) => {
+  console.error('[i18n] Init FAILED', e)
+})
 
-
+export { i18nInit }
 export default i18n

@@ -3,7 +3,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
 import './minimal.css'
-import './i18n/index'
+import i18n, { i18nInit } from './i18n/index'
 import App from './App';
 import { initMonitoring } from './lib/monitoring'
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -46,13 +46,34 @@ if (import.meta.env.VITE_ENABLE_PWA === 'true') {
   }
 }
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="system" storageKey="jobnexai-ui-theme">
-        <App />
-      </ThemeProvider>
-      <ReactQueryDevtools initialIsOpen={false} />
-    </QueryClientProvider>
-  </StrictMode>,
-)
+const rootEl = document.getElementById('root')!
+const root = createRoot(rootEl)
+
+// Monter l'app uniquement après l'init i18n, pour éviter tout problème de Provider
+i18nInit
+  .then(() => {
+    console.log('[bootstrap] i18n initialized:', { lang: i18n.language, ns: i18n.options.ns })
+    root.render(
+      <StrictMode>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider defaultTheme="system" storageKey="jobnexai-ui-theme">
+            <App />
+          </ThemeProvider>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </QueryClientProvider>
+      </StrictMode>,
+    )
+  })
+  .catch((err) => {
+    console.error('[bootstrap] i18n init failed, rendering anyway:', err)
+    root.render(
+      <StrictMode>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider defaultTheme="system" storageKey="jobnexai-ui-theme">
+            <App />
+          </ThemeProvider>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </QueryClientProvider>
+      </StrictMode>,
+    )
+  })
