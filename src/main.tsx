@@ -3,6 +3,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
 import './minimal.css'
+import './i18n/index'
 import App from './App';
 import { initMonitoring } from './lib/monitoring'
 import { ThemeProvider } from './contexts/ThemeContext';

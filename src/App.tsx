@@ -25,7 +25,6 @@ import { AppRoutes } from './routes/AppRoutes';
 
 import { I18nextProvider } from 'react-i18next';
 import i18next from 'i18next';
-import './i18n.js';
 
 
 function App() {
