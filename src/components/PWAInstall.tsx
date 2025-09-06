@@ -1,7 +1,22 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { pwaManager, canInstallPWA, installPWA, isPWAInstalled } from '../lib/pwa'
 import { screenReader } from '../lib/accessibility'
+
+// Import dynamique et conditionnel de la lib PWA pour éviter tout enregistrement de SW
+// quand la PWA est désactivée via VITE_ENABLE_PWA !== 'true'
+const isPWAEnabled = import.meta.env.VITE_ENABLE_PWA === 'true'
+let cachedPwaLib: any | null = null
+async function getPwaLib() {
+  if (!isPWAEnabled) return null
+  if (cachedPwaLib) return cachedPwaLib
+  try {
+    cachedPwaLib = await import('../lib/pwa')
+    return cachedPwaLib
+  } catch (e) {
+    console.warn('[PWA] Impossible de charger la lib PWA:', e)
+    return null
+  }
+}
 
 interface PWAInstallProps {
   variant?: 'banner' | 'button' | 'floating'
@@ -20,9 +35,19 @@ export function PWAInstall({
   const [showPrompt, setShowPrompt] = useState(false)
 
   useEffect(() => {
+    if (!isPWAEnabled) {
+      // PWA désactivée: ne rien initialiser et ne rien afficher
+      setCanInstall(false)
+      setIsInstalled(false)
+      setShowPrompt(false)
+      return
+    }
     // Check initial state
-    setCanInstall(canInstallPWA())
-    setIsInstalled(isPWAInstalled())
+    getPwaLib().then((lib) => {
+      if (!lib) return
+      setCanInstall(lib.canInstallPWA())
+      setIsInstalled(lib.isPWAInstalled())
+    })
 
     // Listen for PWA events
     const handleInstallAvailable = () => {
@@ -38,22 +63,27 @@ export function PWAInstall({
       screenReader.announce('App installed successfully')
     }
 
-    window.addEventListener('pwa-install-available', handleInstallAvailable)
-    window.addEventListener('pwa-install-completed', handleInstallCompleted)
+    if (isPWAEnabled) {
+      window.addEventListener('pwa-install-available', handleInstallAvailable)
+      window.addEventListener('pwa-install-completed', handleInstallCompleted)
+    }
 
     return () => {
-      window.removeEventListener('pwa-install-available', handleInstallAvailable)
-      window.removeEventListener('pwa-install-completed', handleInstallCompleted)
+      if (isPWAEnabled) {
+        window.removeEventListener('pwa-install-available', handleInstallAvailable)
+        window.removeEventListener('pwa-install-completed', handleInstallCompleted)
+      }
     }
   }, [])
 
   const handleInstall = async () => {
-    if (!canInstall) return
+    if (!canInstall || !isPWAEnabled) return
 
     setIsInstalling(true)
     
     try {
-      const installed = await installPWA()
+      const lib = await getPwaLib()
+      const installed = lib ? await lib.installPWA() : false
       
       if (installed) {
         setShowPrompt(false)
@@ -75,7 +105,7 @@ export function PWAInstall({
   }
 
   // Don't show if already installed or can't install
-  if (isInstalled || !canInstall) {
+  if (!isPWAEnabled || isInstalled || !canInstall) {
     return null
   }
 
@@ -304,7 +334,11 @@ export function UpdateNotification() {
     setIsUpdating(true)
     
     try {
-      await pwaManager.skipWaiting()
+      if (!isPWAEnabled) return
+      const lib = await getPwaLib()
+      if (lib?.pwaManager?.skipWaiting) {
+        await lib.pwaManager.skipWaiting()
+      }
       window.location.reload()
     } catch (error) {
       console.error('Update failed:', error)
