@@ -8,9 +8,13 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   console.log('[AuthProvider] -> Le composant est en cours de rendu.');
-  const initialized = useAuth(state => state.initialized);
-  const error = useAuth(state => state.error);
-  const loadUser = useAuth(state => state.loadUser);
+  // Utiliser un seul sélecteur pour éviter les conflits useSyncExternalStoreWithSelector
+  const { initialized, error, loadUser, user } = useAuth(state => ({
+    initialized: state.initialized,
+    error: state.error,
+    loadUser: state.loadUser,
+    user: state.user
+  }));
 
   useEffect(() => {
     loadUser();
@@ -86,8 +90,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   // Gestion du cas "utilisateur non connecté"
-  const user = useAuth(state => state.user);
-  
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
