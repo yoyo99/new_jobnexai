@@ -1,7 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
-import ToastContainer from './ToastContainer';
 
 // Importer les styles CSS ici, avant tout autre import
 import './minimal.css';
@@ -120,7 +119,6 @@ function App() {
             <PrivacyConsent />
             <SecurityBadge />
             <SubscriptionBanner />
-            <ToastContainer />
           </AuthProvider>
         </Router>
       </I18nextProvider>
