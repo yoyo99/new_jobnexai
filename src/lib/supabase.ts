@@ -225,6 +225,13 @@ const mockSupabaseClient = {
       update: (...args: any[]) => { console.warn('[SupabaseInit] Mock update', args); return Promise.resolve({ data: [], error: null }); },
       delete: (...args: any[]) => { console.warn('[SupabaseInit] Mock delete', args); return Promise.resolve({ data: [], error: null }); },
       eq: (...args: any[]) => { console.warn('[SupabaseInit] Mock eq', args); return mockChain; },
+      // Méthodes de chaînage supplémentaires utilisées dans l'app
+      textSearch: (...args: any[]) => { console.warn('[SupabaseInit] Mock textSearch', args); return mockChain; },
+      order: (...args: any[]) => { console.warn('[SupabaseInit] Mock order', args); return mockChain; },
+      ilike: (...args: any[]) => { console.warn('[SupabaseInit] Mock ilike', args); return mockChain; },
+      gte: (...args: any[]) => { console.warn('[SupabaseInit] Mock gte', args); return mockChain; },
+      lte: (...args: any[]) => { console.warn('[SupabaseInit] Mock lte', args); return mockChain; },
+      maybeSingle: () => Promise.resolve({ data: null, error: null }),
       single: () => Promise.resolve({ data: null, error: null }), // Simuler une réponse single()
     };
     return mockChain;

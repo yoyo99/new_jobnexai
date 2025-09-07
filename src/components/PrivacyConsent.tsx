@@ -17,13 +17,18 @@ export function PrivacyConsent() {
   const checkConsent = async () => {
     if (!user) return
 
-    const { data } = await supabase
-      .from('user_preferences')
-      .select('gdpr_consent')
-      .eq('user_id', user.id)
-      .maybeSingle()
+    try {
+      const { data } = await supabase
+        .from('user_preferences')
+        .select('gdpr_consent')
+        .eq('user_id', user.id)
+        .maybeSingle()
 
-    setShowConsent(!(data?.gdpr_consent ?? false))
+      setShowConsent(!(data?.gdpr_consent ?? false))
+    } catch (error) {
+      console.warn('[PrivacyConsent] Failed to check consent, hiding banner:', error)
+      setShowConsent(false)
+    }
   }
 
   const handleConsent = async (accepted: boolean) => {
