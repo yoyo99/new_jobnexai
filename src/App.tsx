@@ -50,34 +50,34 @@ function App() {
   return (
     <ErrorBoundary>
       <I18nextProvider i18n={i18n}>
-        <AuthProvider>
-          <Router>
+        <Router>
+          <AuthProvider>
             {/* PWA Components */}
             <PWAInstall variant="banner" />
             <ConnectionStatus />
             <UpdateNotification />
-        <Toaster
-          position="bottom-right"
-          toastOptions={{
-            className: '',
-            style: {
-              margin: '10px',
-              background: '#333',
-              color: '#fff',
-              zIndex: 1000,
-            },
-            success: {
-              duration: 3000,
-              iconTheme: {
-                primary: '#10B981', // green-500
-                secondary: '#FFFFFF',
-              },
-            },
-            error: {
-              duration: 5000,
-            },
-          }}
-        />
+            <Toaster
+              position="bottom-right"
+              toastOptions={{
+                className: '',
+                style: {
+                  margin: '10px',
+                  background: '#333',
+                  color: '#fff',
+                  zIndex: 1000,
+                },
+                success: {
+                  duration: 3000,
+                  iconTheme: {
+                    primary: '#10B981', // green-500
+                    secondary: '#FFFFFF',
+                  },
+                },
+                error: {
+                  duration: 5000,
+                },
+              }}
+            />
             <Routes>
               {/* Public Routes */}
               <PublicRoutes />
@@ -121,8 +121,8 @@ function App() {
             <SecurityBadge />
             <SubscriptionBanner />
             <ToastContainer />
-          </Router>
-        </AuthProvider>
+          </AuthProvider>
+        </Router>
       </I18nextProvider>
     </ErrorBoundary>
   );

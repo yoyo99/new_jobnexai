@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../stores/auth';
 import { getSupabase } from '../hooks/useSupabaseConfig';
 
@@ -7,6 +8,7 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
+  const navigate = useNavigate();
   console.log('[AuthProvider] -> Le composant est en cours de rendu.');
   // Utiliser un seul sélecteur pour éviter les conflits useSyncExternalStoreWithSelector
   const { initialized, error, loadUser, user } = useAuth(state => ({
@@ -78,15 +80,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
               Réessayer
             </button>
             <button
-              onClick={() => {
-                console.log('[AuthProvider] Bouton Aller à la connexion cliqué');
-                try {
-                  window.location.assign('/login');
-                } catch (error) {
-                  console.error('[AuthProvider] Erreur navigation:', error);
-                  window.location.href = '/login';
-                }
-              }}
+              onClick={() => navigate('/login')}
               className="w-full bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg transition-colors"
             >
               Aller à la connexion
@@ -108,15 +102,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             Vous n'êtes pas connecté. Veuillez vous authentifier pour accéder à l'application.
           </p>
           <button
-            onClick={() => {
-              console.log('[AuthProvider] Bouton Se connecter cliqué');
-              try {
-                window.location.assign('/login');
-              } catch (error) {
-                console.error('[AuthProvider] Erreur navigation:', error);
-                window.location.href = '/login';
-              }
-            }}
+            onClick={() => navigate('/login')}
             className="w-full bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-lg transition-colors"
           >
             Se connecter
