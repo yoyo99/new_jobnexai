@@ -9,53 +9,78 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   console.log('[AuthProvider] -> Le composant est en cours de rendu.');
   const initialized = useAuth(state => state.initialized);
+  const error = useAuth(state => state.error);
   const loadUser = useAuth(state => state.loadUser);
 
   useEffect(() => {
-    console.log('[AuthProvider] -> useEffect a été déclenché. Appel de loadUser...');
-    // 1. Charger l'utilisateur au montage initial du composant.
     loadUser();
+  }, [loadUser]);
 
-    // 2. S'abonner aux changements d'état d'authentification de Supabase.
-    let subscription: { unsubscribe: () => void } | undefined;
-    try {
-      const client = getSupabase();
-      const result = client.auth.onAuthStateChange((event) => {
-        console.log(`AuthProvider: Événement d'authentification Supabase - ${event}`);
-        // Recharger les données utilisateur à chaque événement pour garder l'état synchronisé.
-        loadUser();
-      });
-      subscription = result.data.subscription;
-    } catch (error) {
-      console.error('[AuthProvider] -> Impossible d\'initialiser onAuthStateChange:', error);
-      // On continue sans abonnement pour ne pas bloquer le rendu de l'application
-    }
+  // Écouter les changements d'état d'authentification Supabase
+  useEffect(() => {
+    const { data: { subscription } } = getSupabase().auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('[AuthProvider] Auth state changed:', event, session ? 'session exists' : 'no session');
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          await loadUser();
+        } else if (event === 'SIGNED_OUT') {
+          // Clear user state when signed out
+          useAuth.setState({ user: null, subscription: null });
+        }
+      }
+    );
 
-    // 3. Écouter les changements de stockage pour la synchronisation entre onglets.
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key?.includes('supabase.auth.token')) {
-        console.log('AuthProvider: Événement de stockage détecté, rechargement des données utilisateur.');
+    return () => subscription.unsubscribe();
+  }, [loadUser]);
+
+  // Écouter les changements de localStorage pour synchroniser entre onglets
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'supabase.auth.token') {
         loadUser();
       }
     };
+
     window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [loadUser]);
 
-    // 4. Fonction de nettoyage pour se désabonner lors du démontage du composant.
-    return () => {
-      try {
-        subscription?.unsubscribe?.();
-      } catch (e) {
-        console.warn('[AuthProvider] -> Erreur lors de la désinscription onAuthStateChange:', e);
-      }
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, [loadUser]); // `loadUser` est stable, donc cet effet ne s'exécute qu'une seule fois.
-
-  // Afficher un écran de chargement tant que l'initialisation n'est pas terminée.
   if (!initialized) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#111827', color: 'white' }}>
         <p>Chargement de l'application...</p>
+      </div>
+    );
+  }
+
+  // Gestion explicite des erreurs d'authentification
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center max-w-md p-8">
+          <div className="text-red-400 text-6xl mb-4">⚠️</div>
+          <h2 className="text-xl font-bold text-white mb-4">Erreur d'authentification</h2>
+          <p className="text-gray-300 mb-6">
+            Une erreur est survenue lors de la vérification de votre session : {error}
+          </p>
+          <div className="space-y-3">
+            <button
+              onClick={() => {
+                useAuth.setState({ error: null });
+                loadUser();
+              }}
+              className="w-full bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-lg transition-colors"
+            >
+              Réessayer
+            </button>
+            <button
+              onClick={() => window.location.href = '/login'}
+              className="w-full bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg transition-colors"
+            >
+              Aller à la connexion
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
