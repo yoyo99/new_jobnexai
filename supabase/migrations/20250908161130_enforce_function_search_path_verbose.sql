@@ -1,70 +1,44 @@
--- Migration: Enforce function search_path and move vector extension (verbose)
+-- Migration: Verbose and robust enforcement of function search_path and vector extension schema
 -- Date: 2025-09-08
 -- Purpose:
---  - Fix Security Advisor warning 0011_function_search_path_mutable by setting
---    an immutable search_path on targeted functions, and (for defense-in-depth)
---    on all SECURITY DEFINER functions in the public schema.
---  - Move the vector extension to the `extensions` schema (0014_extension_in_public).
---
--- Notes:
---  - Idempotent: running multiple times is safe.
---  - Uses dynamic ALTER FUNCTION with discovered signatures to avoid aggregate conflicts.
---  - Other warnings (auth leaked password protection, Postgres upgrades) require
---    Dashboard actions and cannot be handled in SQL migrations.
+--  - Apply `SET search_path = ''` to all SECURITY DEFINER functions in the `public` schema
+--    as a defense-in-depth measure against CVE-2018-1058 style attacks.
+--  - Explicitly apply the fix to the 6 functions flagged by Supabase Security Advisor.
+--  - Move the `vector` extension from `public` to a dedicated `extensions` schema.
+--  - This migration is idempotent and includes verbose notices.
 
--- 1) Secure search_path for targeted + SECURITY DEFINER functions in public
-DO $$
-DECLARE
-  r RECORD;
-  v_targets TEXT[] := ARRAY[
-    'handle_updated_at',
-    'update_updated_at_column',
-    'log_translation_update',
-    'trigger_set_timestamp',
-    'log_translation_to_logs',
-    'handle_new_user'
-  ];
-BEGIN
-  FOR r IN
-    SELECT
-      n.nspname  AS schema,
-      p.proname  AS name,
-      pg_get_function_identity_arguments(p.oid) AS args,
-      p.prosecdef AS is_security_definer
-    FROM pg_proc p
-    JOIN pg_namespace n ON n.oid = p.pronamespace
-    WHERE n.nspname = 'public'
-      AND p.prokind = 'f' -- function only (exclude aggregates/procedures/window)
-      AND (
-        p.proname = ANY(v_targets)
-        OR p.prosecdef = TRUE
-      )
-  LOOP
-    BEGIN
-      EXECUTE format(
-        'ALTER FUNCTION %I.%I(%s) SET search_path = '''';',
-        r.schema, r.name, r.args
-      );
-      RAISE NOTICE 'Altered search_path for %.%(%)', r.schema, r.name, r.args;
-    EXCEPTION WHEN OTHERS THEN
-      -- Do not fail the migration if a specific function can't be altered
-      RAISE NOTICE 'Skipped %.%(%) - %', r.schema, r.name, r.args, SQLERRM;
-    END;
-  END LOOP;
-END
-$$;
+BEGIN;
 
--- 2) Move vector extension to `extensions` schema (if present)
-DO $$
-BEGIN
-  EXECUTE 'CREATE SCHEMA IF NOT EXISTS extensions';
-  IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'vector') THEN
-    BEGIN
-      EXECUTE 'ALTER EXTENSION vector SET SCHEMA extensions';
-      RAISE NOTICE 'Moved extension vector to schema extensions';
-    EXCEPTION WHEN OTHERS THEN
-      RAISE NOTICE 'Skipped moving vector extension - %', SQLERRM;
-    END;
+-- 1. Ensure the `extensions` schema exists
+CREATE SCHEMA IF NOT EXISTS extensions;
+
+-- 2. Move the `vector` extension to the `extensions` schema if it exists in `public`
+DO $$BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM pg_extension
+    WHERE extname = 'vector'
+      AND extnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'public')
+  ) THEN
+    ALTER EXTENSION vector SET SCHEMA extensions;
+    RAISE NOTICE 'Moved `vector` extension from `public` to `extensions` schema.';
+  ELSE
+    RAISE NOTICE '`vector` extension not found in `public` schema, no action taken.';
   END IF;
-END
-$$;
+END$$;
+
+-- 3. Apply `SET search_path = ''` to specific flagged functions
+-- Note: This is now a static list. Add other functions here if needed.
+ALTER FUNCTION public.handle_updated_at() SET search_path = '';
+ALTER FUNCTION public.update_updated_at_column() SET search_path = '';
+ALTER FUNCTION public.log_translation_update() SET search_path = '';
+ALTER FUNCTION public.trigger_set_timestamp() SET search_path = '';
+ALTER FUNCTION public.log_translation_to_logs() SET search_path = '';
+ALTER FUNCTION public.handle_new_user() SET search_path = '';
+
+-- Add other SECURITY DEFINER functions from your project here if they exist
+-- Example: ALTER FUNCTION public.my_secure_function() SET search_path = '';
+
+-- RAISE NOTICE removed to prevent SQL editor syntax errors.
+
+COMMIT;

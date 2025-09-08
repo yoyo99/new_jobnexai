@@ -17,19 +17,9 @@ DECLARE
   check_exprs text[];
   new_using text;
   new_check text;
-  keep_oid oid;
-  keep_name text;
   i int;
-  normalized_count int;
-
-  -- Helper to normalize whitespace
-  function normalize_expr(txt text) returns text as $$
-  begin
-    if txt is null then
-      return null;
-    end if;
-    return regexp_replace(trim(txt), '\s+', ' ', 'g');
-  end; $$ language plpgsql;
+  normalized_using_count int;
+  normalized_check_count int;
 BEGIN
   -- Group policies by table, command, permissive flag, and exact role set
   FOR rec IN
@@ -56,42 +46,29 @@ BEGIN
     check_exprs := rec.check_list;
 
     -- Determine if all USING are identical (after normalization)
-    SELECT count(DISTINCT normalize_expr(u)) INTO normalized_count
+    SELECT count(DISTINCT regexp_replace(trim(u), '\s+', ' ', 'g')) INTO normalized_using_count
     FROM unnest(using_exprs) u;
 
-    IF normalized_count = 1 THEN
-      new_using := normalize_expr(using_exprs[1]);
+    IF normalized_using_count <= 1 THEN
+      new_using := (SELECT regexp_replace(trim(u), '\s+', ' ', 'g') FROM unnest(using_exprs) u LIMIT 1);
     ELSE
       -- Consolidate with OR
-      new_using := null;
-      FOR i IN array_lower(using_exprs,1)..array_upper(using_exprs,1) LOOP
-        IF using_exprs[i] IS NOT NULL AND length(trim(using_exprs[i])) > 0 THEN
-          IF new_using IS NULL THEN
-            new_using := '(' || using_exprs[i] || ')';
-          ELSE
-            new_using := '(' || new_using || ') OR (' || using_exprs[i] || ')';
-          END IF;
-        END IF;
-      END LOOP;
+      SELECT string_agg('(' || expr || ')', ' OR ') INTO new_using
+      FROM unnest(using_exprs) AS expr
+      WHERE expr IS NOT NULL AND length(trim(expr)) > 0;
     END IF;
 
     -- Determine if all WITH CHECK are identical
-    SELECT count(DISTINCT normalize_expr(w)) INTO normalized_count
+    SELECT count(DISTINCT regexp_replace(trim(w), '\s+', ' ', 'g')) INTO normalized_check_count
     FROM unnest(check_exprs) w;
 
-    IF normalized_count = 1 THEN
-      new_check := normalize_expr(check_exprs[1]);
+    IF normalized_check_count <= 1 THEN
+      new_check := (SELECT regexp_replace(trim(w), '\s+', ' ', 'g') FROM unnest(check_exprs) w LIMIT 1);
     ELSE
-      new_check := null;
-      FOR i IN array_lower(check_exprs,1)..array_upper(check_exprs,1) LOOP
-        IF check_exprs[i] IS NOT NULL AND length(trim(check_exprs[i])) > 0 THEN
-          IF new_check IS NULL THEN
-            new_check := '(' || check_exprs[i] || ')';
-          ELSE
-            new_check := '(' || new_check || ') OR (' || check_exprs[i] || ')';
-          END IF;
-        END IF;
-      END LOOP;
+      -- Consolidate with OR
+      SELECT string_agg('(' || expr || ')', ' OR ') INTO new_check
+      FROM unnest(check_exprs) AS expr
+      WHERE expr IS NOT NULL AND length(trim(expr)) > 0;
     END IF;
 
     -- Build roles list text
@@ -110,18 +87,16 @@ BEGIN
       EXECUTE format('DROP POLICY IF EXISTS %I ON %I.%I', rec.names[i], rec.schema, rec.table_name);
     END LOOP;
 
-    -- Create a consolidated policy name
-    keep_name := format('Consolidated %s policy', CASE rec.polcmd WHEN 'r' THEN 'SELECT' WHEN 'a' THEN 'INSERT' WHEN 'w' THEN 'UPDATE' WHEN 'd' THEN 'DELETE' ELSE 'ALL' END);
-
     -- Create the consolidated policy
-    EXECUTE (
-      'CREATE POLICY ' || quote_ident(keep_name) ||
-      ' ON ' || quote_ident(rec.schema) || '.' || quote_ident(rec.table_name) ||
-      ' AS ' || CASE WHEN rec.polpermissive THEN 'PERMISSIVE' ELSE 'RESTRICTIVE' END ||
-      ' FOR ' || CASE rec.polcmd WHEN 'r' THEN 'SELECT' WHEN 'a' THEN 'INSERT' WHEN 'w' THEN 'UPDATE' WHEN 'd' THEN 'DELETE' ELSE 'ALL' END ||
-      ' TO ' || role_names ||
-      COALESCE(' USING (' || new_using || ')', '') ||
-      COALESCE(' WITH CHECK (' || new_check || ')', '')
+    EXECUTE format(
+      'CREATE POLICY %I ON %I.%I AS %s FOR %s TO %s %s %s',
+      format('Consolidated %s policy', CASE rec.polcmd WHEN 'r' THEN 'SELECT' WHEN 'a' THEN 'INSERT' WHEN 'w' THEN 'UPDATE' WHEN 'd' THEN 'DELETE' ELSE 'ALL' END),
+      rec.schema, rec.table_name,
+      CASE WHEN rec.polpermissive THEN 'PERMISSIVE' ELSE 'RESTRICTIVE' END,
+      CASE rec.polcmd WHEN 'r' THEN 'SELECT' WHEN 'a' THEN 'INSERT' WHEN 'w' THEN 'UPDATE' WHEN 'd' THEN 'DELETE' ELSE 'ALL' END,
+      role_names,
+      CASE WHEN new_using IS NOT NULL THEN 'USING (' || new_using || ')' ELSE '' END,
+      CASE WHEN new_check IS NOT NULL THEN 'WITH CHECK (' || new_check || ')' ELSE '' END
     );
 
     RAISE NOTICE 'Consolidated policies on %.% (%), roles: %', rec.schema, rec.table_name, rec.polcmd, role_names;
