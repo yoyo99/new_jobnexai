@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { PasswordStrengthMeter } from './PasswordStrengthMeter';
 import { useJobnexai } from '../hooks/useJobnexai';
+import { getSupabase } from '../hooks/useSupabaseConfig';
 
 const SupabaseAuth: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -60,12 +61,20 @@ const SupabaseAuth: React.FC = () => {
     }
     try {
       setLoading(true);
+      console.log('[SupabaseAuth] handleSignUp start', { email });
       // Utiliser notre hook auth.register à la place de AuthService.signUp
       // Diviser le nom complet en prénom et nom pour correspondre à l'interface attendue
       const nameParts = fullName.split(' ');
       const firstName = nameParts[0] || '';
       const lastName = nameParts.slice(1).join(' ') || '';
       const { data: user, error } = await auth.register(email, password, { firstName, lastName });
+      console.log('[SupabaseAuth] handleSignUp result', { hasUser: !!user, error });
+      try {
+        const sessionRes = await getSupabase().auth.getSession();
+        console.log('[SupabaseAuth] session after signUp:', sessionRes.data.session ? 'present' : 'null');
+      } catch (se) {
+        console.warn('[SupabaseAuth] getSession after signUp failed:', se);
+      }
       
       if (error) {
         setMessage({ type: 'error', text: error.message });
@@ -104,8 +113,16 @@ const SupabaseAuth: React.FC = () => {
     }
     try {
       setLoading(true);
+      console.log('[SupabaseAuth] handleSignIn start', { email });
       // Utiliser notre hook auth.login à la place de AuthService.signIn
       const { data: user, error } = await auth.login(email, password);
+      console.log('[SupabaseAuth] handleSignIn result', { hasUser: !!user, error });
+      try {
+        const sessionRes = await getSupabase().auth.getSession();
+        console.log('[SupabaseAuth] session after signIn:', sessionRes.data.session ? 'present' : 'null');
+      } catch (se) {
+        console.warn('[SupabaseAuth] getSession after signIn failed:', se);
+      }
       
       if (error) {
         // Mapping des messages d'erreur Supabase vers des clés i18n si possible

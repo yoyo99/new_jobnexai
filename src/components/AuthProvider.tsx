@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../stores/auth';
 import { getSupabase } from '../hooks/useSupabaseConfig';
 
@@ -9,6 +9,7 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   console.log('[AuthProvider] -> Le composant est en cours de rendu.');
   // Utiliser un seul sélecteur pour éviter les conflits useSyncExternalStoreWithSelector
   const { initialized, error, loadUser, user } = useAuth(state => ({
@@ -95,7 +96,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   // Gestion du cas "utilisateur non connecté"
-  if (!user) {
+  // Ne bloquer l'accès que pour les routes protégées (/app)
+  const isProtectedPath = location.pathname.startsWith('/app');
+
+  // Rediriger automatiquement vers /login si l'utilisateur n'est pas connecté et qu'il tente d'accéder à une route protégée
+  useEffect(() => {
+    if (initialized && !user && isProtectedPath) {
+      console.log('[AuthProvider] Not authenticated on protected route, redirecting to /login');
+      navigate('/login', { replace: true, state: { from: location } });
+    }
+  }, [initialized, user, isProtectedPath, navigate, location]);
+
+  if (!user && isProtectedPath) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center max-w-md p-8">
