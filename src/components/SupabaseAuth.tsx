@@ -5,7 +5,19 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { PasswordStrengthMeter } from './PasswordStrengthMeter';
 import { useJobnexai } from '../hooks/useJobnexai';
-import { getSupabase } from '../hooks/useSupabaseConfig';
+
+// Helper pour s'assurer qu'une valeur est une chaîne de caractères pour le rendu
+const ensureString = (value: any): string => {
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (value && typeof value === 'object') {
+    // Affiche un message d'erreur clair au lieu de faire crasher l'app
+    console.warn('i18n key returned an object, not a string:', value);
+    return JSON.stringify(value);
+  }
+  return String(value ?? '');
+};
 
 const SupabaseAuth: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -43,57 +55,44 @@ const SupabaseAuth: React.FC = () => {
     }
   }, [isLoggedIn, user, navigate]);
 
-  const handleSignUp = async (e: React.FormEvent) => {
+    const handleSignUp = async (e: React.FormEvent) => {
     setTermsError(null);
     if (!acceptTerms) {
-      setTermsError(t('auth.errors.acceptTerms'));
+      setTermsError(ensureString(t('auth.errors.acceptTerms')));
       return;
     }
     e.preventDefault();
     setMessage(null);
     if (!email || !password) {
-      setMessage({ type: 'error', text: t('auth.errors.requiredFields') });
+      setMessage({ type: 'error', text: ensureString(t('auth.errors.requiredFields')) });
       return;
     }
     if (password.length < 9) {
-      setMessage({ type: 'error', text: t('auth.errors.passwordLength') });
+      setMessage({ type: 'error', text: ensureString(t('auth.errors.passwordLength')) });
       return;
     }
     try {
       setLoading(true);
-      console.log('[SupabaseAuth] handleSignUp start', { email });
-      // Utiliser notre hook auth.register à la place de AuthService.signUp
-      // Diviser le nom complet en prénom et nom pour correspondre à l'interface attendue
       const nameParts = fullName.split(' ');
       const firstName = nameParts[0] || '';
       const lastName = nameParts.slice(1).join(' ') || '';
       const { data: user, error } = await auth.register(email, password, { firstName, lastName });
-      console.log('[SupabaseAuth] handleSignUp result', { hasUser: !!user, error });
-      try {
-        const sessionRes = await getSupabase().auth.getSession();
-        console.log('[SupabaseAuth] session after signUp:', sessionRes.data.session ? 'present' : 'null');
-      } catch (se) {
-        console.warn('[SupabaseAuth] getSession after signUp failed:', se);
-      }
-      
+
       if (error) {
-        setMessage({ type: 'error', text: error.message });
+        setMessage({ type: 'error', text: ensureString(error.message) });
         return;
       }
       if (!user) {
-        setMessage({ type: 'error', text: t('auth.errors.signup') });
+        setMessage({ type: 'error', text: ensureString(t('auth.errors.signup')) });
         return;
       }
-      setMessage({ type: 'success', text: t('auth.success.signup') });
-      // Délai pour lire le message, puis la navigation dans son propre tick
-      setTimeout(() => {
-        setTimeout(() => {
-          navigate('/pricing');
-        }, 0);
-      }, 2000);
+
+      setMessage({ type: 'success', text: ensureString(t('auth.success.signup')) });
+      setTimeout(() => navigate('/pricing'), 2000);
+
     } catch (error: any) {
       console.error('Error signing up:', error);
-      setMessage({ type: 'error', text: error?.message || t('auth.errors.unknown') });
+      setMessage({ type: 'error', text: ensureString(error?.message || t('auth.errors.unknown')) });
     } finally {
       setLoading(false);
     }
@@ -104,73 +103,60 @@ const SupabaseAuth: React.FC = () => {
     setMessage(null);
     setShowHelp(false);
     if (!email || !password) {
-      setMessage({ type: 'error', text: t('auth.errors.requiredFields') });
-      return;
-    }
-    if (password.length < 9) {
-      setMessage({ type: 'error', text: t('auth.errors.passwordLength') });
+      setMessage({ type: 'error', text: ensureString(t('auth.errors.requiredFields')) });
       return;
     }
     try {
       setLoading(true);
-      console.log('[SupabaseAuth] handleSignIn start', { email });
-      // Utiliser notre hook auth.login à la place de AuthService.signIn
       const { data: user, error } = await auth.login(email, password);
-      console.log('[SupabaseAuth] handleSignIn result', { hasUser: !!user, error });
-      try {
-        const sessionRes = await getSupabase().auth.getSession();
-        console.log('[SupabaseAuth] session after signIn:', sessionRes.data.session ? 'present' : 'null');
-      } catch (se) {
-        console.warn('[SupabaseAuth] getSession after signIn failed:', se);
-      }
-      
+
       if (error) {
-        // Mapping des messages d'erreur Supabase vers des clés i18n si possible
         let errorKey = '';
         if (error.message === 'Invalid login credentials') errorKey = 'auth.errors.login';
         if (error.message === 'User already registered') errorKey = 'auth.errors.signup';
         if (error.message === 'Password should be at least 9 characters') errorKey = 'auth.errors.passwordLength';
-        setMessage({ type: 'error', text: errorKey !== '' ? t(errorKey) : error.message || t('auth.errors.unknown') });
+        
+        setMessage({ type: 'error', text: ensureString(errorKey ? t(errorKey) : error.message) });
         setShowHelp(true);
         return;
       }
       if (!user) {
-        setMessage({ type: 'error', text: t('auth.errors.login') });
+        setMessage({ type: 'error', text: ensureString(t('auth.errors.login')) });
         setShowHelp(true);
         return;
       }
-      setMessage({ type: 'success', text: t('auth.success.login') });
-      // Délai pour lire le message, puis la navigation
-      setTimeout(() => {
-        navigate(from);
-      }, 1500);
+
+      setMessage({ type: 'success', text: ensureString(t('auth.success.login')) });
+      setTimeout(() => navigate(from), 1500);
+
     } catch (error: any) {
       console.error('Error signing in:', error);
-      setMessage({ type: 'error', text: error?.message || t('auth.errors.unknown') });
+      setMessage({ type: 'error', text: ensureString(error?.message || t('auth.errors.unknown')) });
       setShowHelp(true);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleForgotPassword = async () => {
+    const handleForgotPassword = async () => {
     if (!email) {
-      setMessage({ type: 'error', text: t('auth.errors.emailRequired') });
+      setMessage({ type: 'error', text: ensureString(t('auth.errors.emailRequired')) });
       return;
     }
     try {
       setLoading(true);
-      // Utiliser notre hook auth.resetPassword à la place de AuthService.resetPassword
       const { error } = await auth.resetPassword(email);
-      
+
       if (error) {
-        setMessage({ type: 'error', text: error.message });
+        setMessage({ type: 'error', text: ensureString(error.message) });
         return;
       }
-      setMessage({ type: 'success', text: t('auth.success.passwordReset') });
+
+      setMessage({ type: 'success', text: ensureString(t('auth.success.passwordReset')) });
+
     } catch (error: any) {
       console.error('Error resetting password:', error);
-      setMessage({ type: 'error', text: error?.message || t('auth.errors.unknown') });
+      setMessage({ type: 'error', text: ensureString(error?.message || t('auth.errors.unknown')) });
     } finally {
       setLoading(false);
     }
