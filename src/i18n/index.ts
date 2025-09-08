@@ -10,8 +10,8 @@ const i18nInit = i18n
   .init({
     fallbackLng: 'fr',
     supportedLngs: ['fr', 'en', 'de', 'es', 'it'],
-    ns: ['common', 'translation'],
-    defaultNS: 'common',
+    ns: ['translation'],
+    defaultNS: 'translation',
     interpolation: {
       escapeValue: false,
     },
