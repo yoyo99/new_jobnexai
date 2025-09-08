@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../stores/auth';
+import { shallow } from 'zustand/shallow';
 import { getSupabase } from '../hooks/useSupabaseConfig';
 
 interface AuthProviderProps {
@@ -12,12 +13,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const location = useLocation();
   console.log('[AuthProvider] -> Le composant est en cours de rendu.');
   // Utiliser un seul sélecteur pour éviter les conflits useSyncExternalStoreWithSelector
-  const { initialized, error, loadUser, user } = useAuth(state => ({
+  const { initialized, error, loadUser, user } = useAuth(
+    state => ({
     initialized: state.initialized,
     error: state.error,
     loadUser: state.loadUser,
     user: state.user
-  }));
+  }),
+  shallow
+);
 
   useEffect(() => {
     loadUser();
