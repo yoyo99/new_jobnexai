@@ -308,6 +308,11 @@
     "cvBuilder": "Mon CV",
     "network": "Réseau",
     "marketAnalysis": "Analyse du marché",
-    "profile": "Mon profil"
+    "profile": "Mon profil",
+    "changeLanguage": "Changer de langue",
+    "languageSwitcher": {
+      "title": "Sélection de la langue",
+      "current": "Langue actuelle"
+    }
   }
 }

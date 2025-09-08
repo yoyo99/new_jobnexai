@@ -224,5 +224,20 @@
         ]
       }
     }
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "jobSearch": "Job Search",
+    "applications": "My Applications",
+    "letters": "Cover Letters",
+    "cvBuilder": "My CV",
+    "network": "Network",
+    "marketAnalysis": "Market Analysis",
+    "profile": "My Profile",
+    "changeLanguage": "Change language",
+    "languageSwitcher": {
+      "title": "Language selection",
+      "current": "Current language"
+    }
   }
 }
