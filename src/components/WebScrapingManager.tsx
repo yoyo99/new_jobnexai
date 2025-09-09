@@ -92,7 +92,7 @@ const WebScrapingManager: React.FC = () => {
       
       const { data: { session } } = await supabase.auth.getSession();
       
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/web-scraper`, {
+      const response = await fetch(`${process.env.VITE_SUPABASE_URL}/functions/v1/web-scraper`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -131,7 +131,7 @@ const WebScrapingManager: React.FC = () => {
       console.log('Sites sélectionnés:', selectedSites);
       console.log('Token d\'authentification:', session?.access_token ? 'Présent' : 'Absent');
       
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/web-scraper`, {
+      const response = await fetch(`${process.env.VITE_SUPABASE_URL}/functions/v1/web-scraper`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -175,7 +175,7 @@ const WebScrapingManager: React.FC = () => {
 
     try {
       const { data: { session: authSession } } = await supabase.auth.getSession();
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/web-scraper`, {
+      const response = await fetch(`${process.env.VITE_SUPABASE_URL}/functions/v1/web-scraper`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -207,7 +207,7 @@ const WebScrapingManager: React.FC = () => {
   const loadScrapedJobs = async (sessionId: string) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/web-scraper`, {
+      const response = await fetch(`${process.env.VITE_SUPABASE_URL}/functions/v1/web-scraper`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

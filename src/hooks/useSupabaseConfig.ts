@@ -13,20 +13,10 @@ let supabase: SupabaseClient;
  * @returns {SupabaseClient}
  */
 export function getSupabase(): SupabaseClient {
-  // --- DÉBUT LOGS DE DÉBOGAGE ---
-  console.log("--- JOBNEXAI DEBUG ---");
-  console.log("Tentative d'initialisation de Supabase avec la configuration suivante :");
-  const injectedUrl = (typeof process !== 'undefined' ? process.env.VITE_SUPABASE_URL : undefined) ?? (typeof import.meta !== 'undefined' ? (import.meta as any).env?.VITE_SUPABASE_URL : undefined);
-  const injectedAnon = (typeof process !== 'undefined' ? process.env.VITE_SUPABASE_ANON_KEY : undefined) ?? (typeof import.meta !== 'undefined' ? (import.meta as any).env?.VITE_SUPABASE_ANON_KEY : undefined);
-  console.log("URL (VITE_SUPABASE_URL):", injectedUrl);
-  console.log("Clé Anon (VITE_SUPABASE_ANON_KEY):", injectedAnon ? 'Présente' : 'Manquante !');
-  console.log("--- FIN LOGS DE DÉBOGAGE ---");
-
-  const supabaseUrl = injectedUrl as string | undefined;
-  const supabaseAnonKey = injectedAnon as string | undefined;
+  const supabaseUrl = process.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.error('Supabase URL or Anon Key is missing. Make sure to set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment (Netlify).');
     throw new Error('Supabase configuration is missing (VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY).');
   }
 
@@ -36,7 +26,7 @@ export function getSupabase(): SupabaseClient {
   }
 
   // En développement, réutilise l'instance globale pour éviter les avertissements HMR
-  if (process.env.NODE_ENV === 'development' && globalThis.__supabase_client) {
+  if (globalThis.__supabase_client) {
     supabase = globalThis.__supabase_client;
     return supabase;
   }

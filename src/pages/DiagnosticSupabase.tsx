@@ -18,8 +18,8 @@ function DiagnosticSupabase() {
     try {
       // 1. Vérifier les variables d'environnement
       setCurrentTest('Vérification des variables d\'environnement');
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const supabaseUrl = process.env.VITE_SUPABASE_URL;
+      const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
 
       if (!supabaseUrl) {
         addLog('❌ VITE_SUPABASE_URL non définie');
@@ -43,7 +43,7 @@ function DiagnosticSupabase() {
       // 3. Test de connexion simple (anonyme)
       setCurrentTest('Test de connexion anonyme');
       try {
-        const { data, error } = await supabase.from('profiles').select('count').limit(1);
+        const { error } = await supabase.from('profiles').select('count').limit(1);
         if (error) {
           addLog(`❌ Erreur lors du test de connexion: ${error.message}`);
           throw error;

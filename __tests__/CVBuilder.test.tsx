@@ -5,6 +5,11 @@ import { I18nextProvider } from 'react-i18next';
 import i18n from 'i18next';
 import CVBuilder from '../src/components/cv/CVBuilder';
 
+jest.mock('../src/components/cv/CVEditor', () => () => <div>CVEditor</div>);
+jest.mock('../src/components/cv/CVPreview', () => () => <div>CVPreview</div>);
+jest.mock('../src/components/cv/CVEditor', () => () => <div>CVEditor</div>);
+jest.mock('../src/components/cv/CVPreview', () => () => <div>CVPreview</div>);
+
 // Mock auth store
 jest.mock('../src/stores/auth', () => ({
   useAuth: jest.fn(),

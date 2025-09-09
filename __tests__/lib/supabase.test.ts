@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import { supabase } from '../../src/lib/supabase';
 
 // Mock Supabase client
 jest.mock('@supabase/supabase-js', () => ({
@@ -10,6 +9,7 @@ const mockCreateClient = createClient as jest.MockedFunction<typeof createClient
 
 describe('Supabase Client', () => {
   beforeEach(() => {
+    jest.resetModules();
     jest.clearAllMocks();
     
     // Mock environment variables
@@ -43,6 +43,7 @@ describe('Supabase Client', () => {
   });
 
   test('should export supabase client', () => {
+    const { supabase } = require('../../src/lib/supabase');
     expect(supabase).toBeDefined();
   });
 });

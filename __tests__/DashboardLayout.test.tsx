@@ -1,12 +1,15 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { I18nextProvider } from 'react-i18next';
 import i18n from 'i18next';
 import { DashboardLayout } from '../src/components/DashboardLayout';
 import { useAuth } from '../src/stores/auth';
 
-// Mock auth store
+// Mock child components
+jest.mock('../src/components/LanguageSwitcher', () => ({ LanguageSwitcher: () => <div>LanguageSwitcher</div> }));
+jest.mock('../src/components/NotificationCenter', () => ({ NotificationCenter: () => <div>NotificationCenter</div> }));
+
 jest.mock('../src/stores/auth', () => ({
   useAuth: jest.fn()
 }));

@@ -1,27 +1,26 @@
-import { vi } from 'vitest'
-import { initMonitoring, trackError, trackEvent } from '../monitoring'
+import { initMonitoring, trackError, trackEvent } from '@/lib/monitoring'
 import * as Sentry from '@sentry/react'
 import { onCLS, onFID, onFCP, onLCP, onTTFB } from 'web-vitals'
 
-vi.mock('@sentry/react', () => ({
-  init: vi.fn(),
-  BrowserTracing: vi.fn(),
-  Replay: vi.fn(),
-  captureException: vi.fn(),
-  captureMessage: vi.fn(),
+jest.mock('@sentry/react', () => ({
+  init: jest.fn(),
+  BrowserTracing: jest.fn(),
+  Replay: jest.fn(),
+  captureException: jest.fn(),
+  captureMessage: jest.fn(),
 }))
 
-vi.mock('web-vitals', () => ({
-  onCLS: vi.fn(),
-  onFID: vi.fn(),
-  onFCP: vi.fn(),
-  onLCP: vi.fn(),
-  onTTFB: vi.fn(),
+jest.mock('web-vitals', () => ({
+  onCLS: jest.fn(),
+  onFID: jest.fn(),
+  onFCP: jest.fn(),
+  onLCP: jest.fn(),
+  onTTFB: jest.fn(),
 }))
 
 describe('Monitoring Functions', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   test('initializes monitoring', () => {

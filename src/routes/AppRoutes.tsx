@@ -1,30 +1,28 @@
 import React from 'react';
 import { Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from '../components/ProtectedRoute';
-// Wrapper pour les composants lazy-loaded avec ErrorBoundary spécifique
-const LazyComponentWrapper = ({ children }: { children: React.ReactNode }) => {
-  const ErrorBoundary = React.lazy(() => import('../components/ErrorBoundary').then(m => ({ default: m.ErrorBoundary })));
-  const LoadingFallback = React.lazy(() => import('../components/LoadingFallback').then(m => ({ default: m.LoadingFallback })));
-  
-  return (
-    <React.Suspense fallback={<div>Loading...</div>}>
-      <ErrorBoundary fallback={<div className="card m-8 text-center bg-background/80 backdrop-blur-lg">
-        <h2 className="text-xl font-semibold text-primary-400 mb-4">Un problème est survenu lors du chargement de cette page</h2>
-        <p className="text-white/80 mb-6">Nous nous excusons pour cet inconvénient. L'équipe technique a été informée du problème.</p>
-        <button 
-          onClick={() => window.location.reload()}
-          className="btn-primary"
-        >
-          Essayer de recharger
-        </button>
-      </div>}>
-        <React.Suspense fallback={<LoadingFallback />}>
-          {children}
-        </React.Suspense>
-      </ErrorBoundary>
+import { ErrorBoundary } from '../components/ErrorBoundary';
+import { LoadingFallback } from '../components/LoadingFallback';
+
+// Wrapper pour les composants lazy-loaded avec ErrorBoundary et Suspense
+const LazyComponentWrapper = ({ children }: { children: React.ReactNode }) => (
+  <ErrorBoundary fallback={
+    <div className="card m-8 text-center bg-background/80 backdrop-blur-lg">
+      <h2 className="text-xl font-semibold text-primary-400 mb-4">Un problème est survenu lors du chargement de cette page</h2>
+      <p className="text-white/80 mb-6">Nous nous excusons pour cet inconvénient. L'équipe technique a été informée du problème.</p>
+      <button 
+        onClick={() => window.location.reload()}
+        className="btn-primary"
+      >
+        Essayer de recharger
+      </button>
+    </div>
+  }>
+    <React.Suspense fallback={<LoadingFallback />}>
+      {children}
     </React.Suspense>
-  );
-};
+  </ErrorBoundary>
+);
 
 // App pages lazy imports
 const Dashboard = React.lazy(() => import('../components/Dashboard'));

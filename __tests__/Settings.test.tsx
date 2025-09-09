@@ -1,22 +1,21 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { vi } from 'vitest'
-import { Settings } from '../Settings'
-import { supabase } from '../../lib/supabase'
-import { useAuth } from '../../stores/auth'
+import { Settings } from '~/components/Settings'
+import { supabase } from '~/lib/supabase'
+import { useAuth } from '~/stores/auth'
 import { useTranslation } from 'react-i18next'
 
-vi.mock('../../stores/auth', () => ({
-  useAuth: vi.fn(),
+jest.mock('~/stores/auth', () => ({
+  useAuth: jest.fn(),
 }))
 
-vi.mock('react-i18next', () => ({
-  useTranslation: vi.fn(),
+jest.mock('react-i18next', () => ({
+  useTranslation: jest.fn(),
 }))
 
-vi.mock('../../lib/supabase', () => ({
+jest.mock('@/lib/supabase', () => ({
   supabase: {
-    from: vi.fn(() => ({
-      upsert: vi.fn(),
+    from: jest.fn(() => ({
+      upsert: jest.fn(),
     })),
   },
 }))
@@ -28,13 +27,13 @@ describe('Settings Component', () => {
   }
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     ;(useAuth as any).mockReturnValue({ user: mockUser })
     ;(useTranslation as any).mockReturnValue({
       t: (key: string) => key,
       i18n: {
         language: 'fr',
-        changeLanguage: vi.fn(),
+        changeLanguage: jest.fn(),
       },
     })
   })
@@ -49,7 +48,7 @@ describe('Settings Component', () => {
   })
 
   test('updates security settings', async () => {
-    const upsertMock = vi.fn().mockResolvedValue({ error: null })
+    const upsertMock = jest.fn().mockResolvedValue({ error: null })
     ;(supabase.from as any).mockReturnValue({
       upsert: upsertMock,
     })
@@ -77,7 +76,7 @@ describe('Settings Component', () => {
   })
 
   test('updates notification settings', async () => {
-    const upsertMock = vi.fn().mockResolvedValue({ error: null })
+    const upsertMock = jest.fn().mockResolvedValue({ error: null })
     ;(supabase.from as any).mockReturnValue({
       upsert: upsertMock,
     })

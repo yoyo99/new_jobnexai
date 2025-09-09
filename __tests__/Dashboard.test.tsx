@@ -69,7 +69,7 @@ describe('Dashboard', () => {
     expect(screen.getByText(/dashboard.welcome/i)).toBeInTheDocument();
     
     await waitFor(() => {
-      expect(screen.getByText(/dashboard.stats/i)).toBeInTheDocument();
+      expect(screen.getByText('dashboard.stats')).toBeInTheDocument();
     });
   });
 
@@ -78,7 +78,7 @@ describe('Dashboard', () => {
     
     await waitFor(() => {
       // Should show applications count
-      expect(screen.getByText(/2/)).toBeInTheDocument();
+      expect(screen.getByText('2')).toBeInTheDocument();
     });
   });
 
@@ -104,7 +104,7 @@ describe('Dashboard', () => {
     renderWithProviders(<Dashboard />);
     
     await waitFor(() => {
-      expect(screen.getByText(/dashboard.error/i)).toBeInTheDocument();
+      expect(screen.getByText('dashboard.error')).toBeInTheDocument();
     });
   });
 });

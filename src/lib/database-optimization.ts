@@ -4,7 +4,7 @@
  */
 
 import { getSupabase } from '../hooks/useSupabaseConfig'
-import { trackError, trackPerformance } from '../../lib/monitoring'
+import { trackError, trackEvent } from './monitoring'
 
 // Cache configuration
 const CACHE_CONFIG = {
@@ -227,9 +227,10 @@ class OptimizedQueryBuilder {
       if (this.cacheKey && this.cacheDuration) {
         const cachedData = queryCache.get(this.cacheKey)
         if (cachedData) {
-          trackPerformance('database_query_cache_hit', performance.now() - startTime, {
+          trackEvent('database_query_cache_hit', {
             table: this.tableName,
-            cacheKey: this.cacheKey
+            cacheKey: this.cacheKey,
+            duration: performance.now() - startTime
           })
           
           return { data: cachedData, error: null, fromCache: true }
@@ -302,10 +303,11 @@ class OptimizedQueryBuilder {
         queryCache.set(this.cacheKey, data, this.cacheDuration)
       }
 
-      trackPerformance('database_query_success', duration, {
+      trackEvent('database_query_success', {
         table: this.tableName,
         recordCount: Array.isArray(data) ? data.length : 1,
-        cached: !!this.cacheKey
+        cached: !!this.cacheKey,
+        duration
       })
 
       return { data, error: null, fromCache: false }
@@ -369,12 +371,13 @@ export class DatabaseOptimizer {
       const successCount = results.filter(r => r.status === 'fulfilled').length
       const duration = performance.now() - startTime
 
-      trackPerformance('database_batch_insert', duration, {
+      trackEvent('database_batch_insert', {
         table: tableName,
         totalRecords: records.length,
         batchCount: batches.length,
         successCount,
-        errorCount: errors.length
+        errorCount: results.length - successCount,
+        duration
       })
 
       return {

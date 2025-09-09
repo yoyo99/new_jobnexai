@@ -1,16 +1,15 @@
-import { vi } from 'vitest'
-import { createCheckoutSession, createPortalSession } from '../stripe'
+import { createCheckoutSession, createPortalSession } from '@/lib/stripe'
 import { loadStripe } from '@stripe/stripe-js'
-import { supabase } from '../supabase'
+import { supabase } from '@/lib/supabase'
 
-vi.mock('@stripe/stripe-js', () => ({
-  loadStripe: vi.fn(),
+jest.mock('@stripe/stripe-js', () => ({
+  loadStripe: jest.fn(),
 }))
 
-vi.mock('../supabase', () => ({
+jest.mock('@/lib/supabase', () => ({
   supabase: {
     functions: {
-      invoke: vi.fn(),
+      invoke: jest.fn(),
     },
   },
 }))
@@ -21,9 +20,9 @@ describe('Stripe Functions', () => {
   const mockCustomerId = 'cus_123'
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     ;(loadStripe as any).mockResolvedValue({
-      redirectToCheckout: vi.fn().mockResolvedValue({ error: null }),
+      redirectToCheckout: jest.fn().mockResolvedValue({ error: null } as any),
     })
   })
 
@@ -56,7 +55,7 @@ describe('Stripe Functions', () => {
       error: null,
     })
 
-    const windowSpy = vi.spyOn(window, 'location', 'get')
+    const windowSpy = jest.spyOn(window, 'location', 'get');
     delete (window as any).location
     window.location = { href: '' } as any
 

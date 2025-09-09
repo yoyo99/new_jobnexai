@@ -356,10 +356,14 @@ function getMammouthClient() {
   return { api: 'mammouth' };
 }
 
-
+/**
+ * Récupère le client OpenAI.
+ *
+ * @returns {OpenAI} - Le client OpenAI.
+ */
 function getOpenAIClient(): OpenAI {
   if (!openai) {
-    const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+    const apiKey = process.env.VITE_OPENAI_API_KEY as string | undefined;
     if (!apiKey) {
       throw new Error('La clé API OpenAI (VITE_OPENAI_API_KEY) n\'est pas configurée dans les variables d\'environnement.');
     }

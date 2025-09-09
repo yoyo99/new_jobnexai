@@ -1,7 +1,7 @@
 // Script de test direct de la connexion Supabase
 export async function testSupabaseConnection() {
-  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-  const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
+  const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
 
   console.log('=== TEST CONNEXION SUPABASE ===');
   console.log('URL:', SUPABASE_URL);

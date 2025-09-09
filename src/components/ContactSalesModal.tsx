@@ -2,7 +2,7 @@
 // SERVICE_ID, TEMPLATE_ID et PUBLIC_KEY doivent être définis dans les variables d'environnement :
 // VITE_EMAILJS_SERVICE_ID, VITE_EMAILJS_TEMPLATE_ID, VITE_EMAILJS_PUBLIC_KEY
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import emailjs from 'emailjs-com'
 
 interface ContactSalesModalProps {
@@ -24,9 +24,14 @@ export function ContactSalesModal({ open, onClose }: ContactSalesModalProps) {
     setError(null)
     setLoading(true)
     try {
-      const SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-      const TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
-      const PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+            const SERVICE_ID = process.env.VITE_EMAILJS_SERVICE_ID;
+      const TEMPLATE_ID = process.env.VITE_EMAILJS_TEMPLATE_ID;
+      const PUBLIC_KEY = process.env.VITE_EMAILJS_PUBLIC_KEY;
+
+      if (!SERVICE_ID || !TEMPLATE_ID || !PUBLIC_KEY) {
+        throw new Error("Les variables d'environnement EmailJS ne sont pas configurées.");
+      }
+
       const templateParams = {
         name,
         email,

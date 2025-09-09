@@ -1,12 +1,8 @@
 module.exports = {
   preset: 'ts-jest',
   transform: {
-    '^.+\\.tsx?$': [
-      'ts-jest',
-      {
-        tsconfig: 'tsconfig.json',
-      },
-    ],
+    '^.+\.(ts|tsx)?$': ['ts-jest', { useESM: true, tsconfig: 'tsconfig.test.json' }],
+    '^.+\.(js|jsx)$': 'babel-jest',
   },
   testEnvironment: 'jsdom',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
@@ -14,16 +10,10 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
-    '^../src/(.*)$': '<rootDir>/src/$1',
-    '^../../src/(.*)$': '<rootDir>/src/$1',
-    '^../lib/(.*)$': '<rootDir>/src/lib/$1',
-    '^../../lib/(.*)$': '<rootDir>/src/lib/$1',
-    '^../stores/(.*)$': '<rootDir>/src/stores/$1',
-    '^../../stores/(.*)$': '<rootDir>/src/stores/$1',
-    '^../hooks/(.*)$': '<rootDir>/__mocks__/$1'
+    '^react-i18next$': '<rootDir>/__mocks__/react-i18next.js'
   },
   testMatch: [
-    '<rootDir>/__tests__/**/*.(test|spec).(ts|tsx|js)',
-    '<rootDir>/tests/**/*.(test|spec).(ts|tsx|js)'
+    '<rootDir>/__tests__/**/*.test.(ts|tsx|js)',
+    '<rootDir>/tests/**/*.test.(ts|tsx|js)'
   ]
 };

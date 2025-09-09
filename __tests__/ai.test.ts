@@ -1,11 +1,11 @@
-import { vi } from 'vitest'
-import { optimizeCV } from '../ai'
+import { jest } from '@jest/globals'
+import { optimizeCV } from '../lib/ai'
 import { supabase } from '../supabase'
 
-vi.mock('../supabase', () => ({
+jest.mock('../supabase', () => ({
   supabase: {
     functions: {
-      invoke: vi.fn(),
+      invoke: jest.fn(),
     },
   },
 }))
@@ -31,7 +31,7 @@ describe('AI Functions', () => {
   const mockJobDescription = 'Nous recherchons un développeur React expérimenté...'
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   test('optimizes CV successfully', async () => {

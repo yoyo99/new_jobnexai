@@ -1,70 +1,75 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { vi } from 'vitest'
-import { Auth } from '../Auth'
-import { supabase } from '../../lib/supabase'
-import { useNavigate } from 'react-router-dom'
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import Auth from '../src/components/Auth';
+import { AuthService } from '@/lib/auth-service';
+import { MemoryRouter, useNavigate } from 'react-router-dom';
 
-vi.mock('react-router-dom', () => ({
-  useNavigate: vi.fn(),
-}))
+// Mock the AuthService
+jest.mock('@/lib/auth-service');
 
-vi.mock('../../lib/supabase', () => ({
-  supabase: {
-    auth: {
-      signInWithPassword: vi.fn(),
-      signUp: vi.fn(),
-    },
-  },
-}))
+// Mock react-router-dom
+const mockNavigate = jest.fn();
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useNavigate: () => mockNavigate,
+}));
 
 describe('Auth Component', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
+  const mockAuthService = AuthService as jest.Mocked<typeof AuthService>;
 
-  test('renders login form', () => {
-    render(<Auth />)
-    expect(screen.getByPlaceholderText(/email/i)).toBeInTheDocument()
-    expect(screen.getByPlaceholderText(/password/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /login/i })).toBeInTheDocument()
-  })
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockNavigate.mockClear();
+  });
+
+  const renderComponent = () =>
+    render(
+      <MemoryRouter>
+        <Auth />
+      </MemoryRouter>
+    );
+
+  test('renders login form by default', () => {
+    renderComponent();
+    expect(screen.getByPlaceholderText('Email')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Password')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /se connecter/i })).toBeInTheDocument();
+  });
+
+  test('switches to sign up form', () => {
+    renderComponent();
+    fireEvent.click(screen.getByText(/créer un compte/i));
+    expect(screen.getByPlaceholderText(/nom complet/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /créer un compte/i })).toBeInTheDocument();
+  });
 
   test('handles successful login', async () => {
-    const navigate = vi.fn()
-    ;(useNavigate as any).mockReturnValue(navigate)
-    ;(supabase.auth.signInWithPassword as any).mockResolvedValue({ error: null })
+    mockAuthService.signIn.mockResolvedValue({ user: { id: '123' } as any, error: null });
+    renderComponent();
 
-    render(<Auth />)
-
-    fireEvent.change(screen.getByPlaceholderText(/email/i), {
-      target: { value: 'test@example.com' },
-    })
-    fireEvent.change(screen.getByPlaceholderText(/password/i), {
-      target: { value: 'password123' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: /login/i }))
+    fireEvent.change(screen.getByPlaceholderText('Email'), { target: { value: 'test@example.com' } });
+    fireEvent.change(screen.getByPlaceholderText('Password'), { target: { value: 'password123' } });
+    fireEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
     await waitFor(() => {
-      expect(navigate).toHaveBeenCalledWith('/dashboard')
-    })
-  })
+      expect(mockAuthService.signIn).toHaveBeenCalledWith('test@example.com', 'password123');
+    });
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
+    });
+  });
 
-  test('handles login error', async () => {
-    const error = new Error('Invalid credentials')
-    ;(supabase.auth.signInWithPassword as any).mockRejectedValue(error)
+  test('handles login failure', async () => {
+    const errorMessage = 'Invalid credentials';
+    mockAuthService.signIn.mockResolvedValue({ user: null, error: { message: errorMessage } as any });
+    renderComponent();
 
-    render(<Auth />)
-
-    fireEvent.change(screen.getByPlaceholderText(/email/i), {
-      target: { value: 'test@example.com' },
-    })
-    fireEvent.change(screen.getByPlaceholderText(/password/i), {
-      target: { value: 'wrongpassword' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: /login/i }))
+    fireEvent.change(screen.getByPlaceholderText('Email'), { target: { value: 'test@example.com' } });
+    fireEvent.change(screen.getByPlaceholderText('Password'), { target: { value: 'password123' } });
+    fireEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/incorrect email or password/i)).toBeInTheDocument()
-    })
-  })
-})
+      expect(screen.getByText(errorMessage)).toBeInTheDocument();
+    });
+  });
+});

@@ -3,11 +3,11 @@
  * Provides intelligent request management for improved performance
  */
 
-import { trackError, trackPerformance } from '../../lib/monitoring'
+import { trackError, trackEvent } from './monitoring'
 
 // Configuration
 const API_CONFIG = {
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: process.env.VITE_API_URL || '/api',
   timeout: 30000, // 30 seconds
   retryAttempts: 3,
   retryDelay: 1000, // 1 second base delay
@@ -17,7 +17,7 @@ const API_CONFIG = {
   enableBatching: true,
   enableRetry: true,
   enableCache: true,
-  debug: import.meta.env.DEV
+  debug: process.env.NODE_ENV !== 'production'
 }
 
 // Request cache
@@ -168,6 +168,12 @@ class RequestBatcher {
             request.reject(result.reason)
           }
         })
+        
+        trackEvent('api_batch_request', { 
+          requestCount: batch.requests.length,
+          successCount: results.filter(r => r.status === 'fulfilled').length
+        })
+
       } else {
         // For other methods, execute the request once and share the result
         try {
@@ -214,17 +220,13 @@ export class OptimizedApiClient {
     signal?: AbortSignal
   } = {}): Promise<any> {
     const cacheKey = `GET:${endpoint}`
-    const startTime = performance.now()
-
+        
     try {
       // Check cache first
       if (options.cache !== false && API_CONFIG.enableCache) {
         const cachedData = this.cache.get(cacheKey)
         if (cachedData) {
-          trackPerformance('api_cache_hit', performance.now() - startTime, {
-            endpoint,
-            method: 'GET'
-          })
+          trackEvent('api_cache_hit', { endpoint, method: 'GET' })
           return cachedData
         }
       }
@@ -255,11 +257,7 @@ export class OptimizedApiClient {
         this.cache.set(cacheKey, result, cacheTimeout)
       }
 
-      trackPerformance('api_request_success', performance.now() - startTime, {
-        endpoint,
-        method: 'GET',
-        cached: false
-      })
+      trackEvent('api_request_success', { endpoint, method: 'GET', status: 200 })
 
       return result
 
@@ -267,11 +265,7 @@ export class OptimizedApiClient {
       // Remove from queue on error
       this.requestQueue.delete(cacheKey)
       
-      trackError(error as Error, {
-        endpoint,
-        method: 'GET',
-        duration: performance.now() - startTime
-      })
+      trackError(new Error(`API request failed for ${endpoint}`), { endpoint, method: 'GET' })
 
       throw error
     }
@@ -282,8 +276,6 @@ export class OptimizedApiClient {
     retries?: number
     signal?: AbortSignal
   } = {}): Promise<any> {
-    const startTime = performance.now()
-
     try {
       const result = await this.executeWithRetry(
         () => this.makeRequest('POST', endpoint, data, options),
@@ -293,19 +285,12 @@ export class OptimizedApiClient {
       // Invalidate related cache entries
       this.cache.invalidate(endpoint.split('/')[1] || endpoint)
 
-      trackPerformance('api_request_success', performance.now() - startTime, {
-        endpoint,
-        method: 'POST'
-      })
+      trackEvent('api_request_success', { endpoint, method: 'POST', status: 200 })
 
       return result
 
     } catch (error) {
-      trackError(error as Error, {
-        endpoint,
-        method: 'POST',
-        duration: performance.now() - startTime
-      })
+      trackError(new Error(`API request failed for ${endpoint}`), { endpoint, method: 'POST' })
 
       throw error
     }
@@ -316,8 +301,6 @@ export class OptimizedApiClient {
     retries?: number
     signal?: AbortSignal
   } = {}): Promise<any> {
-    const startTime = performance.now()
-
     try {
       const result = await this.executeWithRetry(
         () => this.makeRequest('PUT', endpoint, data, options),
@@ -327,19 +310,12 @@ export class OptimizedApiClient {
       // Invalidate related cache entries
       this.cache.invalidate(endpoint.split('/')[1] || endpoint)
 
-      trackPerformance('api_request_success', performance.now() - startTime, {
-        endpoint,
-        method: 'PUT'
-      })
+      trackEvent('api_request_success', { endpoint, method: 'PUT', status: 200 })
 
       return result
 
     } catch (error) {
-      trackError(error as Error, {
-        endpoint,
-        method: 'PUT',
-        duration: performance.now() - startTime
-      })
+      trackError(new Error(`API request failed for ${endpoint}`), { endpoint, method: 'PUT' })
 
       throw error
     }
@@ -350,8 +326,6 @@ export class OptimizedApiClient {
     retries?: number
     signal?: AbortSignal
   } = {}): Promise<any> {
-    const startTime = performance.now()
-
     try {
       const result = await this.executeWithRetry(
         () => this.makeRequest('DELETE', endpoint, undefined, options),
@@ -361,19 +335,12 @@ export class OptimizedApiClient {
       // Invalidate related cache entries
       this.cache.invalidate(endpoint.split('/')[1] || endpoint)
 
-      trackPerformance('api_request_success', performance.now() - startTime, {
-        endpoint,
-        method: 'DELETE'
-      })
+      trackEvent('api_request_success', { endpoint, method: 'DELETE', status: 200 })
 
       return result
 
     } catch (error) {
-      trackError(error as Error, {
-        endpoint,
-        method: 'DELETE',
-        duration: performance.now() - startTime
-      })
+      trackError(new Error(`API request failed for ${endpoint}`), { endpoint, method: 'DELETE' })
 
       throw error
     }
@@ -386,8 +353,7 @@ export class OptimizedApiClient {
     data?: any
     options?: any
   }>): Promise<any[]> {
-    const startTime = performance.now()
-
+    
     try {
       const promises = requests.map(req => {
         switch (req.method) {
@@ -402,23 +368,8 @@ export class OptimizedApiClient {
         }
       })
 
-      const results = await Promise.allSettled(promises)
-
-      trackPerformance('api_batch_request', performance.now() - startTime, {
-        requestCount: requests.length,
-        successCount: results.filter(r => r.status === 'fulfilled').length
-      })
-
-      return results.map(result => 
-        result.status === 'fulfilled' ? result.value : { error: result.reason }
-      )
-
+      return await Promise.all(promises)
     } catch (error) {
-      trackError(error as Error, {
-        operation: 'batch_request',
-        requestCount: requests.length
-      })
-
       throw error
     }
   }
@@ -516,25 +467,25 @@ export class OptimizedApiClient {
     this.cache.clear()
   }
 
-  getCacheStats(): { size: number; memoryUsage: string } {
+  getCacheStats() {
     return this.cache.getStats()
   }
 
   // Health check
   async checkHealth(): Promise<{ healthy: boolean; latency: number; error?: string }> {
-    const startTime = performance.now()
-
+    const startTime = Date.now();
+    
     try {
       await this.get('/health', { cache: false, timeout: 5000, retries: 0 })
       
       return {
         healthy: true,
-        latency: performance.now() - startTime
+        latency: Date.now() - startTime
       }
     } catch (error) {
       return {
         healthy: false,
-        latency: performance.now() - startTime,
+        latency: Date.now() - startTime,
         error: (error as Error).message
       }
     }

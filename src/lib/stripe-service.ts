@@ -5,12 +5,6 @@ import { trackError, trackEvent } from './monitoring'
 // Initialiser Stripe
 let stripePromise: Promise<any> | null = null
 
-const getStripe = () => {
-  if (!stripePromise) {
-    stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY!)
-  }
-  return stripePromise
-}
 
 export const StripeService = {
   /**

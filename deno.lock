@@ -2375,7 +2375,8 @@
       "dependencies": [
         "npm:@apollo/client@^3.13.8",
         "npm:@axe-core/react@^4.10.2",
-        "npm:@babel/preset-env@^7.27.1",
+        "npm:@babel/core@^7.28.4",
+        "npm:@babel/preset-env@^7.28.3",
         "npm:@babel/preset-react@^7.27.1",
         "npm:@babel/preset-typescript@^7.27.1",
         "npm:@headlessui/react@^1.7.18",
@@ -2421,6 +2422,8 @@
         "npm:@vueuse/core@^13.7.0",
         "npm:autoprefixer@^10.4.21",
         "npm:babel-jest@^29.7.0",
+        "npm:babel-plugin-transform-import-meta@^2.3.3",
+        "npm:babel-plugin-transform-vite-meta-env@^1.0.3",
         "npm:browserslist@^4.24.5",
         "npm:chalk@^5.4.1",
         "npm:chart.js@^4.4.2",

@@ -1,4 +1,5 @@
 import React from 'react';
+import { MemoryRouter } from 'react-router-dom';
 import { render, screen, waitFor } from '@testing-library/react';
 import { AuthProvider } from '../src/components/AuthProvider';
 import { useAuth } from '../src/stores/auth';
@@ -31,6 +32,9 @@ describe('AuthProvider', () => {
     mockUseAuth.mockReturnValue({
       user: null,
       loading: true,
+      initialized: false,
+      error: null,
+      loadUser: jest.fn(),
       signIn: jest.fn(),
       signOut: jest.fn(),
       signUp: jest.fn()
@@ -39,9 +43,11 @@ describe('AuthProvider', () => {
 
   test('should render children when provided', () => {
     render(
-      <AuthProvider>
-        <div data-testid="test-child">Test Content</div>
-      </AuthProvider>
+      <MemoryRouter>
+        <AuthProvider>
+          <div data-testid="test-child">Test Content</div>
+        </AuthProvider>
+      </MemoryRouter>
     );
 
     expect(screen.getByTestId('test-child')).toBeInTheDocument();
@@ -49,9 +55,11 @@ describe('AuthProvider', () => {
 
   test('should show loading state initially', () => {
     render(
-      <AuthProvider>
-        <div>Content</div>
-      </AuthProvider>
+      <MemoryRouter>
+        <AuthProvider>
+          <div>Content</div>
+        </AuthProvider>
+      </MemoryRouter>
     );
 
     // Should handle loading state properly
@@ -62,15 +70,20 @@ describe('AuthProvider', () => {
     mockUseAuth.mockReturnValue({
       user: { id: 'test-user', email: 'test@example.com' },
       loading: false,
+      initialized: true,
+      error: null,
+      loadUser: jest.fn(),
       signIn: jest.fn(),
       signOut: jest.fn(),
       signUp: jest.fn()
     });
 
     render(
-      <AuthProvider>
-        <div data-testid="authenticated-content">Authenticated Content</div>
-      </AuthProvider>
+      <MemoryRouter>
+        <AuthProvider>
+          <div data-testid="authenticated-content">Authenticated Content</div>
+        </AuthProvider>
+      </MemoryRouter>
     );
 
     await waitFor(() => {

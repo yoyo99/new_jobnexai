@@ -6,10 +6,10 @@ import {
   useStripe,
   useElements,
 } from '@stripe/react-stripe-js'
-import { supabase } from '../lib/supabase'
-import { useAuth } from '../stores/auth'
+import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/stores/auth'
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
+const stripePromise = loadStripe(process.env.VITE_STRIPE_PUBLIC_KEY!)
 
 interface CheckoutFormProps {
   priceId: string

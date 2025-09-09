@@ -1,4 +1,3 @@
-console.log(`<<<<<<<<<<<<<<<<<< DEPLOYMENT TEST - ${new Date().toISOString()} >>>>>>>>>>>>>>>>>>`);
 console.log('main.tsx is loaded');
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'

@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "src",
+    "components",
+    "lib",
+    "types",
+    "__tests__",
+    "tests",
+    "*.ts",
+    "*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "supabase/functions/**/*",
+    "JobNexAI-WindSurf/**/*",
+    "coverage/**/*",
+    "*.config.js",
+    "*.config.ts"
+  ]
+}

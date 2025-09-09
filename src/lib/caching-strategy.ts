@@ -3,7 +3,7 @@
  * Provides memory cache, browser storage, and IndexedDB caching layers
  */
 
-import { trackError, trackPerformance } from '../../lib/monitoring'
+import { trackError, trackEvent } from './monitoring'
 
 // Caching configuration
 const CACHE_CONFIG = {
@@ -40,7 +40,7 @@ const CACHE_CONFIG = {
     enabled: true,
     threshold: 1024 // Compress if data is larger than 1KB
   },
-  debug: import.meta.env.DEV
+  debug: process.env.NODE_ENV === 'development'
 }
 
 // Cache entry interface
@@ -630,11 +630,12 @@ export class CacheManager {
 
       const success = results.some(r => r)
       
-      trackPerformance('cache_set', performance.now() - startTime, {
+      trackEvent('cache_set', {
         key,
         layers: layers.join(','),
         strategy,
-        success
+        success,
+        duration: performance.now() - startTime
       })
 
       return success
@@ -679,19 +680,21 @@ export class CacheManager {
           // Promote data to higher layers for faster future access
           await this.promoteToHigherLayers(key, data, layer, layers)
           
-          trackPerformance('cache_get_hit', performance.now() - startTime, {
+          trackEvent('cache_get_hit', {
             key,
             layer,
-            promoted: true
+            promoted: true,
+            duration: performance.now() - startTime
           })
 
           return data
         }
       }
 
-      trackPerformance('cache_get_miss', performance.now() - startTime, {
+      trackEvent('cache_get_miss', {
         key,
-        layers: layers.join(',')
+        layers: layers.join(','),
+        duration: performance.now() - startTime
       })
 
       return null

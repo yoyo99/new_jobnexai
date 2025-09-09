@@ -1,17 +1,16 @@
-import { vi } from 'vitest'
-import { generateApplicationPDF, downloadApplicationPDF } from '../pdf'
+import { generateApplicationPDF, downloadApplicationPDF } from '@/lib/pdf'
 import pdfMake from 'pdfmake/build/pdfmake'
 import * as pdfFonts from 'pdfmake/build/vfs_fonts'
 
-vi.mock('pdfmake/build/pdfmake', () => ({
+jest.mock('pdfmake/build/pdfmake', () => ({
   default: {
     vfs: {},
     fonts: {},
-    createPdf: vi.fn(),
+    createPdf: jest.fn(),
   },
 }))
 
-vi.mock('pdfmake/build/vfs_fonts', () => ({
+jest.mock('pdfmake/build/vfs_fonts', () => ({
   pdfMake: {
     vfs: {},
   },
@@ -37,7 +36,7 @@ describe('PDF Functions', () => {
   }
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     ;(pdfMake.createPdf as any).mockReturnValue({
       getBlob: (callback: (blob: Blob) => void) => callback(new Blob()),
     })
@@ -69,10 +68,10 @@ describe('PDF Functions', () => {
   })
 
   test('downloads PDF', async () => {
-    const createElementSpy = vi.spyOn(document, 'createElement')
-    const appendChildSpy = vi.spyOn(document.body, 'appendChild')
-    const removeChildSpy = vi.spyOn(document.body, 'removeChild')
-    const clickSpy = vi.fn()
+    const createElementSpy = jest.spyOn(document, 'createElement')
+    const appendChildSpy = jest.spyOn(document.body, 'appendChild')
+    const removeChildSpy = jest.spyOn(document.body, 'removeChild')
+    const clickSpy = jest.fn()
 
     createElementSpy.mockReturnValue({
       href: '',

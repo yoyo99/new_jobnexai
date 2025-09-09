@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 
@@ -21,6 +21,8 @@ import { SubscriptionBanner } from './components/SubscriptionBanner'
 import { PublicRoutes } from './routes/PublicRoutes';
 import { DevelopmentRoutes } from './routes/DevelopmentRoutes';
 import { AppRoutes } from './routes/AppRoutes';
+import { RedirectRoutes } from './routes/RedirectRoutes';
+import { NotFoundPage } from './pages/NotFoundPage';
 
 import { I18nextProvider } from 'react-i18next';
 import i18n from './i18n';
@@ -84,11 +86,8 @@ function App() {
               {/* Development Routes (only in dev mode) */}
               <DevelopmentRoutes />
               
-              <Route path="/terms-of-service" element={<Navigate to="/terms" replace />} />
-              
-              {/* Legacy redirections */}
-              <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
-              <Route path="/letters" element={<Navigate to="/app/letters" replace />} />
+              {/* Redirections */}
+              <RedirectRoutes />
               
               {/* Protected App Routes */}
               <Route 
@@ -103,18 +102,7 @@ function App() {
               </Route>
               
               {/* 404 - Page non trouvée */}
-              <Route path="*" element={<div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
-                <div className="text-center">
-                  <h1 className="text-6xl font-bold text-white mb-4">404</h1>
-                  <p className="text-xl text-gray-300 mb-8">Page non trouvée</p>
-                  <button 
-                    onClick={() => window.location.href = '/'}
-                    className="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-lg transition-colors"
-                  >
-                    Retour à l'accueil
-                  </button>
-                </div>
-              </div>} />
+              <Route path="*" element={<NotFoundPage />} />
             </Routes>
             <PrivacyConsent />
             <SecurityBadge />
