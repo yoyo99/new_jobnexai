@@ -97,13 +97,17 @@ const Auth: React.FC = () => {
     }
     try {
       setLoading(true);
-            const { data: user, error } = await auth.login(email, password);
+      const { data: user, error } = await auth.login(email, password);
       if (error) {
-        // Mapping des messages d’erreur Supabase vers des clés i18n si possible
         let errorKey = '';
         if (error.message === 'Invalid login credentials') errorKey = 'auth.errors.login';
         if (error.message === 'User already registered') errorKey = 'auth.errors.signup';
         if (error.message === 'Password should be at least 9 characters') errorKey = 'auth.errors.passwordLength';
+        if (error.message.toLowerCase().includes('jwt')) {
+          setMessage({ type: 'error', text: 'Session expirée ou token invalide. Veuillez rafraîchir la page.' });
+          setShowHelp(true);
+          return;
+        }
         setMessage({ type: 'error', text: errorKey !== '' ? t(errorKey) : error.message || t('auth.errors.unknown') });
         setShowHelp(true);
         return;
@@ -120,11 +124,15 @@ const Auth: React.FC = () => {
         navigate(from);
       }, 0);
     } catch (error: any) {
-      // Mapping des messages d’erreur JS génériques
       let errorKey = '';
       if (error?.message === 'Invalid login credentials') errorKey = 'auth.errors.login';
       if (error?.message === 'User already registered') errorKey = 'auth.errors.signup';
       if (error?.message === 'Password should be at least 9 characters') errorKey = 'auth.errors.passwordLength';
+      if (error?.message?.toLowerCase().includes('jwt')) {
+        setMessage({ type: 'error', text: 'Session expirée ou token invalide. Veuillez rafraîchir la page.' });
+        setShowHelp(true);
+        return;
+      }
       setMessage({ type: 'error', text: errorKey !== '' ? t(errorKey) : error?.message || t('auth.errors.unknown') });
       setShowHelp(true);
     } finally {

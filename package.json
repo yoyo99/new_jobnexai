@@ -46,7 +46,7 @@
     "@stripe/stripe-js": "^3.0.10",
     "@supabase/auth-helpers-react": "^0.5.0",
     "@supabase/gotrue-js": "^2.69.1",
-    "@supabase/supabase-js": "^2.49.4",
+    "@supabase/supabase-js": "^2.39.1",
     "@tanstack/react-query": "^5.83.0",
     "@tanstack/react-query-devtools": "^5.83.0",
     "@tanstack/react-virtual": "^3.1.3",
