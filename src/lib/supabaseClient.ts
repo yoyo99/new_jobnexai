@@ -17,4 +17,5 @@ supabase.auth.onAuthStateChange((event, session) => {
   }
 });
 
+export { supabase };
 export default supabase;
