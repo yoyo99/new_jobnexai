@@ -10,6 +10,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   console.log('[AuthProvider] -> Le composant est en cours de rendu.');
   const initialized = useAuth(state => state.initialized);
   const loadUser = useAuth(state => state.loadUser);
+  console.log('DEBUG Zustand:', { initialized, loadUser });
 
   useEffect(() => {
     console.log('[AuthProvider] -> useEffect a été déclenché. Appel de loadUser...');
