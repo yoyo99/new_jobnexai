@@ -48,16 +48,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     );
   }
 
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Gestion du cas "utilisateur non connecté"
-  // Ne bloquer l'accès que pour les routes protégées (/app)
-  const isProtectedPath = location.pathname.startsWith('/app');
-
+  // Une fois l'initialisation terminée, rendre l'application.
+  return <>{children}</>;
+}
   // Rediriger automatiquement vers /login si l'utilisateur n'est pas connecté et qu'il tente d'accéder à une route protégée
   useEffect(() => {
     if (initialized && !user && isProtectedPath) {
