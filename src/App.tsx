@@ -48,11 +48,16 @@ function App() {
     };
   }, []);
 
-  // Désactivation temporaire de ErrorBoundary pour afficher les erreurs réelles
-  console.log('App.tsx: rendu du AuthProvider');
-  console.log('i18n is initialized:', i18n.isInitialized);
-  // Test de rendu minimal
-  return <div style={{color:'lime', fontSize: 32}}>TEST</div>;
+  // Test avec Router uniquement
+  return (
+    <I18nextProvider i18n={i18n}>
+      <AuthProvider>
+        <Router>
+          <div style={{color:'orange', fontSize: 32}}>TEST ROUTER</div>
+        </Router>
+      </AuthProvider>
+    </I18nextProvider>
+  );
 
 }
 
