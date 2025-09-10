@@ -2394,7 +2394,7 @@
         "npm:@stripe/stripe-js@^3.0.10",
         "npm:@supabase/auth-helpers-react@0.5",
         "npm:@supabase/gotrue-js@^2.69.1",
-        "npm:@supabase/supabase-js@^2.49.4",
+        "npm:@supabase/supabase-js@^2.39.1",
         "npm:@tailwindcss/aspect-ratio@~0.4.2",
         "npm:@tailwindcss/forms@~0.5.10",
         "npm:@tailwindcss/typography@~0.5.16",
