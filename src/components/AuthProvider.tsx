@@ -51,37 +51,3 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Une fois l'initialisation terminée, rendre l'application.
   return <>{children}</>;
 }
-  // Rediriger automatiquement vers /login si l'utilisateur n'est pas connecté et qu'il tente d'accéder à une route protégée
-  useEffect(() => {
-    if (initialized && !user && isProtectedPath) {
-      console.log('[AuthProvider] Not authenticated on protected route, redirecting to /login');
-      navigate('/login', { replace: true, state: { from: location } });
-    }
-  }, [initialized, user, isProtectedPath, navigate, location]);
-
-  if (!user && isProtectedPath) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center max-w-md p-8">
-          <div className="text-primary-400 text-6xl mb-4">🔐</div>
-          <h2 className="text-xl font-bold text-white mb-4">Authentification requise</h2>
-          <p className="text-gray-300 mb-6">
-            Vous n'êtes pas connecté. Veuillez vous authentifier pour accéder à l'application.
-          </p>
-          <button
-            onClick={() => {
-              console.log('Bouton de connexion cliqué, tentative de navigation vers /login');
-              navigate('/login');
-            }}
-            className="w-full bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-lg transition-colors"
-          >
-            Se connecter
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Une fois l'initialisation terminée, rendre l'application.
-  return <>{children}</>;
-}
