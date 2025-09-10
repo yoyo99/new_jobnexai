@@ -48,69 +48,65 @@ function App() {
     };
   }, []);
 
+  // Désactivation temporaire de ErrorBoundary pour afficher les erreurs réelles
+  console.log('App.tsx: rendu du AuthProvider');
   return (
-    <ErrorBoundary>
-      <I18nextProvider i18n={i18n}>
+    <I18nextProvider i18n={i18n}>
+      <AuthProvider>
         <Router>
-          <AuthProvider>
-            {/* PWA Components */}
-            <PWAInstall variant="banner" />
-            <ConnectionStatus />
-            <UpdateNotification />
-            <Toaster
-              position="bottom-right"
-              toastOptions={{
-                className: '',
-                style: {
-                  margin: '10px',
-                  background: '#333',
-                  color: '#fff',
-                  zIndex: 1000,
+          {/* PWA Components */}
+          <PWAInstall variant="banner" />
+          <ConnectionStatus />
+          <UpdateNotification />
+          <Toaster
+            position="bottom-right"
+            toastOptions={{
+              className: '',
+              style: {
+                margin: '10px',
+                background: '#333',
+                color: '#fff',
+                zIndex: 1000,
+              },
+              success: {
+                duration: 3000,
+                iconTheme: {
+                  primary: '#10B981',
+                  secondary: '#FFFFFF',
                 },
-                success: {
-                  duration: 3000,
-                  iconTheme: {
-                    primary: '#10B981', // green-500
-                    secondary: '#FFFFFF',
-                  },
-                },
-                error: {
-                  duration: 5000,
-                },
-              }}
-            />
-            <Routes>
-              {/* Public Routes */}
-              <PublicRoutes />
-              
-              {/* Development Routes (only in dev mode) */}
-              <DevelopmentRoutes />
-              
-              {/* Redirections */}
-              <RedirectRoutes />
-              
-              {/* Protected App Routes */}
-              <Route 
-                path="/app" 
-                element={
-                  <ProtectedRoute>
-                    <DashboardLayout />
-                  </ProtectedRoute>
-                }
-              >
-                <AppRoutes />
-              </Route>
-              
-              {/* 404 - Page non trouvée */}
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-            <PrivacyConsent />
-            <SecurityBadge />
-            <SubscriptionBanner />
-          </AuthProvider>
+              },
+              error: {
+                duration: 5000,
+              },
+            }}
+          />
+          <Routes>
+            {/* Public Routes */}
+            <PublicRoutes />
+            {/* Development Routes (only in dev mode) */}
+            <DevelopmentRoutes />
+            {/* Redirections */}
+            <RedirectRoutes />
+            {/* Protected App Routes */}
+            <Route 
+              path="/app" 
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }
+            >
+              <AppRoutes />
+            </Route>
+            {/* 404 - Page non trouvée */}
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+          <PrivacyConsent />
+          <SecurityBadge />
+          <SubscriptionBanner />
         </Router>
-      </I18nextProvider>
-    </ErrorBoundary>
+      </AuthProvider>
+    </I18nextProvider>
   );
 }
 
