@@ -53,7 +53,9 @@ function App() {
     <I18nextProvider i18n={i18n}>
       <AuthProvider>
         <Router>
-          <div style={{color:'orange', fontSize: 32}}>TEST ROUTER</div>
+          <Routes>
+            <Route path="*" element={<div style={{color:'cyan', fontSize: 32}}>ROUTE OK</div>} />
+          </Routes>
         </Router>
       </AuthProvider>
     </I18nextProvider>
