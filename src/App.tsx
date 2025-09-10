@@ -54,7 +54,7 @@ function App() {
       <AuthProvider>
         <Router>
           <Routes>
-            <Route path="*" element={<div style={{color:'cyan', fontSize: 32}}>ROUTE OK</div>} />
+            <PublicRoutes />
           </Routes>
         </Router>
       </AuthProvider>
