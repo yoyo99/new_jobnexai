@@ -291,7 +291,7 @@ function App() {
           </AuthProvider>
         </Router>
 // Wrapper pour les composants lazy-loaded avec ErrorBoundary spécifique
-const LazyComponentWrapper = ({ children }: { children: React.ReactNode }) => {
+const LazyComponentWrapper = (props: { children: React.ReactNode }) => {
   const ErrorBoundary = React.lazy(() => import('./components/ErrorBoundary').then(m => ({ default: m.ErrorBoundary })));
   const LoadingFallback = React.lazy(() => import('./components/LoadingFallback').then(m => ({ default: m.LoadingFallback })));
   return (
@@ -302,7 +302,7 @@ const LazyComponentWrapper = ({ children }: { children: React.ReactNode }) => {
         <button onClick={() => window.location.reload()} className="btn-primary">Essayer de recharger</button>
       </div>}>
         <Suspense fallback={<LoadingFallback />}>
-          {children}
+          {props.children}
         </Suspense>
       </ErrorBoundary>
     </Suspense>
