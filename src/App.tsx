@@ -52,16 +52,8 @@ import { I18nextProvider } from 'react-i18next';
 import i18n from './i18n';
 import { NotFoundPage } from './pages/NotFoundPage';
 
-      </div>}>
-        <React.Suspense fallback={<LoadingFallback />}>
-          {children}
-        </React.Suspense>
-      </ErrorBoundary>
-    </React.Suspense>
-  );
-};
 
- function App() {
+function App() {
   // Gestionnaires d'erreurs globaux
   useEffect(() => {
     const handleError = (event: ErrorEvent) => {
