@@ -309,22 +309,6 @@ function App() {
           <SubscriptionBanner />
           </AuthProvider>
         </Router>
-;
-const SupabaseAuth = lazy(() => import('./components/SupabaseAuth'));
-const Pricing = lazy(() => import('./pages/PricingPage'));
-const PrivacyPolicy = lazy(() => import('./components/PrivacyPolicy'));
-const FeaturesPage = lazy(() => import('./components/pages/FeaturesPage'));
-const HowItWorksPage = lazy(() => import('./components/pages/HowItWorksPage'));
-const TestimonialsPage = lazy(() => import('./components/pages/TestimonialsPage'));
-const AboutPage = lazy(() => import('./components/pages/AboutPage'));
-const ContactPage = lazy(() => import('./components/pages/ContactPage'));
-const TermsPage = lazy(() => import('./components/pages/TermsPage'));
-const ResetPassword = lazy(() => import('./components/ResetPassword'));
-const AuthCallback = lazy(() => import('./components/AuthCallback'));
-const StripeCheckoutStatus = lazy(() => import('./components/StripeCheckoutStatus'));
-const ModernComponentsDemo = lazy(() => import('./components/ModernComponentsDemo').then(module => ({ default: module.ModernComponentsDemo })));
-import { PublicRoute } from './components/PublicRoute';
-
 // Importer les styles CSS ici, avant tout autre import
 import './minimal.css';
 import './App.css';
