@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
 // Wrapper pour les composants lazy-loaded avec ErrorBoundary spécifique
@@ -96,6 +96,20 @@ function App() {
             <Route path="/auth/reset-password" element={<LazyComponentWrapper><ResetPassword /></LazyComponentWrapper>} />
             <Route path="/auth/callback" element={<LazyComponentWrapper><AuthCallback /></LazyComponentWrapper>} />
             <Route path="/checkout/success" element={<LazyComponentWrapper><StripeCheckoutStatus /></LazyComponentWrapper>} />
+
+            {/* Aliases /app/xxx pour toutes les pages publiques */}
+            <Route path="/app/login" element={<Navigate to="/login" replace />} />
+            <Route path="/app/register" element={<Navigate to="/register" replace />} />
+            <Route path="/app/pricing" element={<Navigate to="/pricing" replace />} />
+            <Route path="/app/privacy" element={<Navigate to="/privacy" replace />} />
+            <Route path="/app/about" element={<Navigate to="/about" replace />} />
+            <Route path="/app/contact" element={<Navigate to="/contact" replace />} />
+            <Route path="/app/terms" element={<Navigate to="/terms" replace />} />
+            <Route path="/app/features" element={<Navigate to="/features" replace />} />
+            <Route path="/app/how-it-works" element={<Navigate to="/how-it-works" replace />} />
+            <Route path="/app/testimonials" element={<Navigate to="/testimonials" replace />} />
+            <Route path="/app/demo" element={<Navigate to="/demo" replace />} />
+
             <Route path="/app/*" element={<AppRoutes />} />
           </Routes>
         </Router>
