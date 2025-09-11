@@ -8,16 +8,17 @@ import { SecurityBadge } from './components/SecurityBadge';
 import { SubscriptionBanner } from './components/SubscriptionBanner';
 import { LoadingSpinner } from './components/LoadingSpinner';
 
-// Lazy imports (exemple générique à adapter)
+// Lazy imports (à adapter selon tes vrais composants)
 const Dashboard = React.lazy(() => import('./components/Dashboard'));
 const Profile = React.lazy(() => import('./components/Profile'));
-// Ajoute ici tous tes autres composants lazy
+// ... Ajoute ici tous tes autres lazy imports, syntaxe : React.lazy(() => import('./chemin/Composant'));
 
 const PageLoadingFallback = () => (
   <div className="flex items-center justify-center min-h-screen bg-gray-50">
     <LoadingSpinner size="lg" text="Loading..." className="text-primary-600" />
   </div>
 );
+
 const ComponentLoadingFallback = () => (
   <div className="flex items-center justify-center p-8">
     <LoadingSpinner size="md" text="Loading component..." className="text-primary-600" />
@@ -43,7 +44,7 @@ function App() {
               {/* Exemple de routes à adapter */}
               <Route path="/" element={<LazyComponentWrapper><Dashboard /></LazyComponentWrapper>} />
               <Route path="/profile" element={<LazyComponentWrapper><Profile /></LazyComponentWrapper>} />
-              {/* ... Autres routes */}
+              {/* ... Ajoute toutes tes autres routes ici */}
             </Routes>
             <PrivacyConsent />
             <SecurityBadge />
