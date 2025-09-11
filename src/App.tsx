@@ -291,7 +291,7 @@ function App() {
           </AuthProvider>
         </Router>
 // Wrapper pour les composants lazy-loaded avec ErrorBoundary spécifique
-function LazyComponentWrapper(props: { children: React.ReactNode }) {
+function LazyComponentWrapper(props: any) {
   const ErrorBoundary = React.lazy(() => import('./components/ErrorBoundary').then(m => ({ default: m.ErrorBoundary })));
   const LoadingFallback = React.lazy(() => import('./components/LoadingFallback').then(m => ({ default: m.LoadingFallback })));
   return (
