@@ -51,6 +51,7 @@ import { SubscriptionBanner } from './components/SubscriptionBanner';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './i18n';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { AppRoutes } from './routes/AppRoutes';
 
 
 function App() {
@@ -95,6 +96,7 @@ function App() {
             <Route path="/auth/reset-password" element={<LazyComponentWrapper><ResetPassword /></LazyComponentWrapper>} />
             <Route path="/auth/callback" element={<LazyComponentWrapper><AuthCallback /></LazyComponentWrapper>} />
             <Route path="/checkout/success" element={<LazyComponentWrapper><StripeCheckoutStatus /></LazyComponentWrapper>} />
+            <Route path="/app/*" element={<AppRoutes />} />
           </Routes>
         </Router>
       </AuthProvider>
