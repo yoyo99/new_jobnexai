@@ -66,6 +66,7 @@ export function ProtectedRoute({ children, requiresSubscription = false }: Prote
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-400"></div>
+        <p className="mt-4 text-gray-400">Chargement de votre session utilisateur...</p>
       </div>
     );
   }
@@ -75,8 +76,14 @@ export function ProtectedRoute({ children, requiresSubscription = false }: Prote
   //    Si une redirection est nécessaire (gérée par useEffect), rendre null pour éviter d'afficher les enfants prématurément.
   if (!user) {
     // L'utilisateur n'est pas là, useEffect devrait avoir déclenché une redirection.
-    // Rendre null pour attendre que la redirection prenne effet.
-    return null;
+    // Afficher un message explicite si la redirection ne prend pas effet.
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center text-center text-red-500">
+        <h2 className="text-2xl font-bold mb-4">Vous devez être connecté pour accéder à cette page.</h2>
+        <p>Merci de vous reconnecter ou de vérifier votre accès.</p>
+        <button onClick={() => window.location.href = '/login'} className="btn-primary mt-4">Aller à la page de connexion</button>
+      </div>
+    );
   }
 
   if (requiresSubscription) {
