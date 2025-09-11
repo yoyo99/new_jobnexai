@@ -82,6 +82,14 @@ export function ProtectedRoute({ children, requiresSubscription = false }: Prote
         <h2 className="text-2xl font-bold mb-4">Vous devez être connecté pour accéder à cette page.</h2>
         <p>Merci de vous reconnecter ou de vérifier votre accès.</p>
         <button onClick={() => window.location.href = '/login'} className="btn-primary mt-4">Aller à la page de connexion</button>
+        <div className="bg-black/60 text-xs text-left mt-8 p-4 rounded-lg max-w-xl w-full break-words text-white">
+          <div><b>Debug Zustand/Supabase :</b></div>
+          <div><b>loading</b>: {String(loading)}</div>
+          <div><b>initialized</b>: {String(initialized)}</div>
+          <div><b>error</b>: {error || 'aucune'}</div>
+          <div><b>user</b>: <pre>{JSON.stringify(user, null, 2)}</pre></div>
+          <div><b>subscription</b>: <pre>{JSON.stringify(subscription, null, 2)}</pre></div>
+        </div>
       </div>
     );
   }
