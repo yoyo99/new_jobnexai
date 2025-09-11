@@ -105,6 +105,23 @@ export function ProtectedRoute({ children, requiresSubscription = false }: Prote
   }
 
   // 3. Si tous les contrôles sont passés (chargement terminé, utilisateur existe, abonnement OK),
-  //    rendre les enfants du composant.
-  return <>{children}</>;
+  //    rendre les enfants du composant, mais capturer toute erreur critique.
+  try {
+    return <>{children}</>;
+  } catch (err: any) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center text-center text-red-500">
+        <h2 className="text-2xl font-bold mb-4">Erreur critique dans un composant protégé</h2>
+        <p>{err?.message || String(err)}</p>
+        <div className="bg-black/60 text-xs text-left mt-8 p-4 rounded-lg max-w-xl w-full break-words text-white">
+          <div><b>Debug Zustand/Supabase :</b></div>
+          <div><b>loading</b>: {String(loading)}</div>
+          <div><b>initialized</b>: {String(initialized)}</div>
+          <div><b>error</b>: {error || 'aucune'}</div>
+          <div><b>user</b>: <pre>{JSON.stringify(user, null, 2)}</pre></div>
+          <div><b>subscription</b>: <pre>{JSON.stringify(subscription, null, 2)}</pre></div>
+        </div>
+      </div>
+    );
+  }
 }
