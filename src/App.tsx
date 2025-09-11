@@ -290,12 +290,10 @@ function App() {
           <SubscriptionBanner />
           </AuthProvider>
         </Router>
-import { Toaster } from 'react-hot-toast';
-
 // Wrapper pour les composants lazy-loaded avec ErrorBoundary spécifique
 const LazyComponentWrapper = ({ children }: { children: React.ReactNode }) => {
-  const ErrorBoundary = lazy(() => import('./components/ErrorBoundary').then(m => ({ default: m.ErrorBoundary })));
-  const LoadingFallback = lazy(() => import('./components/LoadingFallback').then(m => ({ default: m.LoadingFallback })));
+  const ErrorBoundary = React.lazy(() => import('./components/ErrorBoundary').then(m => ({ default: m.ErrorBoundary })));
+  const LoadingFallback = React.lazy(() => import('./components/LoadingFallback').then(m => ({ default: m.LoadingFallback })));
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <ErrorBoundary fallback={<div className="card m-8 text-center bg-background/80 backdrop-blur-lg">
@@ -310,8 +308,6 @@ const LazyComponentWrapper = ({ children }: { children: React.ReactNode }) => {
     </Suspense>
   );
 };
-
-const JobNexAILanding = lazy(() => import('./pages/LandingPage'));
 const SupabaseAuth = lazy(() => import('./components/SupabaseAuth'));
 const Pricing = lazy(() => import('./pages/PricingPage'));
 const PrivacyPolicy = lazy(() => import('./components/PrivacyPolicy'));
