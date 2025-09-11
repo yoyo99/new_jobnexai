@@ -1,31 +1,56 @@
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
+
+// Wrapper pour les composants lazy-loaded avec ErrorBoundary spécifique
+const LazyComponentWrapper = ({ children }: { children: React.ReactNode }) => {
+  const ErrorBoundary = lazy(() => import('./components/ErrorBoundary').then(m => ({ default: m.ErrorBoundary })));
+  const LoadingFallback = lazy(() => import('./components/LoadingFallback').then(m => ({ default: m.LoadingFallback })));
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ErrorBoundary fallback={<div className="card m-8 text-center bg-background/80 backdrop-blur-lg">
+        <h2 className="text-xl font-semibold text-primary-400 mb-4">Un problème est survenu lors du chargement de cette page</h2>
+        <p className="text-white/80 mb-6">Nous nous excusons pour cet inconvénient. L'équipe technique a été informée du problème.</p>
+        <button onClick={() => window.location.reload()} className="btn-primary">Essayer de recharger</button>
+      </div>}>
+        <Suspense fallback={<LoadingFallback />}>
+          {children}
+        </Suspense>
+      </ErrorBoundary>
+    </Suspense>
+  );
+};
+
+const JobNexAILanding = lazy(() => import('./pages/LandingPage'));
+const SupabaseAuth = lazy(() => import('./components/SupabaseAuth'));
+const Pricing = lazy(() => import('./pages/PricingPage'));
+const PrivacyPolicy = lazy(() => import('./components/PrivacyPolicy'));
+const FeaturesPage = lazy(() => import('./components/pages/FeaturesPage'));
+const HowItWorksPage = lazy(() => import('./components/pages/HowItWorksPage'));
+const TestimonialsPage = lazy(() => import('./components/pages/TestimonialsPage'));
+const AboutPage = lazy(() => import('./components/pages/AboutPage'));
+const ContactPage = lazy(() => import('./components/pages/ContactPage'));
+const TermsPage = lazy(() => import('./components/pages/TermsPage'));
+const ResetPassword = lazy(() => import('./components/ResetPassword'));
+const AuthCallback = lazy(() => import('./components/AuthCallback'));
+const StripeCheckoutStatus = lazy(() => import('./components/StripeCheckoutStatus'));
+const ModernComponentsDemo = lazy(() => import('./components/ModernComponentsDemo').then(module => ({ default: module.ModernComponentsDemo })));
+import { PublicRoute } from './components/PublicRoute';
 
 // Importer les styles CSS ici, avant tout autre import
 import './minimal.css';
 import './App.css';
 
 // Import immédiat des composants critiques pour la navigation
-import { DashboardLayout } from './components/DashboardLayout'
-import { ProtectedRoute } from './components/ProtectedRoute'
-
-import { PrivacyConsent } from './components/PrivacyConsent'
-import { SecurityBadge } from './components/SecurityBadge'
-import { ErrorBoundary } from './components/ErrorBoundary'
+import { DashboardLayout } from './components/DashboardLayout';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { PrivacyConsent } from './components/PrivacyConsent';
+import { SecurityBadge } from './components/SecurityBadge';
 import { AuthProvider } from './components/AuthProvider';
-import { PWAInstall, ConnectionStatus, UpdateNotification } from './components/PWAInstall'
-import { SubscriptionBanner } from './components/SubscriptionBanner'
-
-// Import route modules
-import { PublicRoutes } from './routes/PublicRoutes';
-import { DevelopmentRoutes } from './routes/DevelopmentRoutes';
-import { AppRoutes } from './routes/AppRoutes';
-import { RedirectRoutes } from './routes/RedirectRoutes';
-import { NotFoundPage } from './pages/NotFoundPage';
-
+import { SubscriptionBanner } from './components/SubscriptionBanner';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './i18n';
+import { NotFoundPage } from './pages/NotFoundPage';
 
 
 function App() {
@@ -54,7 +79,22 @@ function App() {
       <AuthProvider>
         <Router>
           <Routes>
-            <PublicRoutes />
+            <Route path="/" element={<LazyComponentWrapper><JobNexAILanding /></LazyComponentWrapper>} />
+            <Route path="/home" element={<LazyComponentWrapper><JobNexAILanding /></LazyComponentWrapper>} />
+            <Route path="/login" element={<PublicRoute><LazyComponentWrapper><SupabaseAuth /></LazyComponentWrapper></PublicRoute>} />
+            <Route path="/register" element={<PublicRoute><LazyComponentWrapper><SupabaseAuth /></LazyComponentWrapper></PublicRoute>} />
+            <Route path="/pricing" element={<LazyComponentWrapper><Pricing /></LazyComponentWrapper>} />
+            <Route path="/demo" element={<LazyComponentWrapper><ModernComponentsDemo /></LazyComponentWrapper>} />
+            <Route path="/privacy" element={<LazyComponentWrapper><PrivacyPolicy /></LazyComponentWrapper>} />
+            <Route path="/about" element={<LazyComponentWrapper><AboutPage /></LazyComponentWrapper>} />
+            <Route path="/contact" element={<LazyComponentWrapper><ContactPage /></LazyComponentWrapper>} />
+            <Route path="/terms" element={<LazyComponentWrapper><TermsPage /></LazyComponentWrapper>} />
+            <Route path="/features" element={<LazyComponentWrapper><FeaturesPage /></LazyComponentWrapper>} />
+            <Route path="/how-it-works" element={<LazyComponentWrapper><HowItWorksPage /></LazyComponentWrapper>} />
+            <Route path="/testimonials" element={<LazyComponentWrapper><TestimonialsPage /></LazyComponentWrapper>} />
+            <Route path="/auth/reset-password" element={<LazyComponentWrapper><ResetPassword /></LazyComponentWrapper>} />
+            <Route path="/auth/callback" element={<LazyComponentWrapper><AuthCallback /></LazyComponentWrapper>} />
+            <Route path="/checkout/success" element={<LazyComponentWrapper><StripeCheckoutStatus /></LazyComponentWrapper>} />
           </Routes>
         </Router>
       </AuthProvider>
