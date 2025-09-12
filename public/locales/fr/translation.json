@@ -1,4 +1,16 @@
 {
+  "auth": {
+    "signIn": "Connexion",
+    "signUp": "Créer un compte",
+    "welcome": "Bienvenue !",
+    "signOut": "Déconnexion",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "createAccount": "Créer un compte",
+    "alreadyRegistered": "Déjà inscrit ? Connexion",
+    "startTrial": "Démarrer l'essai gratuit"
+  },
   "pages": {
     "home": {
       "title": "Trouvez l'emploi de vos rêves avec l'IA",
