@@ -12,12 +12,12 @@ console.log('Initialisation du module i18n...');
 try {
   i18n
     .use(Backend) // Charge les traductions depuis le serveur (public/locales)
-    .use(LanguageDetector) // Détecte la langue du navigateur
+    // .use(LanguageDetector) // Désactivé pour forcer la langue FR
     .use(initReactI18next)
     .init({
     // Plus besoin de pré-charger les ressources, elles seront chargées dynamiquement
     lng: 'fr', // langue par défaut
-    fallbackLng: 'en',
+    fallbackLng: 'fr',
     ns: [
       'common', // Contient les traductions communes (navigation, auth, forms, etc.)
       'translation' // Contient les traductions spécifiques aux pages
@@ -39,6 +39,8 @@ try {
       lookupLocalStorage: 'i18nextLng',
       caches: ['localStorage', 'cookie']
     }
+  }).then(() => {
+    console.log('i18next language:', i18n.language);
   }).catch(error => {
     console.error("Erreur lors de l'initialisation d'i18next:", error);
     // Fallback minimal pour éviter de bloquer l'application
