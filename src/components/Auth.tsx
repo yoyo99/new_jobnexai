@@ -12,9 +12,6 @@ const Auth: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [userType, setUserType] = useState<'individual' | 'company'>('individual');
-  const [companyName, setCompanyName] = useState('');
-  const [siret, setSiret] = useState('');
   const [message, setMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
   const [showHelp, setShowHelp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -50,20 +47,10 @@ const Auth: React.FC = () => {
     }
     try {
       setLoading(true);
-            const metadata = userType === 'individual' 
-        ? { 
-            firstName: fullName.split(' ')[0] || '', 
-            lastName: fullName.split(' ').slice(1).join(' ') || '',
-            userType: 'individual'
-          }
-        : {
-            companyName,
-            siret,
-            userType: 'company',
-            contactName: fullName
-          };
-      
-      const { data: user, error } = await auth.register(email, password, metadata);
+            const { data: user, error } = await auth.register(email, password, { 
+        firstName: fullName.split(' ')[0] || '', 
+        lastName: fullName.split(' ').slice(1).join(' ') || '' 
+      });
       if (error) {
         setMessage({ type: 'error', text: error.message });
         return;
@@ -73,8 +60,12 @@ const Auth: React.FC = () => {
         return;
       }
       setMessage({ type: 'success', text: t('auth.success.signup') });
-      // ✅ Compte créé avec succès - confirmation email désactivée temporairement
-      // L'utilisateur peut maintenant se connecter directement
+      // Délai pour lire le message, puis la navigation dans son propre tick
+      setTimeout(() => {
+        setTimeout(() => {
+          navigate('/pricing');
+        }, 0);
+      }, 2000);
     } catch (error: any) {
       console.error('Error signing up:', error);
       setMessage({ type: 'error', text: error?.message || t('auth.errors.unknown') });
@@ -97,17 +88,13 @@ const Auth: React.FC = () => {
     }
     try {
       setLoading(true);
-      const { data: user, error } = await auth.login(email, password);
+            const { data: user, error } = await auth.login(email, password);
       if (error) {
+        // Mapping des messages d’erreur Supabase vers des clés i18n si possible
         let errorKey = '';
         if (error.message === 'Invalid login credentials') errorKey = 'auth.errors.login';
         if (error.message === 'User already registered') errorKey = 'auth.errors.signup';
         if (error.message === 'Password should be at least 9 characters') errorKey = 'auth.errors.passwordLength';
-        if (error.message.toLowerCase().includes('jwt')) {
-          setMessage({ type: 'error', text: 'Session expirée ou token invalide. Veuillez rafraîchir la page.' });
-          setShowHelp(true);
-          return;
-        }
         setMessage({ type: 'error', text: errorKey !== '' ? t(errorKey) : error.message || t('auth.errors.unknown') });
         setShowHelp(true);
         return;
@@ -124,15 +111,11 @@ const Auth: React.FC = () => {
         navigate(from);
       }, 0);
     } catch (error: any) {
+      // Mapping des messages d’erreur JS génériques
       let errorKey = '';
       if (error?.message === 'Invalid login credentials') errorKey = 'auth.errors.login';
       if (error?.message === 'User already registered') errorKey = 'auth.errors.signup';
       if (error?.message === 'Password should be at least 9 characters') errorKey = 'auth.errors.passwordLength';
-      if (error?.message?.toLowerCase().includes('jwt')) {
-        setMessage({ type: 'error', text: 'Session expirée ou token invalide. Veuillez rafraîchir la page.' });
-        setShowHelp(true);
-        return;
-      }
       setMessage({ type: 'error', text: errorKey !== '' ? t(errorKey) : error?.message || t('auth.errors.unknown') });
       setShowHelp(true);
     } finally {
@@ -204,116 +187,24 @@ const Auth: React.FC = () => {
           )}
           <div className="rounded-md shadow-sm -space-y-px">
             {!isLogin && (
-              <>
-                {/* Sélection du type d'utilisateur */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Type de compte
-                  </label>
-                  <div className="flex space-x-4">
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="userType"
-                        value="individual"
-                        checked={userType === 'individual'}
-                        onChange={(e) => setUserType(e.target.value as 'individual' | 'company')}
-                        className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-white/10"
-                      />
-                      <span className="ml-2 text-sm text-gray-300">Particulier</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="userType"
-                        value="company"
-                        checked={userType === 'company'}
-                        onChange={(e) => setUserType(e.target.value as 'individual' | 'company')}
-                        className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-white/10"
-                      />
-                      <span className="ml-2 text-sm text-gray-300">Entreprise</span>
-                    </label>
-                  </div>
-                </div>
-
-                {/* Champs selon le type d'utilisateur */}
-                {userType === 'individual' ? (
-                  <div>
-                    <label htmlFor="full-name" className="sr-only">
-                      {t('auth.fullName')}
-                    </label>
-                    <input
-                      id="full-name"
-                      name="fullName"
-                      type="text"
-                      autoComplete="name"
-                      value={fullName}
-                      onChange={(e) => {
-                        setFullName(e.target.value);
-                        setMessage(null);
-                      }}
-                      className="appearance-none rounded-none relative block w-full px-3 py-2 border border-white/10 placeholder-gray-400 text-white rounded-t-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm bg-white/5"
-                      placeholder={t('auth.fullName')}
-                    />
-                  </div>
-                ) : (
-                  <>
-                    <div>
-                      <label htmlFor="company-name" className="sr-only">
-                        Nom de l'entreprise
-                      </label>
-                      <input
-                        id="company-name"
-                        name="companyName"
-                        type="text"
-                        value={companyName}
-                        onChange={(e) => {
-                          setCompanyName(e.target.value);
-                          setMessage(null);
-                        }}
-                        className="appearance-none rounded-none relative block w-full px-3 py-2 border border-white/10 placeholder-gray-400 text-white rounded-t-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm bg-white/5"
-                        placeholder="Nom de l'entreprise"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="siret" className="sr-only">
-                        SIRET
-                      </label>
-                      <input
-                        id="siret"
-                        name="siret"
-                        type="text"
-                        value={siret}
-                        onChange={(e) => {
-                          setSiret(e.target.value);
-                          setMessage(null);
-                        }}
-                        className="appearance-none rounded-none relative block w-full px-3 py-2 border border-white/10 placeholder-gray-400 text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm bg-white/5"
-                        placeholder="SIRET (optionnel)"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="contact-name" className="sr-only">
-                        Nom du contact
-                      </label>
-                      <input
-                        id="contact-name"
-                        name="contactName"
-                        type="text"
-                        value={fullName}
-                        onChange={(e) => {
-                          setFullName(e.target.value);
-                          setMessage(null);
-                        }}
-                        className="appearance-none rounded-none relative block w-full px-3 py-2 border border-white/10 placeholder-gray-400 text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm bg-white/5"
-                        placeholder="Nom du contact"
-                        required
-                      />
-                    </div>
-                  </>
-                )}
-              </>
+              <div>
+                <label htmlFor="full-name" className="sr-only">
+                  {t('auth.fullName')}
+                </label>
+                <input
+                  id="full-name"
+                  name="fullName"
+                  type="text"
+                  autoComplete="name"
+                  value={fullName}
+                  onChange={(e) => {
+                    setFullName(e.target.value);
+                    setMessage(null);
+                  }}
+                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-white/10 placeholder-gray-400 text-white rounded-t-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm bg-white/5"
+                  placeholder={t('auth.fullName')}
+                />
+              </div>
             )}
             <div>
               <label htmlFor="email-address" className="sr-only">

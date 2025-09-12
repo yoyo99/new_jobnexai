@@ -16,15 +16,10 @@ interface Template {
 function CVBuilder() {
   const [templates, setTemplates] = useState<Template[]>([])
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
-  const [selectedCvId, setSelectedCvId] = useState<string | null>(null)
-  const [cvs, setCvs] = useState<any[]>([])
-  const [cvName, setCvName] = useState<string | null>(null)
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [cvSections, setCvSections] = useState<any[] | null>(null)
   const [error, setError] = useState<string | null>(null)
-
-  const selectedCv = cvs.find(c => c.id === selectedCvId);
 
   useEffect(() => {
     loadTemplates()
@@ -36,24 +31,6 @@ function CVBuilder() {
       loadCV(selectedTemplate);
     }
   }, [selectedTemplate]);
-
-  useEffect(() => {
-    if (selectedCvId) {
-      const cv = cvs.find((c) => c.id === selectedCvId);
-      if (cv) {
-        setCvName(cv.name);
-        if (cv.sections) {
-          try {
-            const sections = typeof cv.sections === 'string' ? JSON.parse(cv.sections) : cv.sections;
-            setCvSections(sections);
-          } catch (e) {
-            console.error('Failed to parse CV sections:', e);
-            setCvSections([]);
-          }
-        }
-      }
-    }
-  }, [selectedCvId, cvs]);
 
   const loadTemplates = async () => {
     try {
@@ -81,7 +58,7 @@ function CVBuilder() {
         .eq('id', templateId)
         .single()
 
-      if (templateError) throw templateError
+      if (templateError) throw templateError;
 
 
 
@@ -182,7 +159,7 @@ function CVBuilder() {
         sections={cvSections || []}
         onSectionsChange={setCvSections}
       />
-      {selectedCv && <CVPreview cvId={selectedCv.id} cvName={selectedCv.name} sections={cvSections} />}
+      <CVPreview sections={cvSections} />
     </div>
   )
 }

@@ -1,60 +1,62 @@
-import { generateCoverLetter } from '../ai'
+import { vi } from 'vitest'
+import { optimizeCV } from '../ai'
 import { supabase } from '../supabase'
 
-// Mock de la fonction invoke de manière plus générique pour couvrir tous les appels
-jest.mock('../supabase', () => ({
+vi.mock('../supabase', () => ({
   supabase: {
     functions: {
-      invoke: jest.fn(),
+      invoke: vi.fn(),
     },
   },
-}));
+}))
 
-// Mock de la fonction getBestModel pour contrôler le modèle utilisé dans les tests
-jest.mock('../getBestModel', () => ({
-  getBestModel: jest.fn(),
-}));
+describe('AI Functions', () => {
+  const mockCV = {
+    education: [
+      {
+        title: 'Master en Informatique',
+        school: 'Université de Paris',
+        year: 2020,
+      },
+    ],
+    experience: [
+      {
+        title: 'Développeur Full Stack',
+        company: 'Tech Corp',
+        duration: '2020-2023',
+      },
+    ],
+  }
 
-jest.mock('../mammouthClient', () => ({
-  sendPromptToMammouth: jest.fn(),
-}));
-
-describe('generateCoverLetter', () => {
-  const mockCV = { education: [], experience: [] };
-  const mockJobDescription = 'Description de poste';
-  const mockLanguage = 'fr';
-  const mockTone = 'professional';
+  const mockJobDescription = 'Nous recherchons un développeur React expérimenté...'
 
   beforeEach(() => {
-    jest.clearAllMocks();
-  });
+    vi.clearAllMocks()
+  })
 
-  test('devrait générer une lettre de motivation avec succès via Mammouth.ai', async () => {
-    const mockGeneratedLetter = 'Voici votre lettre de motivation.';
-    (supabase.functions.invoke as any).mockResolvedValue({
-      data: { coverLetter: mockGeneratedLetter },
+  test('optimizes CV successfully', async () => {
+    const mockResponse = {
+      suggestions: 'Mettez en avant vos compétences React...',
+      keywords: ['React', 'TypeScript', 'Node.js'],
+    }
+
+    ;(supabase.functions.invoke as any).mockResolvedValue({
+      data: mockResponse,
       error: null,
-    });
+    })
 
-    const result = await generateCoverLetter(mockCV, mockJobDescription, mockLanguage, mockTone);
+    const result = await optimizeCV(mockCV, mockJobDescription)
 
-    expect(result).toBe(mockGeneratedLetter);
-    expect(supabase.functions.invoke).toHaveBeenCalledWith('askMammouthFromCV', {
-      body: {
-        cv: mockCV,
-        jobDescription: mockJobDescription,
-        language: mockLanguage,
-        tone: mockTone,
-      },
-    });
-  });
+    expect(result).toEqual(mockResponse)
+    expect(supabase.functions.invoke).toHaveBeenCalledWith('optimize-cv', {
+      body: { cv: mockCV, jobDescription: mockJobDescription },
+    })
+  })
 
-  test('devrait gérer une erreur lors de la génération de la lettre de motivation', async () => {
-    const error = new Error('Erreur de la fonction Netlify');
-    (supabase.functions.invoke as any).mockResolvedValue({ data: null, error });
+  test('handles optimization error', async () => {
+    const error = new Error('Failed to optimize CV')
+    ;(supabase.functions.invoke as any).mockRejectedValue(error)
 
-    await expect(
-      generateCoverLetter(mockCV, mockJobDescription, mockLanguage, mockTone)
-    ).rejects.toThrow('Erreur de la fonction Netlify');
-  });
-});
+    await expect(optimizeCV(mockCV, mockJobDescription)).rejects.toThrow('Failed to optimize CV')
+  })
+})

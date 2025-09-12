@@ -515,18 +515,7 @@ export function Settings() {
               {languages.map((language) => (
                 <button
                   key={language.code}
-                  onClick={() => {
-                    try {
-                      i18n.changeLanguage(language.code)
-                      localStorage.setItem('i18nextLng', language.code)
-                      setMessage({ type: 'success', text: `Langue changée vers ${language.name}` })
-                      // Effacer le message après 3 secondes
-                      setTimeout(() => setMessage(null), 3000)
-                    } catch (error) {
-                      console.error('Erreur lors du changement de langue:', error)
-                      setMessage({ type: 'error', text: 'Erreur lors de la mise à jour des paramètres' })
-                    }
-                  }}
+                  onClick={() => i18n.changeLanguage(language.code)}
                   className={`flex items-center justify-between p-4 rounded-lg transition-colors ${
                     i18n.language === language.code
                       ? 'bg-primary-600/20'

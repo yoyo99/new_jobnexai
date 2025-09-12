@@ -136,7 +136,7 @@ export function DashboardStats() {
       // Récupérer les statistiques des candidatures (pour stats & top lists)
       const { data: applicationsData, error: applicationsError } = await supabase
         .from('job_applications')
-        .select('id, created_at, status, jobs ( id, title, company, location )') // Ajout de job_title, id pour recentActivity
+        .select('id, created_at, status, job_id, user_id, jobs!fk_job ( title, company, location )') // Ajout de job_title, id pour recentActivity
         .eq('user_id', user.id)
         .order('created_at', { ascending: false }); // Commander par date de création pour faciliter la prise des plus récentes
 
@@ -169,7 +169,7 @@ export function DashboardStats() {
 
       // Calculer les meilleures entreprises et lieux à partir de applicationsInTimeframe
       const companyCounts = (applicationsInTimeframe || []).reduce((acc, app) => {
-        const companyName = app.jobs && app.jobs[0]?.company ? app.jobs[0].company : 'N/A';
+        const companyName = app.job_applications_job_id_fkey?.company;
         if (companyName) {
           acc[companyName] = (acc[companyName] || 0) + 1;
         }
@@ -182,7 +182,7 @@ export function DashboardStats() {
       console.log('[DashboardStats] Calculated topCompanies:', topCompanies);
 
       const locationCounts = (applicationsInTimeframe || []).reduce((acc, app) => {
-        const locationName = app.jobs && app.jobs[0]?.location ? app.jobs[0].location : 'N/A';
+        const locationName = app.jobs?.location;
         if (locationName) {
           acc[locationName] = (acc[locationName] || 0) + 1;
         }
@@ -194,45 +194,20 @@ export function DashboardStats() {
         .map(([name, count]) => ({ name, count: count as number }));
       console.log('[DashboardStats] Calculated topLocations:', topLocations);
 
-      // Fetch favorites
-      const { data: favoritesData, error: favoritesError } = await supabase
-        .from('job_favorites')
-        .select('id, created_at, jobs (id, title, company)')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (favoritesError) {
-        console.error('[DashboardStats] Error fetching favorites:', favoritesError);
-        throw favoritesError;
-      }
-      console.log('[DashboardStats] Fetched favorites:', favoritesData);
-
       // Prepare recentActivity from applicationsData
       const recentApplicationsActivity = (applicationsData || []).slice(0, 5).map(app => ({
         id: app.id,
-        type: 'application' as const,
-        title: app.jobs && app.jobs[0]?.title ? app.jobs[0].title : 'N/A',
-        company: app.jobs && app.jobs[0]?.company ? app.jobs[0].company : 'N/A',
+        type: 'application',
+        title: app.jobs?.title || 'N/A',
+        subtitle: app.jobs?.company || 'N/A',
         date: app.created_at,
         status: app.status,
       }));
       console.log('[DashboardStats] Calculated recentActivity from applications:', recentApplicationsActivity);
 
-      // Prepare recentActivity from favoritesData
-      const recentFavoritesActivity = (favoritesData || []).slice(0, 5).map(fav => ({
-        id: fav.id,
-        type: 'favorite' as const,
-        title: fav.jobs && fav.jobs[0]?.title ? fav.jobs[0].title : 'N/A',
-        company: fav.jobs && fav.jobs[0]?.company ? fav.jobs[0].company : 'N/A',
-        date: fav.created_at,
-      }));
-      console.log('[DashboardStats] Calculated recentActivity from favorites:', recentFavoritesActivity);
-
-      // Merge recent activity from applications and favorites
-      const finalRecentActivity: DashboardStats['recentActivity'] = [...recentApplicationsActivity, ...recentFavoritesActivity]
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-        .slice(0, 5)
-        .map(activity => ({ ...activity, ...activityConfig[activity.type] }));
+      // Trier recentApplicationsActivity par date (plus récent d'abord) et prendre les 5 premiers (déjà fait par slice(0,5) sur data triée)
+      // Pour l'instant, finalRecentActivity est juste recentApplicationsActivity car les favoris sont retirés
+      const finalRecentActivity = recentApplicationsActivity;
       console.log('[DashboardStats] Final recentActivity (applications only):', finalRecentActivity);
 
       // Mise à jour des stats

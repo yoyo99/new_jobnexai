@@ -5,6 +5,12 @@ import { trackError, trackEvent } from './monitoring'
 // Initialiser Stripe
 let stripePromise: Promise<any> | null = null
 
+const getStripe = () => {
+  if (!stripePromise) {
+    stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY!)
+  }
+  return stripePromise
+}
 
 export const StripeService = {
   /**
@@ -21,7 +27,7 @@ export const StripeService = {
       }
 
       // Appeler la fonction Edge pour créer une session Checkout
-      const { data, error } = await supabase.functions.invoke('create-checkout-session-v2', {
+      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
         body: { 
           priceId, 
           userId,

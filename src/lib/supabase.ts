@@ -225,13 +225,6 @@ const mockSupabaseClient = {
       update: (...args: any[]) => { console.warn('[SupabaseInit] Mock update', args); return Promise.resolve({ data: [], error: null }); },
       delete: (...args: any[]) => { console.warn('[SupabaseInit] Mock delete', args); return Promise.resolve({ data: [], error: null }); },
       eq: (...args: any[]) => { console.warn('[SupabaseInit] Mock eq', args); return mockChain; },
-      // Méthodes de chaînage supplémentaires utilisées dans l'app
-      textSearch: (...args: any[]) => { console.warn('[SupabaseInit] Mock textSearch', args); return mockChain; },
-      order: (...args: any[]) => { console.warn('[SupabaseInit] Mock order', args); return mockChain; },
-      ilike: (...args: any[]) => { console.warn('[SupabaseInit] Mock ilike', args); return mockChain; },
-      gte: (...args: any[]) => { console.warn('[SupabaseInit] Mock gte', args); return mockChain; },
-      lte: (...args: any[]) => { console.warn('[SupabaseInit] Mock lte', args); return mockChain; },
-      maybeSingle: () => Promise.resolve({ data: null, error: null }),
       single: () => Promise.resolve({ data: null, error: null }), // Simuler une réponse single()
     };
     return mockChain;
@@ -245,31 +238,24 @@ const mockSupabaseClient = {
   },
   functions: {
     invoke: async (functionName: string, options?: any) => {
-      // Utiliser le véritable client Supabase pour les appels de fonction
-      const supabase = getSupabase();
-      console.log(`[Supabase] Calling Edge Function: ${functionName}`, options);
-      
-      try {
-        const { data, error } = await supabase.functions.invoke(functionName, {
-          body: options?.body,
-          headers: {
-            'Content-Type': 'application/json',
-            ...options?.headers
-          }
-        });
-        
-        if (error) {
-          console.error(`[Supabase] Error calling ${functionName}:`, error);
-          return { data: null, error };
-        }
-        
-        console.log(`[Supabase] Success calling ${functionName}`);
-        return { data, error: null };
-      } catch (error) {
-        console.error(`[Supabase] Exception calling ${functionName}:`, error);
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-        return { data: null, error: { message: errorMessage } };
+      console.warn(`[SupabaseInit] Using mock Supabase client: functions.invoke(${functionName})`, options);
+      // Simuler la réponse pour create-stripe-checkout
+      if (functionName === 'create-stripe-checkout') {
+        return {
+          data: {
+            sessionId: 'mock_session_id_12345'
+          },
+          error: null
+        };
       }
+      // Simuler la réponse pour get_user_roles
+      if (functionName === 'get_user_roles') {
+        return {
+          data: { roles: ['user'] }, // Simule un utilisateur avec le rôle 'user'
+          error: null
+        };
+      }
+      return { data: null, error: { message: 'Mock function not implemented' } }; // Réponse par défaut
     }
   },
   realtime: null, // ou simuler un client realtime basique si besoin
@@ -471,30 +457,6 @@ export async function saveUserAISettings(userId: string, settings: UserAISetting
 const CV_STORAGE_BUCKET = 'cvs'; // Nom du bucket de stockage pour les CVs
 
 /**
- * Vérifie si le bucket CVs existe et donne des instructions claires si ce n'est pas le cas.
- */
-async function checkCVBucketExists(): Promise<boolean> {
-  try {
-    // Tenter un simple appel au bucket pour voir s'il existe
-    const { data, error } = await supabase.storage.from(CV_STORAGE_BUCKET).list('', { limit: 1 });
-    
-    if (error) {
-      console.error('CV Bucket does not exist or is not accessible:', error);
-      console.log('🚨 CONFIGURATION REQUISE:');
-      console.log('1. Aller dans Supabase Dashboard > Storage');
-      console.log('2. Créer un bucket nommé "cvs"');
-      console.log('3. Configurer les permissions RLS si nécessaire');
-      return false;
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('Error checking CV bucket:', error);
-    return false;
-  }
-}
-
-/**
  * Récupère la liste des CVs d'un utilisateur.
  */
 export const getUserCVs = async (userId: string): Promise<CVMetadata[]> => {
@@ -522,12 +484,6 @@ export const getUserCVs = async (userId: string): Promise<CVMetadata[]> => {
 export const uploadUserCV = async (userId: string, file: File): Promise<CVMetadata> => {
   if (!userId) throw new Error('User ID is required to upload CV.');
   if (!file) throw new Error('File is required to upload CV.');
-  
-  // Vérifier que le bucket CVs existe
-  const bucketExists = await checkCVBucketExists();
-  if (!bucketExists) {
-    throw new Error('Le stockage des CVs n\'est pas configuré. Veuillez contacter l\'administrateur pour créer le bucket "cvs" dans Supabase Storage.');
-  }
 
   // Vérifier la limite de CVs côté client (la BDD a aussi une RLS pour ça)
   const existingCVs = await getUserCVs(userId);
@@ -556,17 +512,7 @@ export const uploadUserCV = async (userId: string, file: File): Promise<CVMetada
     throw new Error('Upload to storage failed, no data returned.');
   }
 
-  // 2. Vérifier l'authentification avant insertion
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  console.log('[uploadUserCV] Auth check - user:', user?.id, 'expected userId:', userId);
-  console.log('[uploadUserCV] Auth error:', authError);
-  
-  if (authError || !user || user.id !== userId) {
-    console.error('[uploadUserCV] Auth validation failed:', { authError, user: user?.id, userId });
-    throw new Error('Utilisateur non authentifié ou ID utilisateur invalide.');
-  }
-
-  // 3. Enregistrer les métadonnées dans la table user_cvs
+  // 2. Enregistrer les métadonnées dans la table user_cvs
   const cvMetadataToInsert = {
     user_id: userId,
     file_name: file.name,
@@ -576,15 +522,11 @@ export const uploadUserCV = async (userId: string, file: File): Promise<CVMetada
     is_primary: existingCVs.length === 0, // Le premier CV uploadé devient principal par défaut
   };
 
-  console.log('[uploadUserCV] Inserting CV metadata:', cvMetadataToInsert);
-  
   const { data: dbData, error: dbError } = await supabase
     .from('user_cvs')
     .insert(cvMetadataToInsert)
     .select()
     .single();
-    
-  console.log('[uploadUserCV] DB insert result:', { dbData, dbError });
 
   if (dbError) {
     console.error('Error saving CV metadata to database:', dbError);
@@ -669,13 +611,12 @@ export const setPrimaryCV = async (userId: string, cvIdToMakePrimary: string): P
  * @param cvPath Le chemin de stockage du fichier CV dans Supabase Storage.
  * @returns Le texte extrait du CV.
  */
-// Force git detection
 export const invokeExtractCvText = async (cvPath: string): Promise<string> => {
   if (!supabaseExport) throw new Error('Supabase client is not initialized');
   if (!cvPath) throw new Error('CV path is required to extract text.');
 
   const { data, error } = await supabaseExport.functions.invoke('extract-cv-text', {
-    body: { storagePath: cvPath },
+    body: { cvPath },
   });
 
   if (error) {
@@ -693,17 +634,14 @@ export const invokeExtractCvText = async (cvPath: string): Promise<string> => {
 };
 
 /**
- * Interface pour le statut d'une tâche de génération de contenu.
- */
-export interface GenerationStatus {
-  status: 'pending' | 'completed' | 'failed';
-  content: string | null;
-  error: string | null;
-}
-
-/**
- * Déclenche la génération asynchrone d'une lettre de motivation.
- * @returns {Promise<string>} Le taskId de la tâche de génération.
+ * Appelle la fonction Edge 'generate-cover-letter' pour générer une lettre de motivation.
+ * @param cvText Le texte du CV.
+ * @param jobTitle Le titre du poste.
+ * @param companyName Le nom de l'entreprise.
+ * @param jobDescription La description du poste.
+ * @param language La langue cible pour la lettre.
+ * @param customInstructions Instructions personnalisées optionnelles.
+ * @returns Le contenu de la lettre de motivation générée.
  */
 export const invokeGenerateCoverLetter = async (
   cvText: string,
@@ -733,105 +671,13 @@ export const invokeGenerateCoverLetter = async (
     throw error;
   }
 
-  if (data.error || !data.taskId) {
-    console.error('Error from generate-cover-letter function:', data.error || 'No taskId returned');
-    throw new Error(data.error || 'Failed to start generation task.');
+  // La fonction retourne { coverLetter: string } ou { error: string }
+  if (data.error) {
+    console.error('Error from generate-cover-letter function:', data.error);
+    throw new Error(data.error);
   }
 
-  return data.taskId;
-};
-
-/**
- * Interroge le statut d'une tâche de génération de contenu.
- * @param taskId L'ID de la tâche à vérifier.
- * @returns Le statut et le contenu/erreur de la tâche.
- */
-export const pollGeneratedContent = async (taskId: string): Promise<GenerationStatus> => {
-  if (!supabaseExport) throw new Error('Supabase client is not initialized');
-  if (!taskId) throw new Error('Task ID is required for polling.');
-
-  const { data, error } = await supabaseExport.functions.invoke(`get-generated-content?taskId=${taskId}`);
-
-  if (error) {
-    console.error('Error polling generation status:', error);
-    throw error;
-  }
-
-  return data;
-};
-
-/**
- * Exporte une lettre de motivation générée via l'Edge Function `export-cover-letter`.
- * Retourne une URL signée (valide 1h) vers le fichier dans le stockage Supabase.
- */
-export interface ExportCoverLetterResult {
-  bucket?: string;
-  path?: string;
-  signedUrl?: string;
-  expiresIn?: number;
-  format: 'pdf' | 'docx';
-}
-
-export const exportGeneratedCoverLetter = async (
-  taskId: string,
-  format: 'pdf' | 'docx' = 'pdf',
-  filename?: string,
-): Promise<ExportCoverLetterResult> => {
-  if (!supabaseExport) throw new Error('Supabase client is not initialized');
-  if (!taskId) throw new Error('Task ID is required for export.');
-
-  const { data, error } = await supabaseExport.functions.invoke('export-cover-letter', {
-    body: {
-      taskId,
-      format,
-      mode: 'store', // store in Storage and return a signed URL
-      filename,
-    },
-  });
-
-  if (error) {
-    console.error('Error invoking export-cover-letter function:', error);
-    throw error;
-  }
-  if (!data || (data as any).error) {
-    const msg = (data as any)?.error || 'Failed to export cover letter';
-    console.error('Error from export-cover-letter function:', msg);
-    throw new Error(msg);
-  }
-  return data as ExportCoverLetterResult;
-};
-
-/**
- * Exporte une lettre de motivation à partir d'un contenu brut via l'Edge Function `export-cover-letter-from-content`.
- * Retourne une URL signée (valide 1h) vers le fichier dans le stockage Supabase.
- */
-export const exportCoverLetterFromContent = async (
-  content: string,
-  format: 'pdf' | 'docx' = 'pdf',
-  filename?: string,
-): Promise<ExportCoverLetterResult> => {
-  if (!supabaseExport) throw new Error('Supabase client is not initialized');
-  if (!content || content.trim().length === 0) throw new Error('Content is required for export.');
-
-  const { data, error } = await supabaseExport.functions.invoke('export-cover-letter-from-content', {
-    body: {
-      content,
-      format,
-      mode: 'store', // store in Storage and return a signed URL
-      filename,
-    },
-  });
-
-  if (error) {
-    console.error('Error invoking export-cover-letter-from-content function:', error);
-    throw error;
-  }
-  if (!data || (data as any).error) {
-    const msg = (data as any)?.error || 'Failed to export cover letter from content';
-    console.error('Error from export-cover-letter-from-content function:', msg);
-    throw new Error(msg);
-  }
-  return data as ExportCoverLetterResult;
+  return data.coverLetter;
 };
 
 // --- Fonctions pour la gestion des Lettres de Motivation Utilisateurs ---

@@ -11,8 +11,6 @@ import { VirtualizedList } from './VirtualizedList'
 import { LazyImage } from './LazyImage'
 import { cache } from '../lib/cache'
 import { LoadingSpinner } from './LoadingSpinner'
-import { JobCard } from './ui/job-card'
-import AIJobSearchService, { type OptimizedSearchResult, type UserProfile } from '../services/aiJobSearchService'
 
 function JobSearch() {
   const { user } = useAuth()
@@ -33,12 +31,6 @@ function JobSearch() {
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [shareJob, setShareJob] = useState<Job | null>(null)
-  
-  // États pour l'IA
-  const [aiOptimizing, setAiOptimizing] = useState(false)
-  const [optimizedSearch, setOptimizedSearch] = useState<OptimizedSearchResult | null>(null)
-  const [aiSuggestions, setAiSuggestions] = useState<string[]>([])
-  const [showAiInsights, setShowAiInsights] = useState(false)
 
   const jobTypes = useMemo(() => [
     { value: '', label: 'Tous les types' },
@@ -160,43 +152,6 @@ function JobSearch() {
     setShowAdvancedSearch(false)
   }
 
-  // Optimiser la recherche avec l'IA
-  const optimizeSearchWithAI = async () => {
-    if (!search.trim()) return
-    
-    setAiOptimizing(true)
-    try {
-      // Construire le profil utilisateur depuis les données disponibles
-      const userProfile: UserProfile = {
-        skills: [], // TODO: Récupérer depuis le profil utilisateur
-        experience: '', // TODO: Récupérer depuis le profil utilisateur
-        preferences: [] // TODO: Récupérer depuis le profil utilisateur
-      }
-      
-      // Construire les filtres
-      const filters = {
-        location: location || undefined,
-        jobType: jobType || undefined,
-        salaryRange: (salaryMin && salaryMax) ? { min: Number(salaryMin), max: Number(salaryMax) } : undefined,
-        remote: remote !== 'all' ? remote === 'remote' : undefined
-      }
-      
-      const result = await AIJobSearchService.optimizeJobSearch(search, userProfile, filters)
-      setOptimizedSearch(result)
-      setShowAiInsights(true)
-      
-      // Utiliser la requête optimisée pour la recherche
-      if (result.enhancedQuery && result.enhancedQuery !== search) {
-        setSearch(result.enhancedQuery)
-      }
-      
-    } catch (error) {
-      console.error('Erreur lors de l\'optimisation IA:', error)
-    } finally {
-      setAiOptimizing(false)
-    }
-  }
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     loadJobs()
@@ -209,44 +164,46 @@ function JobSearch() {
     return jobs
   }, [jobs, favorites, showFavoritesOnly])
 
-  const renderJob = useCallback((job: Job, matchScore?: number, matchingSkills?: string[]) => {
-    // Adapter les données Job pour JobCard
-    const tags = [
-      job.job_type,
-      job.experience_level,
-      job.remote_type,
-      job.salary_min && `${job.salary_min}${job.salary_max ? ` - ${job.salary_max}` : ''} ${job.currency || ''}`,
-    ].filter(Boolean) as string[];
-
-    const salary = job.salary_min 
-      ? `${job.salary_min}${job.salary_max ? ` - ${job.salary_max}` : ''} ${job.currency || ''}` 
-      : 'Non spécifié';
-
-    const calculatedMatchScore = matchScore !== undefined ? Math.round(matchScore * 100) : Math.floor(Math.random() * 40) + 60; // Score par défaut entre 60-100
-
-    return (
-      <div key={job.id} className="mb-4">
-        <JobCard
-          title={job.title}
-          company={job.company}
-          logoUrl={job.company_logo || '/placeholder-logo.svg'}
-          location={job.location}
-          isRemote={job.remote_type === 'remote' || job.remote_type === 'hybrid'}
-          salary={salary}
-          matchScore={calculatedMatchScore}
-          tags={tags}
-          favorited={favorites[job.id] || false}
-          onFavorite={() => toggleFavorite(job.id)}
-          onClick={() => window.open(job.url, '_blank', 'noopener,noreferrer')}
-        />
-        {matchScore !== undefined && matchingSkills && (
-          <div className="mt-2 text-sm text-green-400 px-4">
-            <p className="text-xs text-gray-400">Compétences correspondantes : {matchingSkills.join(', ')}</p>
+  const renderJob = useCallback((job: Job, matchScore?: number, matchingSkills?: string[]) => (
+    <div key={job.id} className="bg-gray-800/50 backdrop-blur-sm border border-white/10 rounded-lg p-4 flex flex-col md:flex-row gap-4 hover:bg-gray-800 transition-colors duration-200">
+      <LazyImage src={job.company_logo || '/placeholder-logo.svg'} alt={`${job.company} logo`} className="w-12 h-12 object-contain mr-4" />
+      <div className="flex-grow">
+        <div className="flex justify-between items-start">
+          <div>
+            <a href={job.url} target="_blank" rel="noopener noreferrer" className="text-lg font-bold text-white hover:text-primary-400 transition-colors duration-200">{job.title}</a>
+            <p className="text-sm text-gray-600">{job.company} - {job.location}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setShareJob(job)} className="text-gray-400 hover:text-white transition-colors duration-200">
+              <ShareIcon className="h-5 w-5" />
+            </button>
+            <button onClick={() => toggleFavorite(job.id)} className="text-gray-400 hover:text-white transition-colors duration-200">
+              {favorites[job.id] ? <HeartIconSolid className="h-6 w-6 text-red-500" /> : <HeartIcon className="h-6 w-6" />}
+            </button>
+          </div>
+        </div>
+        <p className="text-gray-300 mt-2 text-sm line-clamp-2">{job.description}</p>
+        <div className="flex flex-wrap gap-2 mt-3 text-xs">
+          <span className="bg-primary-500/20 text-primary-300 px-2 py-1 rounded-full">{job.job_type}</span>
+          <span className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full">{job.experience_level}</span>
+          {job.remote_type && <span className="bg-green-500/20 text-green-300 px-2 py-1 rounded-full">{job.remote_type}</span>}
+          {job.salary_min && <span className="bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded-full">{`${job.salary_min}${job.salary_max ? ` - ${job.salary_max}` : ''} ${job.currency || ''}`}</span>}
+        </div>
+        {matchScore !== undefined && (
+          <div className="mt-2 text-sm text-green-400">
+            Score de correspondance : {Math.round(matchScore * 100)}%
+            {matchingSkills && <p className="text-xs text-gray-400">Compétences correspondantes : {matchingSkills.join(', ')}</p>}
           </div>
         )}
       </div>
-    );
-  }, [favorites, toggleFavorite])
+      <div className="flex flex-col justify-between items-end flex-shrink-0 mt-4 md:mt-0">
+        <p className="text-xs text-gray-500">{format(new Date(job.created_at), 'd MMMM yyyy', { locale: fr })}</p>
+        <a href={job.url} target="_blank" rel="noopener noreferrer" className="btn-secondary mt-2 w-full md:w-auto text-center">
+          Voir l'offre
+        </a>
+      </div>
+    </div>
+  ), [favorites, toggleFavorite])
 
   return (
     <>
@@ -286,16 +243,6 @@ function JobSearch() {
               </button>
               <button type="submit" className="btn-primary flex-shrink-0">
                 Rechercher
-              </button>
-              <button 
-                type="button" 
-                onClick={optimizeSearchWithAI}
-                disabled={aiOptimizing || !search.trim()}
-                className="btn-secondary flex-shrink-0 flex items-center gap-2"
-                title="Optimiser la recherche avec l'IA"
-              >
-                <SparklesIcon className="h-4 w-4" />
-                {aiOptimizing ? 'IA...' : 'IA'}
               </button>
               <button type="button" onClick={resetFilters} className="btn-secondary flex-shrink-0">
                 Réinitialiser
@@ -420,86 +367,6 @@ function JobSearch() {
                     </select>
                   </div>
                 </div>
-              </motion.div>
-            )}
-
-            {/* Insights IA */}
-            {showAiInsights && optimizedSearch && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="mt-4 p-4 bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-500/30 rounded-lg"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <SparklesIcon className="h-5 w-5 text-purple-400" />
-                    <h3 className="text-lg font-semibold text-white">Optimisation IA</h3>
-                    <span className="text-xs bg-purple-600 text-white px-2 py-1 rounded-full">
-                      Confiance: {Math.round(optimizedSearch.confidence * 100)}%
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => setShowAiInsights(false)}
-                    className="text-gray-400 hover:text-white"
-                  >
-                    ×
-                  </button>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <h4 className="font-medium text-purple-300 mb-2">Mots-clés suggérés</h4>
-                    <div className="flex flex-wrap gap-1">
-                      {optimizedSearch.keywords.map((keyword, index) => (
-                        <span key={index} className="bg-purple-600/30 text-purple-200 px-2 py-1 rounded text-xs">
-                          {keyword}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  {optimizedSearch.synonyms.length > 0 && (
-                    <div>
-                      <h4 className="font-medium text-blue-300 mb-2">Synonymes détectés</h4>
-                      <div className="flex flex-wrap gap-1">
-                        {optimizedSearch.synonyms.map((synonym, index) => (
-                          <span key={index} className="bg-blue-600/30 text-blue-200 px-2 py-1 rounded text-xs">
-                            {synonym}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {optimizedSearch.prioritySkills.length > 0 && (
-                    <div>
-                      <h4 className="font-medium text-green-300 mb-2">Compétences prioritaires</h4>
-                      <div className="flex flex-wrap gap-1">
-                        {optimizedSearch.prioritySkills.map((skill, index) => (
-                          <span key={index} className="bg-green-600/30 text-green-200 px-2 py-1 rounded text-xs">
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div>
-                    <h4 className="font-medium text-yellow-300 mb-2">Stratégie de recherche</h4>
-                    <span className="bg-yellow-600/30 text-yellow-200 px-2 py-1 rounded text-xs capitalize">
-                      {optimizedSearch.searchStrategy}
-                    </span>
-                  </div>
-                </div>
-                
-                {optimizedSearch.enhancedQuery !== optimizedSearch.originalQuery && (
-                  <div className="mt-3 p-3 bg-black/20 rounded">
-                    <h4 className="font-medium text-gray-300 mb-1">Requête optimisée</h4>
-                    <p className="text-white text-sm">"{optimizedSearch.enhancedQuery}"</p>
-                    <p className="text-gray-400 text-xs mt-1">Original: "{optimizedSearch.originalQuery}"</p>
-                  </div>
-                )}
               </motion.div>
             )}
 

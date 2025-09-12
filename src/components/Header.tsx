@@ -20,26 +20,24 @@ const publicNavigation = [
 
 // Navigation pour les utilisateurs connectés (avant admin)
 const userCoreNavigation = [
-  { name: 'navigation.dashboard', href: '/app/dashboard' },
-  { name: 'navigation.jobSearch', href: '/app/jobs' },
-  { name: 'navigation.applications', href: '/app/applications' },
-  { name: 'navigation.letters', href: '/app/letters' },
-  { name: 'navigation.coverLetterGenerator', href: '/app/cover-letter-generator' },
-  { name: 'navigation.cvBuilder', href: '/app/cv-builder' },
-  { name: 'navigation.network', href: '/app/network' },
-  { name: 'navigation.marketAnalysis', href: '/app/market-analysis' },
-  { name: 'navigation.profile.title', href: '/app/profile' },
-  { name: 'navigation.billing', href: '/app/billing' },
+  { name: 'Dashboard', href: '/dashboard' },
+  { name: 'Job Search', href: '/jobs' },
+  { name: 'Suivi', href: '/suivi' },
+  { name: 'CV Builder', href: '/cv-builder' },
+  { name: 'Network', href: '/network' },
+  { name: 'Market Analysis', href: '/market-analysis' },
+  { name: 'Profile', href: '/profile' },
+  { name: 'Billing', href: '/billing' },
 ];
 
 const adminSpecificNavigation = [
-  { name: 'Admin', href: '/app/admin' },
+  { name: 'Admin', href: '/admin' },
 ];
 
 export function Header() {
   console.log('[Header] FUNCTION EXECUTION STARTED'); // <--- NOUVEAU LOG AJOUTÉ ICI
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const { t } = useTranslation('common')
+  const { t } = useTranslation()
   const { user, subscription, signOut } = useAuth()
   console.log('[Header] User from useAuth in Header:', user);
   const location = useLocation()
@@ -78,9 +76,15 @@ export function Header() {
     return (
       <header className="backdrop-blur-sm border-b border-white/10">
         <nav className="flex items-center justify-between p-6 lg:px-8" aria-label="Global">
+          {((): boolean => true)() && // Re-enable Logo section's parent div
           <div className="flex lg:flex-1">
-            {/* Logo supprimé pour éviter la redondance avec le menu Dashboard */}
+            <Link to="/" className="-m-1.5 p-1.5 flex items-center">
+              <span className="sr-only">JobNexAI</span>
+              <img src={simpleLogoSrc} alt="JobNexAI Logo" className="h-10 w-auto" />
+              {/* Link Text Test */}
+            </Link>
           </div>
+          }
           {((): boolean => true)() && // Enable mobile menu button
           <div className="flex lg:hidden">
             <button
@@ -108,7 +112,9 @@ export function Header() {
           }
           {((): boolean => true)() && // Restore user section display
           <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:items-center">
-            {/* Sélecteur de langue supprimé - disponible dans Paramètres */}
+            <div className="mr-4">
+              <LanguageSwitcher />
+            </div>
             <div className="mr-4">
               <ThemeToggle />
             </div>
@@ -151,7 +157,7 @@ export function Header() {
                       <Menu.Item>
                         {({ active }) => (
                           <Link
-                            to="/app/admin"
+                            to="/admin"
                             className={`${active ? 'bg-gray-700' : ''} group flex items-center px-4 py-2 text-sm text-yellow-400 hover:text-yellow-300 w-full`}
                           >
                             {/* Vous pouvez ajouter une icône spécifique pour Admin si vous le souhaitez */}
@@ -163,7 +169,7 @@ export function Header() {
                     <Menu.Item>
                       {({ active }) => (
                         <Link
-                          to="/app/profile"
+                          to="/profile"
                           className={`${active ? 'bg-gray-700' : ''} group flex items-center px-4 py-2 text-sm text-gray-300 hover:text-white w-full`}
                         >
                           <UserCircleIcon className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-300" aria-hidden="true" />
@@ -174,7 +180,7 @@ export function Header() {
                     <Menu.Item>
                       {({ active }) => (
                         <Link
-                          to="/app/settings"
+                          to="/settings"
                           className={`${active ? 'bg-gray-700' : ''} group flex items-center px-4 py-2 text-sm text-gray-300 hover:text-white w-full`}
                         >
                           <Cog6ToothIcon className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-300" aria-hidden="true" />
@@ -221,9 +227,10 @@ export function Header() {
           <div className="fixed inset-0 z-50" />
           <Dialog.Panel className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-background px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-white/10">
             <div className="flex items-center justify-between">
-              <div className="-m-1.5 p-1.5">
-                {/* Logo mobile supprimé */}
-              </div>
+              <Link to="/" className="-m-1.5 p-1.5">
+                <span className="sr-only">JobNexAI</span>
+                <img src={simpleLogoSrc} alt="JobNexAI Logo" className="h-10 w-auto" />
+              </Link>
               <button
                 type="button"
                 className="-m-2.5 rounded-md p-2.5 text-white"
@@ -248,7 +255,9 @@ export function Header() {
                   ))}
                 </div>
                 <div className="py-6">
-                  {/* Sélecteur de langue supprimé - disponible dans Paramètres */}
+                  <div className="mb-4">
+                    <LanguageSwitcher />
+                  </div>
                   <div className="mb-4">
                     <ThemeToggle />
                   </div>
@@ -256,7 +265,7 @@ export function Header() {
                     <div className="py-6">
                       {user.is_admin && (
                         <Link
-                          to="/app/admin"
+                          to="/admin"
                           className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-yellow-400 hover:bg-white/10"
                           onClick={() => setMobileMenuOpen(false)}
                         >

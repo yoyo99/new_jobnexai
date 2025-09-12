@@ -74,7 +74,7 @@ function getPasswordFeedback(password: string): string[] {
     /[A-Z]/.test(password) ? '✓ Au moins une majuscule' : '✗ Au moins une majuscule',
     /[a-z]/.test(password) ? '✓ Au moins une minuscule' : '✗ Au moins une minuscule',
     /[0-9]/.test(password) ? '✓ Au moins un chiffre' : '✗ Au moins un chiffre',
-    /[^A-Za-z0-9]/.test(password) ? '✓ Au moins un caractère spécial' : '✗ Au moins un caractère spécial',
+    /[^A-Za-z0-9]/.test(password) ? `✓ Au moins ${minLength} caractères` : `✗ Au moins ${minLength} caractères`,
   ]
   return criteria
 }

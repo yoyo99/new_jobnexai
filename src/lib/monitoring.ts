@@ -1,31 +1,12 @@
 import * as Sentry from '@sentry/react'
 import { onCLS, onFID, onFCP, onLCP, onTTFB } from 'web-vitals'
 
-// Enhanced monitoring configuration
-interface MonitoringConfig {
-  enableSentry: boolean
-  enableWebVitals: boolean
-  enablePerformanceTracking: boolean
-  enableUserBehaviorTracking: boolean
-  enableErrorBoundary: boolean
-  sampleRate: number
-}
-
-const config: MonitoringConfig = {
-  enableSentry: !!process.env.VITE_SENTRY_DSN,
-  enableWebVitals: true,
-  enablePerformanceTracking: true,
-  enableUserBehaviorTracking: true,
-  enableErrorBoundary: true,
-  sampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0
-}
-
 export function initMonitoring() {
   console.log('Initialisation du monitoring...')
   
   try {
     // Vérifier si la clé Sentry est disponible
-    const sentryDsn = process.env.VITE_SENTRY_DSN
+    const sentryDsn = import.meta.env.VITE_SENTRY_DSN
     
     if (!sentryDsn) {
       console.warn('DSN Sentry non définie. Le monitoring des erreurs est désactivé.')
@@ -94,19 +75,11 @@ function initWebVitalsWithSentry() {
   try {
     onCLS(metric => {
       try {
-        const vitalsData = {
-          value: metric.value,
-          rating: metric.rating,
-        };
-        Sentry.captureMessage(`Web Vital: ${metric.name}`, {
+        Sentry.captureMessage(`Web Vital: CLS`, {
           level: 'info',
-          tags: { 
-            metric: metric.name, 
-            rating: metric.rating,
-            id: metric.id 
-          },
-          extra: vitalsData
-        });
+          tags: { metric: 'CLS', id: metric.id },
+          extra: { value: metric.value },
+        })
       } catch (e) {
         console.log('Web Vital: CLS', metric.value)
       }
@@ -114,19 +87,11 @@ function initWebVitalsWithSentry() {
     
     onFID(metric => {
       try {
-        const vitalsData = {
-          value: metric.value,
-          rating: metric.rating,
-        };
-        Sentry.captureMessage(`Web Vital: ${metric.name}`, {
+        Sentry.captureMessage(`Web Vital: FID`, {
           level: 'info',
-          tags: { 
-            metric: metric.name, 
-            rating: metric.rating,
-            id: metric.id 
-          },
-          extra: vitalsData
-        });
+          tags: { metric: 'FID', id: metric.id },
+          extra: { value: metric.value },
+        })
       } catch (e) {
         console.log('Web Vital: FID', metric.value)
       }
@@ -134,19 +99,11 @@ function initWebVitalsWithSentry() {
     
     onFCP(metric => {
       try {
-        const vitalsData = {
-          value: metric.value,
-          rating: metric.rating,
-        };
-        Sentry.captureMessage(`Web Vital: ${metric.name}`, {
+        Sentry.captureMessage(`Web Vital: FCP`, {
           level: 'info',
-          tags: { 
-            metric: metric.name, 
-            rating: metric.rating,
-            id: metric.id 
-          },
-          extra: vitalsData
-        });
+          tags: { metric: 'FCP', id: metric.id },
+          extra: { value: metric.value },
+        })
       } catch (e) {
         console.log('Web Vital: FCP', metric.value)
       }
@@ -154,19 +111,11 @@ function initWebVitalsWithSentry() {
     
     onLCP(metric => {
       try {
-        const vitalsData = {
-          value: metric.value,
-          rating: metric.rating,
-        };
-        Sentry.captureMessage(`Web Vital: ${metric.name}`, {
+        Sentry.captureMessage(`Web Vital: LCP`, {
           level: 'info',
-          tags: { 
-            metric: metric.name, 
-            rating: metric.rating,
-            id: metric.id 
-          },
-          extra: vitalsData
-        });
+          tags: { metric: 'LCP', id: metric.id },
+          extra: { value: metric.value },
+        })
       } catch (e) {
         console.log('Web Vital: LCP', metric.value)
       }
@@ -174,19 +123,11 @@ function initWebVitalsWithSentry() {
     
     onTTFB(metric => {
       try {
-        const vitalsData = {
-          value: metric.value,
-          rating: metric.rating,
-        };
-        Sentry.captureMessage(`Web Vital: ${metric.name}`, {
+        Sentry.captureMessage(`Web Vital: TTFB`, {
           level: 'info',
-          tags: { 
-            metric: metric.name, 
-            rating: metric.rating,
-            id: metric.id 
-          },
-          extra: vitalsData
-        });
+          tags: { metric: 'TTFB', id: metric.id },
+          extra: { value: metric.value },
+        })
       } catch (e) {
         console.log('Web Vital: TTFB', metric.value)
       }
@@ -199,18 +140,14 @@ function initWebVitalsWithSentry() {
 }
 
 export function trackError(error: Error, context?: Record<string, any>) {
-  Sentry.withScope(scope => {
-    if (context) scope.setTags(context);
-    Sentry.captureException(error);
-  });
+  Sentry.captureException(error, {
+    tags: context,
+  })
 }
 
 export function trackEvent(name: string, data?: Record<string, any>) {
-  Sentry.captureMessage(name, (scope) => {
-    scope.setLevel('info');
-    if (data) {
-      scope.setExtras(data);
-    }
-    return scope;
-  });
+  Sentry.captureMessage(name, {
+    level: 'info',
+    extra: data,
+  })
 }

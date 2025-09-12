@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
-import { uploadUserCV, getUserCVs, deleteUserCV, setPrimaryCV, CVMetadata } from '../lib/supabase';
+import { useAuth } from '../stores/auth';
+import { CVMetadata, getUserCVs, uploadUserCV, deleteUserCV, setPrimaryCV } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
-import { testRLSPolicies } from '../utils/testRLS';
 import { FaUpload, FaTrash, FaCheckCircle, FaTimesCircle, FaSpinner, FaFilePdf } from 'react-icons/fa'; // Exemple d'icônes
 
 interface UserCVsProps {
@@ -15,7 +14,6 @@ const UserCVs: React.FC<UserCVsProps> = ({ userId }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [analyzingCvId, setAnalyzingCvId] = useState<string | null>(null);
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const [feedbackMessage, setFeedbackMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
@@ -45,15 +43,7 @@ const UserCVs: React.FC<UserCVsProps> = ({ userId }) => {
         setFileToUpload(null);
         return;
       }
-      const allowedTypes = [
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/vnd.oasis.opendocument.text', // ODT (LibreOffice/OpenOffice)
-        'application/rtf', // RTF (Rich Text Format)
-        'text/rtf' // RTF alternative MIME type
-      ];
-    if (!allowedTypes.includes(file.type)) {
+      if (!['application/pdf'].includes(file.type)) { // Accepter uniquement les PDF pour l'instant
          setFeedbackMessage({ type: 'error', text: t('userCVs.errors.invalidFileType') });
          setFileToUpload(null);
          return;
@@ -71,106 +61,16 @@ const UserCVs: React.FC<UserCVsProps> = ({ userId }) => {
     }
     setUploading(true);
     setFeedbackMessage(null);
-    
-    console.log('🚀 [UserCVs] Début upload CV:', {
-      fileName: fileToUpload.name,
-      fileSize: fileToUpload.size,
-      fileType: fileToUpload.type,
-      userId: userId
-    });
-    
     try {
-            const result = await uploadUserCV(userId, fileToUpload);
-      console.log('✅ [UserCVs] Upload réussi:', result);
-
-      // Lancer l'analyse en arrière-plan
-      setAnalyzingCvId(result.id);
-      setFeedbackMessage({ type: 'success', text: t('userCVs.success.analysisInProgress') });
-
-      try {
-        console.log(`🚀 [UserCVs] Lancement du parsing pour le CV ID: ${result.id}`);
-        console.log('Détails de l\'appel:', {
-          function: 'parse-cv-v2',
-          cvId: result.id,
-          cvPath: result.storage_path,
-          supabaseUrl: import.meta.env.VITE_SUPABASE_URL
-        });
-        
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          throw new Error('User not authenticated. Cannot call Edge Function.');
-        }
-
-                        const parseResponse = await supabase.functions.invoke('parse-cv-v2', {
-          body: { 
-            cvId: result.id, 
-            cvPath: result.storage_path 
-          },
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`
-          }
-        });
-        
-        console.log('Réponse brute de parse-cv-v2:', parseResponse);
-        
-        if (parseResponse.error) {
-          console.error('Erreur détaillée du parsing:', {
-            error: parseResponse.error,
-            message: parseResponse.error.message,
-          });
-          throw new Error(`Erreur lors du parsing: ${parseResponse.error.message}`);
-        }
-        
-        console.log(`✅ [UserCVs] Parsing terminé pour le CV ID: ${result.id}`, parseResponse.data);
-
-        console.log(`🚀 [UserCVs] Lancement de l'analyse pour le CV ID: ${result.id}`);
-        const analyzeResponse = await supabase.functions.invoke('analyze-cv-v2', {
-          body: { cvId: result.id },
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`
-          }
-        });
-        
-        console.log('Réponse brute de analyze-cv-v2:', analyzeResponse);
-        
-        if (analyzeResponse.error) {
-          console.error('Erreur détaillée de l\'analyse:', analyzeResponse.error);
-          throw new Error(`Erreur lors de l'analyse: ${analyzeResponse.error.message}`);
-        }
-        
-        console.log(`✅ [UserCVs] Analyse terminée. Résultat:`, analyzeResponse.data);
-
-        setFeedbackMessage({ type: 'success', text: t('userCVs.success.analysisDone') });
-
-      } catch (analysisError: any) {
-        console.error('❌ [UserCVs] Erreur durant l\'analyse:', analysisError);
-        setFeedbackMessage({ type: 'error', text: `${t('userCVs.errors.analysisFailed')}: ${analysisError.message}` });
-      } finally {
-        setAnalyzingCvId(null);
-        fetchCVs(); // Recharger la liste pour mettre à jour les statuts/données
-      }
-
-      // Réinitialiser le formulaire d'upload immédiatement après l'upload
-      setFileToUpload(null);
+      await uploadUserCV(userId, fileToUpload);
+      setFeedbackMessage({ type: 'success', text: t('userCVs.success.upload') });
+      fetchCVs(); // Recharger la liste
+      setFileToUpload(null); // Réinitialiser le champ de fichier
       const fileInput = document.getElementById('cv-upload-input') as HTMLInputElement;
       if (fileInput) fileInput.value = '';
     } catch (err: any) {
-      console.error('❌ [UserCVs] Upload échoué:', err);
-      console.error('❌ [UserCVs] Détails de l\'erreur:', {
-        message: err.message,
-        code: err.code,
-        details: err.details,
-        hint: err.hint,
-        statusCode: err.statusCode
-      });
-      
-      // Message d'erreur plus détaillé pour l'utilisateur
-      let userMessage = err.message || t('userCVs.errors.uploadFailed');
-      if (err.message && err.message.includes('bucket')) {
-        userMessage = 'Erreur de configuration du stockage. Le bucket "cvs" n\'existe pas ou n\'est pas accessible.';
-      }
-      
-      setFeedbackMessage({ type: 'error', text: userMessage });
+      setFeedbackMessage({ type: 'error', text: err.message || t('userCVs.errors.uploadFailed') });
+      console.error('Upload failed:', err);
     }
     setUploading(false);
   };
@@ -232,7 +132,7 @@ const UserCVs: React.FC<UserCVsProps> = ({ userId }) => {
             <input
               type="file"
               id="cv-upload-input"
-              accept=".pdf,.doc,.docx,.odt,.rtf,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text,application/rtf,text/rtf"
+              accept=".pdf" // Limiter aux PDF dans l'input
               onChange={handleFileChange}
               className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-500 file:text-white hover:file:bg-primary-600 disabled:opacity-50"
               disabled={uploading}
@@ -258,17 +158,11 @@ const UserCVs: React.FC<UserCVsProps> = ({ userId }) => {
       {cvs.length > 0 ? (
         <ul className="space-y-3">
           {cvs.map((cv) => (
-                        <li key={cv.id} className="bg-white/5 p-3 rounded-lg shadow flex items-center justify-between relative overflow-hidden">
+            <li key={cv.id} className="bg-white/5 p-3 rounded-lg shadow flex items-center justify-between">
               <div className="flex items-center">
                 <FaFilePdf className="text-2xl text-primary-400 mr-3" />
                 <div>
-                                    <p className="font-medium text-white">{cv.file_name}</p>
-                  {analyzingCvId === cv.id && (
-                    <div className="flex items-center text-xs text-amber-400 mt-1">
-                      <FaSpinner className="animate-spin mr-2" />
-                      <span>{t('userCVs.analysisInProgress')}</span>
-                    </div>
-                  )}
+                  <p className="font-medium text-white">{cv.file_name}</p>
                   <p className="text-xs text-gray-400">
                     {t('userCVs.uploadedOn', { date: new Date(cv.uploaded_at).toLocaleDateString() })}
                     {cv.file_size && ` - ${(cv.file_size / 1024 / 1024).toFixed(2)} MB`}

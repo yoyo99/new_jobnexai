@@ -14,8 +14,7 @@ import {
   MagnifyingGlassIcon,
   PlusCircleIcon,
   CreditCardIcon,
-  Cog6ToothIcon,
-  GlobeAltIcon, // Ajout de l'icône pour Scraping Web
+  Cog6ToothIcon, // Ajout de l'icône Paramètres
 } from '@heroicons/react/24/outline'
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom' // Already v6 compatible
 import { useTranslation } from 'react-i18next'
@@ -38,47 +37,38 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
     // Définir la navigation en fonction du type d'utilisateur
     if (user?.user_type === 'freelancer') {
       setNavigation([
-        { name: 'navigation.dashboard', href: '/app/dashboard', icon: HomeIcon },
-        { name: 'Projets disponibles', href: '/app/freelance/projects', icon: RectangleGroupIcon },
-        { name: 'Mon profil freelance', href: '/app/freelance/profile', icon: UserIcon },
-        { name: 'Scraping Web', href: '/app/web-scraping', icon: GlobeAltIcon },
-        { name: 'navigation.letters', href: '/app/letters', icon: DocumentTextIcon },
-        { name: 'navigation.coverLetterGenerator', href: '/app/cover-letter-generator', icon: PlusCircleIcon },
-        { name: 'navigation.cvBuilder', href: '/app/cv-builder', icon: DocumentTextIcon },
-        { name: 'navigation.network', href: '/app/network', icon: UsersIcon },
-        { name: 'navigation.marketAnalysis', href: '/app/market-analysis', icon: ChartPieIcon },
-        { name: 'navigation.billing', href: '/app/billing', icon: CreditCardIcon },
-        { name: 'navigation.settings', href: '/app/settings', icon: Cog6ToothIcon },
+        { name: 'Dashboard', href: '/app/dashboard', icon: HomeIcon },
+        { name: 'Projets disponibles', href: '/freelance/projects', icon: RectangleGroupIcon },
+        { name: 'Mon profil freelance', href: '/freelance/profile', icon: UserIcon },
+        { name: 'CV Builder', href: '/cv-builder', icon: DocumentTextIcon },
+        { name: 'Réseau', href: '/network', icon: UsersIcon },
+        { name: 'Analyse du marché', href: '/market-analysis', icon: ChartPieIcon },
+        { name: 'Facturation', href: '/billing', icon: CreditCardIcon },
+        { name: 'Paramètres', href: '/settings', icon: Cog6ToothIcon },
       ])
     } else if (user?.user_type === 'recruiter') {
       setNavigation([
-        { name: 'navigation.dashboard', href: '/app/recruiter/dashboard', icon: HomeIcon },
-        { name: 'Recherche de candidats', href: '/app/recruiter/candidates', icon: MagnifyingGlassIcon },
-        { name: 'Mes offres d\'emploi', href: '/app/recruiter/job-postings', icon: ClipboardDocumentListIcon },
-        { name: 'Créer une offre', href: '/app/recruiter/create-job', icon: PlusCircleIcon },
-        { name: 'Scraping Web', href: '/app/web-scraping', icon: GlobeAltIcon },
-        { name: 'navigation.network', href: '/app/network', icon: UsersIcon },
-        { name: 'navigation.profile.title', href: '/app/profile', icon: UserIcon },
-        { name: 'navigation.letters', href: '/app/letters', icon: DocumentTextIcon },
-        { name: 'navigation.coverLetterGenerator', href: '/app/cover-letter-generator', icon: PlusCircleIcon },
-        { name: 'navigation.billing', href: '/app/billing', icon: CreditCardIcon },
-        { name: 'navigation.settings', href: '/app/settings', icon: Cog6ToothIcon },
+        { name: 'Dashboard', href: '/recruiter/dashboard', icon: HomeIcon },
+        { name: 'Recherche de candidats', href: '/recruiter/candidates', icon: MagnifyingGlassIcon },
+        { name: 'Mes offres d\'emploi', href: '/recruiter/job-postings', icon: ClipboardDocumentListIcon },
+        { name: 'Créer une offre', href: '/recruiter/create-job', icon: PlusCircleIcon },
+        { name: 'Réseau', href: '/network', icon: UsersIcon },
+        { name: 'Profil', href: '/profile', icon: UserIcon },
+        { name: 'Facturation', href: '/billing', icon: CreditCardIcon },
+        { name: 'Paramètres', href: '/settings', icon: Cog6ToothIcon },
       ])
     } else {
       // Navigation par défaut pour les candidats
       setNavigation([
         { name: 'navigation.dashboard', href: '/app/dashboard', icon: HomeIcon },
-        { name: 'navigation.jobSearch', href: '/app/job-search', icon: MagnifyingGlassIcon },
-        { name: 'navigation.applications', href: '/app/applications', icon: ClipboardDocumentListIcon },
-        { name: 'Scraping Web', href: '/app/web-scraping', icon: GlobeAltIcon },
-        { name: 'navigation.profile.title', href: '/app/profile', icon: UserIcon },
-        { name: 'navigation.letters', href: '/app/letters', icon: DocumentTextIcon },
-        { name: 'navigation.coverLetterGenerator', href: '/app/cover-letter-generator', icon: PlusCircleIcon },
-        { name: 'navigation.cvBuilder', href: '/app/cv-builder', icon: DocumentTextIcon },
-        { name: 'navigation.network', href: '/app/network', icon: UsersIcon },
-        { name: 'navigation.marketAnalysis', href: '/app/market-analysis', icon: ChartPieIcon },
-        { name: 'navigation.billing', href: '/app/billing', icon: CreditCardIcon },
-        { name: 'navigation.settings', href: '/app/settings', icon: Cog6ToothIcon },
+        { name: 'navigation.jobSearch', href: '/jobs', icon: FolderIcon },
+        { name: 'navigation.applications', href: '/suivi', icon: ClipboardDocumentListIcon },
+        { name: 'navigation.cvBuilder', href: '/cv-builder', icon: DocumentTextIcon },
+        { name: 'navigation.network', href: '/network', icon: UsersIcon },
+        { name: 'navigation.marketAnalysis', href: '/market-analysis', icon: ChartPieIcon },
+        { name: 'navigation.profile.title', href: '/profile', icon: UserIcon },
+        { name: 'Facturation', href: '/billing', icon: CreditCardIcon },
+        { name: 'Paramètres', href: '/settings', icon: Cog6ToothIcon },
       ])
     }
   }, [user?.user_type, t])

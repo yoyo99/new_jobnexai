@@ -40,11 +40,11 @@ export function ExperienceSection({ items, onChange }: ExperienceProps) {
     );
   };
 
-    const addAchievement = (experienceId: string) => {
+  const addAchievement = (experienceId: string) => {
     onChange(
       items.map((item) =>
         item.id === experienceId
-          ? { ...item, achievements: [...item.achievements, { id: crypto.randomUUID(), text: '' }] }
+          ? { ...item, achievements: [...item.achievements, ''] }
           : item
       )
     );
@@ -75,8 +75,8 @@ export function ExperienceSection({ items, onChange }: ExperienceProps) {
         item.id === experienceId
           ? {
               ...item,
-                            achievements: item.achievements.map((ach, i) =>
-                i === achievementIndex ? { ...ach, text: value } : ach
+              achievements: item.achievements.map((ach, i) =>
+                i === achievementIndex ? value : ach
               ),
             }
           : item
@@ -236,7 +236,7 @@ export function ExperienceSection({ items, onChange }: ExperienceProps) {
                       <input
                         type="text"
                         placeholder="Ex: Augmentation du chiffre d'affaires de 20%"
-                        value={achievement.text}
+                        value={achievement}
                         onChange={(e) => updateAchievement(experience.id, i, e.target.value)}
                         className="flex-1 bg-transparent text-white focus:outline-none placeholder-gray-500"
                       />

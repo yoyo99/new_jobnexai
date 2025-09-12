@@ -36,7 +36,7 @@ describe('Stripe Functions', () => {
 
     await createCheckoutSession(mockUserId, mockPriceId)
 
-    expect(supabase.functions.invoke).toHaveBeenCalledWith('create-checkout-session-v2', {
+    expect(supabase.functions.invoke).toHaveBeenCalledWith('create-checkout-session', {
       body: { priceId: mockPriceId, userId: mockUserId },
     })
     expect(loadStripe).toHaveBeenCalled()

@@ -134,46 +134,6 @@
     "loading": "Loading...",
     "selectPreferredCurrencyPlaceholder": "Select your preferred currency"
   },
-  "coverLetterGenerator": {
-    "title": "Cover Letter Generator",
-    "buttons": {
-      "generate": "Generate Letter",
-      "generating": "Generating...",
-      "save": "Save",
-      "saving": "Saving...",
-      "modify": "Modify text",
-      "preview": "Preview"
-    },
-    "labels": {
-      "jobTitle": "Job Title",
-      "companyName": "Company Name",
-      "jobDescription": "Job Description",
-      "cv": "Use CV",
-      "customInstructions": "Custom Instructions (optional)",
-      "language": "Letter Language",
-      "generatedLetter": "Generated Cover Letter"
-    },
-    "placeholders": {
-      "jobDescription": "Paste the full job description here...",
-      "selectCv": "Select a CV",
-      "customInstructions": "E.g., Emphasize my project management experience...",
-      "letterOutput": "The generated letter will appear here..."
-    },
-    "feedback": {
-      "generationSuccess": "Cover letter generated successfully!",
-      "saved": "Letter saved successfully."
-    },
-    "errors": {
-      "fetchCvError": "Failed to fetch CVs.",
-      "generationError": "Letter generation failed.",
-      "pollingError": "Failed to retrieve the result.",
-      "formInvalid": "Please select a CV and fill in the job description.",
-      "startGenerationError": "Failed to start generation.",
-      "saveFailed": "Save failed. Make sure the letter is not empty."
-    },
-    "generating": "Generating, please wait...",
-    "notGeneratedYet": "The letter has not been generated yet."
-  },
   "pricing": {
     "title": "Our Subscription Plans",
     "footerText": "All prices are in EUR. Choose the plan that suits you best and get started today!",
@@ -223,21 +183,6 @@
           "Personalized support"
         ]
       }
-    }
-  },
-  "navigation": {
-    "dashboard": "Dashboard",
-    "jobSearch": "Job Search",
-    "applications": "My Applications",
-    "letters": "Cover Letters",
-    "cvBuilder": "My CV",
-    "network": "Network",
-    "marketAnalysis": "Market Analysis",
-    "profile": "My Profile",
-    "changeLanguage": "Change language",
-    "languageSwitcher": {
-      "title": "Language selection",
-      "current": "Current language"
     }
   }
 }

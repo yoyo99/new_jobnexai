@@ -1,7 +1,5 @@
 import { motion } from "framer-motion";
-import { BookmarkIcon, BriefcaseIcon, MapPinIcon, HeartIcon, XMarkIcon } from "@heroicons/react/24/solid";
-import { HeartIcon as HeartOutlineIcon, XMarkIcon as XMarkOutlineIcon } from "@heroicons/react/24/outline";
-import { CircularProgressBar } from "./CircularProgressBar";
+import { BookmarkIcon, BriefcaseIcon, MapPinIcon, StarIcon } from "@heroicons/react/24/solid";
 
 type JobCardProps = {
   title: string;
@@ -13,11 +11,7 @@ type JobCardProps = {
   matchScore: number; // 0 - 100
   tags: string[];
   favorited: boolean;
-  liked?: boolean;
-  disliked?: boolean;
   onFavorite: () => void;
-  onLike?: () => void;
-  onDislike?: () => void;
   onClick?: () => void;
 };
 
@@ -31,93 +25,28 @@ export const JobCard = ({
   matchScore,
   tags,
   favorited,
-  liked = false,
-  disliked = false,
   onFavorite,
-  onLike,
-  onDislike,
   onClick,
 }: JobCardProps) => {
   return (
     <motion.div
-      whileHover={{ scale: 1.02, boxShadow: "0 10px 40px -5px rgba(0,0,0,0.1)" }}
-      className="group bg-white/50 dark:bg-zinc-800/40 backdrop-blur-lg border border-white/10 dark:border-zinc-700/50 rounded-2xl shadow-xl shadow-black/5 p-5 flex flex-col gap-3 relative transition cursor-pointer"
+      whileHover={{ scale: 1.025, boxShadow: "0 6px 32px 0 rgba(20,20,40,0.10)" }}
+      className="group bg-white dark:bg-zinc-900 rounded-2xl shadow-lg p-5 flex flex-col gap-3 relative transition cursor-pointer"
       onClick={onClick}
     >
-      {/* Action Buttons */}
-      <div className="absolute top-4 right-4 z-10 flex gap-2">
-        {/* Like Button */}
-        {onLike && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onLike();
-            }}
-            className="p-2 -m-2"
-            aria-label={liked ? "Retirer le like" : "Liker cette offre"}
-          >
-            <motion.div
-              animate={{ scale: liked ? [1, 1.3, 1] : 1 }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
-              whileTap={{ scale: 0.8 }}
-            >
-              {liked ? (
-                <HeartIcon className="h-5 w-5 text-red-500 fill-red-500" />
-              ) : (
-                <HeartOutlineIcon className="h-5 w-5 text-zinc-300 group-hover:text-red-400 transition-colors duration-200" />
-              )}
-            </motion.div>
-          </button>
-        )}
-
-        {/* Dislike Button */}
-        {onDislike && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDislike();
-            }}
-            className="p-2 -m-2"
-            aria-label={disliked ? "Retirer le dislike" : "Disliker cette offre"}
-          >
-            <motion.div
-              animate={{ scale: disliked ? [1, 1.3, 1] : 1 }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
-              whileTap={{ scale: 0.8 }}
-            >
-              {disliked ? (
-                <XMarkIcon className="h-5 w-5 text-red-500 fill-red-500" />
-              ) : (
-                <XMarkOutlineIcon className="h-5 w-5 text-zinc-300 group-hover:text-red-400 transition-colors duration-200" />
-              )}
-            </motion.div>
-          </button>
-        )}
-
-        {/* Favorite Button */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onFavorite();
-          }}
-          className="p-2 -m-2"
-          aria-label={favorited ? "Retirer des favoris" : "Ajouter aux favoris"}
-        >
-          <motion.div
-            animate={{ scale: favorited ? [1, 1.3, 1] : 1 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
-            whileTap={{ scale: 0.8 }}
-          >
-            <BookmarkIcon
-              className={`h-5 w-5 transition-colors duration-200 ${ 
-                favorited 
-                  ? "text-yellow-400 fill-yellow-400/80" 
-                  : "text-zinc-300 group-hover:text-yellow-400"
-              }`}
-            />
-          </motion.div>
-        </button>
-      </div>
+      {/* Favorite Button */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onFavorite();
+        }}
+        className="absolute top-4 right-4 z-10"
+        aria-label={favorited ? "Retirer des favoris" : "Ajouter aux favoris"}
+      >
+        <BookmarkIcon
+          className={`h-6 w-6 ${favorited ? "text-yellow-400" : "text-zinc-300 group-hover:text-yellow-400"} transition`}
+        />
+      </button>
       
       {/* Logo & Entreprise */}
       <div className="flex items-center gap-3">
@@ -169,11 +98,22 @@ export const JobCard = ({
       </div>
       
       {/* Bas de carte */}
-      <div className="flex items-end justify-between mt-4 pt-4 border-t border-zinc-200/50 dark:border-zinc-700/50">
-        <div className="text-zinc-800 dark:text-zinc-100 font-semibold text-lg">
-          {salary}
+      <div className="flex items-end justify-between mt-2">
+        {/* Match Score animé */}
+        <div className="flex items-center gap-2">
+          <div className="relative w-16 h-3 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${matchScore}%` }}
+              transition={{ duration: 1, ease: "easeOut" }}
+              className="h-full bg-gradient-to-r from-emerald-400 to-emerald-700 rounded-full"
+            />
+          </div>
+          <span className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-bold text-sm">
+            <StarIcon className="w-4 h-4" /> {matchScore}%
+          </span>
         </div>
-        <CircularProgressBar progress={matchScore} size={50} strokeWidth={5} />
+        <div className="text-zinc-700 dark:text-zinc-200 font-semibold text-sm">{salary}</div>
       </div>
     </motion.div>
   );

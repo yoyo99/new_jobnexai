@@ -1,11 +1,39 @@
 /**
  * @file Centralized AI Service
- * @description This service manages all interactions with different AI models (e.g., OpenAI, Mammouth)
+ * @description This service manages all interactions with different AI models (OpenAI, Mistral, etc.)
  * for tasks like cover letter generation, CV analysis, and job matching.
  */
 
-import { generateCoverLetter as generateCoverLetterFromLib } from '../lib/ai';
-import { matchCVWithJob } from '../lib/ai_logic/matchCV';
+import { getUserAISettings as fetchUserSettings, UserAISettingsData } from '../lib/supabase';
+
+// Définition des moteurs d'IA supportés
+export type SupportedAI = 'openai' | 'mistral' | 'gemini' | 'claude' | 'cohere' | 'huggingface' | 'internal';
+
+const DEFAULT_ENGINE: SupportedAI = 'openai';
+
+// --- Fonctions de service --- //
+
+/**
+ * Récupère les paramètres IA d'un utilisateur depuis Supabase ou retourne des valeurs par défaut.
+ * @param userId - L'ID de l'utilisateur (optionnel)
+ * @returns Les paramètres IA de l'utilisateur.
+ */
+const getUserSettings = async (userId?: string): Promise<UserAISettingsData> => {
+  if (userId) {
+    const settings = await fetchUserSettings(userId);
+    if (settings) {
+      return settings;
+    }
+  }
+  // Retourne des paramètres par défaut si l'utilisateur n'est pas connecté ou n'a pas de configuration
+  return {
+    feature_engines: {
+      coverLetter: DEFAULT_ENGINE,
+      matchScore: 'internal',
+    },
+    api_keys: {},
+  };
+};
 
 /**
  * Génère une lettre de motivation en utilisant le moteur IA configuré.
@@ -17,25 +45,21 @@ import { matchCVWithJob } from '../lib/ai_logic/matchCV';
  * @returns La lettre de motivation générée.
  */
 export const generateCoverLetter = async (
-  cv: any, // Le CV peut être un objet complexe
+  cv: string,
   jobDescription: string,
   language: string,
-  tone: 'professional' | 'conversational' | 'enthusiastic',
-  userId?: string // Gardé pour la cohérence de l'API, mais la logique est dans le client
+  tone: string,
+  userId?: string
 ): Promise<string> => {
-  console.log(`Génération de la lettre de motivation via le service centralisé...`);
-  try {
-    // Délégation à la librairie `ai.ts` qui gère la sélection du fournisseur (y compris Mammouth)
-    return await generateCoverLetterFromLib(cv, jobDescription, language, tone);
-  } catch (error) {
-    console.error('Erreur lors de la génération de la lettre de motivation via le service AI:', error);
-    throw new Error(`Impossible de générer la lettre de motivation: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
-  }
-};
+  const settings = await getUserSettings(userId);
+  const engine = settings.feature_engines?.coverLetter || DEFAULT_ENGINE;
 
-/**
- * Génère une lettre de motivation via la fonction serverless
- */
+  console.log(`Generating cover letter with ${engine}...`);
+
+  // TODO: Implémenter la logique d'appel pour chaque moteur IA
+  // Pour l'instant, on retourne une réponse simulée.
+  return `[IA: ${engine}] Lettre de motivation générée (simulé).\n\nCV: ${cv.substring(0, 50)}...\nJob: ${jobDescription.substring(0, 50)}...\nLangue: ${language}\nTon: ${tone}`;
+};
 
 /**
  * Calcule le score de matching entre un CV et une offre d'emploi.
@@ -47,19 +71,16 @@ export const generateCoverLetter = async (
 export const getMatchScore = async (
   cv: string,
   jobDescription: string,
-  userId?: string // Gardé pour la cohérence de l'API
-): Promise<{ score: number; summary: string }> => {
-  console.log(`Calcul du score de matching avec Mammouth.ai...`);
-  try {
-    // Appel à la fonction qui utilise Mammouth.ai pour une analyse sémantique
-    const result = await matchCVWithJob(cv, jobDescription);
-    return result;
-  } catch (error) {
-    console.error('Erreur lors du calcul du score de matching:', error);
-    return {
-      score: 0,
-      summary: `Une erreur est survenue lors de l'analyse: ${error instanceof Error ? error.message : 'Erreur inconnue'}`
-    };
-  }
-};
+  userId?: string
+): Promise<{ score: number; explanation: string }> => {
+  const settings = await getUserSettings(userId);
+  const engine = settings.feature_engines?.matchScore || 'internal';
 
+  console.log(`Calculating match score with ${engine}...`);
+
+  // TODO: Implémenter la logique d'appel pour chaque moteur IA
+  return {
+    score: Math.round(Math.random() * 30 + 70), // Score aléatoire entre 70 et 100
+    explanation: `[IA: ${engine}] Le score a été calculé en analysant les compétences clés. Le CV correspond bien à l'offre (simulé).`,
+  };
+};

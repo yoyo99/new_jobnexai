@@ -84,7 +84,7 @@ function FreelanceProfile() {
         id: 'profile1',
         user_id: user?.id || '',
         title: 'Développeur Full Stack React / Node.js',
-        hourly_rate: 520, // TJM par défaut (8h x 65€)
+        hourly_rate: 65,
         description: 'Développeur full stack avec 5 ans d\'expérience, spécialisé dans les technologies React, Node.js et TypeScript. J\'ai travaillé sur divers projets allant des applications web aux solutions e-commerce, en passant par les dashboards analytiques.',
         skills: ['React', 'Node.js', 'TypeScript', 'MongoDB', 'Express', 'GraphQL', 'AWS'],
         experience: [
@@ -293,7 +293,7 @@ function FreelanceProfile() {
               
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-1">
-                  TJM (Taux Journalier Moyen)
+                  Taux horaire
                 </label>
                 <input
                   type="number"
@@ -333,7 +333,7 @@ function FreelanceProfile() {
           ) : (
             <div>
               <h3 className="text-xl font-semibold text-white">{profile.title}</h3>
-              <p className="text-primary-400 font-semibold mt-2">{formatPrice(profile.hourly_rate)} / jour</p>
+              <p className="text-primary-400 font-semibold mt-2">{formatPrice(profile.hourly_rate)} / heure</p>
               
               <div className="mt-4">
                 <h4 className="text-sm font-medium text-gray-400">Disponibilité</h4>

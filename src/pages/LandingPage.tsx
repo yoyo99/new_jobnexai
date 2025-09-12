@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import SiteHeader from '../components/SiteHeader'; // Importer le nouveau header
 
 // Si vous avez copié le logo dans public/assets/
-const logoUrl = '/logo-jobnexai.png';
+const logoUrl = '/assets/Logo-JobNexAI.svg'; // Ajustez si le nom ou le chemin est différent dans le répertoire
 
 const LandingPage: React.FC = () => {
   const cardVariants = {

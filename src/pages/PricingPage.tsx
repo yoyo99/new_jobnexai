@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 const PRICE_IDS = {
   OBJECTIF_EMPLOI_ANNUEL: 'price_1RWdSbQIOmiow871HazTXnUJ',
   OBJECTIF_EMPLOI_MENSUEL: 'price_1RWdQNQIOmiow871XZcJO7QK',
-  ESSAI_GRATUIT_48H: 'price_1RoRHKQIOmiow871W7anKnRZ',
+  ESSAI_GRATUIT_48H: 'price_1RWdHcQIOmiow871I3yM8fQM',
   RECRUTEUR_BUSINESS_ANNUEL: 'price_1RWHWKQIOmiow871iO6Nn2KC',
   RECRUTEUR_BUSINESS_MENSUEL: 'price_1RWHTwQIOmiow871O2ZWdTfr',
   FREELANCE_STARTER_ANNUEL: 'price_1RWHQbQIOmiow871ySCJbYPW',
@@ -17,7 +17,7 @@ const PricingPage: React.FC = () => {
   const { t } = useTranslation('translation');
   return (
     <div className="container mx-auto px-4 py-12">
-            <h1 className="text-4xl font-bold text-center mb-12 text-gray-800">{t('pricing.title')}</h1>
+      <h1 className="text-4xl font-bold text-center mb-12 text-gray-800">{t('pricing.title')}</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 justify-center">
 
         <SubscriptionPlanCard 

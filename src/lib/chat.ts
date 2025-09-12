@@ -24,7 +24,7 @@ let socket: Socket | null = null
 export function initializeChat(userId: string): Socket {
   if (socket) return socket
 
-  socket = io(process.env.VITE_CHAT_SERVER_URL || 'http://localhost:3001', {
+  socket = io(import.meta.env.VITE_CHAT_SERVER_URL || 'http://localhost:3001', {
     auth: {
       userId
     }

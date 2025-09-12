@@ -2,10 +2,11 @@ console.log('main.tsx is loaded');
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
-import './minimal.css'
-import i18n, { i18nInit } from './i18n/index'
+import './i18n'
+import './index.css'
 import App from './App';
 import { initMonitoring } from './lib/monitoring'
+import { initPerformanceMonitoring } from './lib/performance-monitoring'
 import { ThemeProvider } from './contexts/ThemeContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
@@ -13,67 +14,19 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 // Initialiser le monitoring
 initMonitoring()
 
-// Initialiser le monitoring des performances (désactivé pour l'instant)
+// Initialiser le monitoring des performances
+// initPerformanceMonitoring()
 
 // Créer un client React Query
 const queryClient = new QueryClient();
 
-// Enregistrer le Service Worker uniquement si activé explicitement
-if (import.meta.env.VITE_ENABLE_PWA === 'true') {
-  import('./lib/pwa').then(({ pwaManager }) => {
-    console.log('PWA Manager initialized:', pwaManager)
-  }).catch((err) => {
-    console.warn('PWA initialization skipped or failed:', err)
-  })
-} else {
-  console.log('PWA disabled (VITE_ENABLE_PWA !== "true").')
-  // Forcer la désinscription des SW existants et la purge du cache si la PWA est désactivée
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations()
-      .then((regs) => {
-        if (regs.length) console.log(`[PWA] Unregistering ${regs.length} service worker(s)`)
-        regs.forEach(r => r.unregister())
-      })
-      .catch((err) => console.warn('[PWA] Failed to enumerate SW registrations', err))
-  }
-  if (typeof caches !== 'undefined' && caches.keys) {
-    caches.keys()
-      .then((names) => {
-        if (names.length) console.log(`[PWA] Deleting ${names.length} cache(s)`) 
-        return Promise.all(names.map(n => caches.delete(n)))
-      })
-      .catch((err) => console.warn('[PWA] Failed to delete caches', err))
-  }
-}
-
-const rootEl = document.getElementById('root')!
-const root = createRoot(rootEl)
-
-// Monter l'app uniquement après l'init i18n, pour éviter tout problème de Provider
-i18nInit
-  .then(() => {
-    console.log('[bootstrap] i18n initialized:', { lang: i18n.language, ns: i18n.options.ns })
-    root.render(
-      <StrictMode>
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider defaultTheme="system" storageKey="jobnexai-ui-theme">
-            <App />
-          </ThemeProvider>
-          <ReactQueryDevtools initialIsOpen={false} />
-        </QueryClientProvider>
-      </StrictMode>,
-    )
-  })
-  .catch((err) => {
-    console.error('[bootstrap] i18n init failed, rendering anyway:', err)
-    root.render(
-      <StrictMode>
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider defaultTheme="system" storageKey="jobnexai-ui-theme">
-            <App />
-          </ThemeProvider>
-          <ReactQueryDevtools initialIsOpen={false} />
-        </QueryClientProvider>
-      </StrictMode>,
-    )
-  })
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="system" storageKey="jobnexai-ui-theme">
+        <App />
+      </ThemeProvider>
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
+  </StrictMode>,
+)

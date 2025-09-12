@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
 export default function DebugEnv() {
@@ -7,8 +7,8 @@ export default function DebugEnv() {
   
   // Charger les variables d'environnement au montage du composant
   useEffect(() => {
-    const url = process.env.VITE_SUPABASE_URL;
-    const key = process.env.VITE_SUPABASE_ANON_KEY;
+    const url = import.meta.env.VITE_SUPABASE_URL;
+    const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
     
     setSupabaseUrl(url || 'Non définie');
     
@@ -31,18 +31,14 @@ export default function DebugEnv() {
     try {
       setTestConnection({ status: 'Test en cours...' });
       
-      const url = process.env.VITE_SUPABASE_URL;
-      const key = process.env.VITE_SUPABASE_ANON_KEY;
-
-      if (!url || !key) {
-        throw new Error('URL ou clé Supabase manquante dans les variables d`environnement');
-      }
-
       // Créer un client Supabase
-      const supabase = createClient(url, key);
+      const supabase = createClient(
+        import.meta.env.VITE_SUPABASE_URL,
+        import.meta.env.VITE_SUPABASE_ANON_KEY
+      );
       
       // Faire une requête simple (anonyme)
-      const { error } = await supabase.from('profiles').select('*').limit(1);
+      const { data, error } = await supabase.from('profiles').select('*').limit(1);
       
       if (error) {
         setTestConnection({ 

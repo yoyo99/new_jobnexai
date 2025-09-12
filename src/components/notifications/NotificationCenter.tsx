@@ -80,7 +80,7 @@ export function NotificationCenter() {
           if (window.Notification && Notification.permission === 'granted') {
             new Notification(newNotification.title, {
               body: newNotification.content,
-              icon: '/jobnexai-logo.svg',
+              icon: '/logo.png',
             })
           }
         }

@@ -37,21 +37,21 @@ export async function generateApplicationPDF(application: JobApplication, option
       {
         text: [
           { text: 'Poste : ', bold: true },
-          application.job?.title || 'N/A',
+          application.job.title,
         ],
         margin: [0, 10, 0, 5],
       },
       {
         text: [
           { text: 'Entreprise : ', bold: true },
-          application.job?.company || 'N/A',
+          application.job.company,
         ],
         margin: [0, 0, 0, 5],
       },
       {
         text: [
           { text: 'Localisation : ', bold: true },
-          application.job?.location || 'N/A',
+          application.job.location,
         ],
         margin: [0, 0, 0, 5],
       },
@@ -124,7 +124,7 @@ export async function downloadApplicationPDF(application: JobApplication, option
   const url = URL.createObjectURL(blob as Blob)
   const link = document.createElement('a')
   link.href = url
-  link.download = `candidature-${application.job?.company || 'inconnu'}-${format(new Date(), 'yyyy-MM-dd')}.pdf`
+  link.download = `candidature-${application.job.company}-${format(new Date(), 'yyyy-MM-dd')}.pdf`
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)

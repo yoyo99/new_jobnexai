@@ -16,7 +16,7 @@ export interface Profile {
   trial_ends_at?: string | null;
   created_at: string;
   updated_at: string;
-  ai_provider?: 'openai' | 'mammouth'; // Ajout du fournisseur d'IA
+  ai_provider?: 'openai' | 'mistral'; // Ajout du fournisseur d'IA
 }
 
 export interface Subscription {
@@ -61,7 +61,7 @@ export const useAuth = create<AuthState>((set) => ({
       console.log('[AuthStore] -> getSession terminé. Session:', session ? 'trouvée' : 'nulle');
 
       if (!session?.user) {
-        console.log('[AuthStore] -> Pas de session utilisateur. Nettoyage de l`état.');
+        console.log('[AuthStore] -> Pas de session utilisateur. Nettoyage de l\`état.');
         set({ user: null, subscription: null });
         return; // Le finally s'occupera de `initialized`.
       }
@@ -77,58 +77,26 @@ export const useAuth = create<AuthState>((set) => ({
         console.error('[AuthStore] -> Erreur lors du fetch du profil:', profileError);
         throw profileError;
       }
-      console.log('[AuthStore] -> Profil trouvé:', profile || 'aucun (PGRST116)');
+      console.log('[AuthStore] -> Profil trouvé:', profile);
 
-      // Fallback: si aucun profil en base, construire un profil minimal depuis session.user
-      let resolvedProfile: Profile = profile ?? {
-        id: session.user.id,
-        email: session.user.email ?? undefined,
-        full_name: (session.user.user_metadata as any)?.full_name ?? undefined,
-        user_type: 'candidate',
-        is_admin: false,
-        trial_ends_at: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      // Tenter un upsert non bloquant du profil manquant (ignorer les erreurs)
-      if (!profile) {
-        try {
-          console.log('[AuthStore] -> Aucun profil en BDD, tentative d\'upsert d\'un profil minimal...');
-          await getSupabase()
-            .from('profiles')
-            .upsert({
-              id: resolvedProfile.id,
-              email: resolvedProfile.email,
-              full_name: resolvedProfile.full_name,
-              user_type: resolvedProfile.user_type,
-              updated_at: new Date().toISOString(),
-            });
-        } catch (upsertErr) {
-          console.warn('[AuthStore] -> Upsert du profil minimal ignoré (non bloquant):', upsertErr);
-        }
-      }
-
-      // Récupérer la souscription avec l'id utilisateur même sans profil en BDD
       let subscription: Subscription | null = null;
-      try {
+      if (profile) {
+        console.log(`[AuthStore] -> Profil trouvé pour l'utilisateur ID: ${profile.id}. Tentative de fetch la souscription...`);
         const { data: subData, error: subError } = await getSupabase()
           .from('subscriptions')
           .select('*')
-          .eq('user_id', resolvedProfile.id)
+          .eq('user_id', profile.id)
           .single();
         if (subError && subError.code !== 'PGRST116') {
-          console.error('[AuthStore] -> Erreur lors du fetch de la souscription:', subError);
-          throw subError;
+            console.error('[AuthStore] -> Erreur lors du fetch de la souscription:', subError);
+            throw subError;
         }
-        subscription = subData ?? null;
-        console.log('[AuthStore] -> Souscription:', subscription ?? 'aucune');
-      } catch (subErr) {
-        console.warn('[AuthStore] -> Lecture souscription ignorée (non bloquant):', subErr);
+        subscription = subData;
+        console.log('[AuthStore] -> Souscription trouvée:', subscription);
       }
-
-      console.log('[AuthStore] -> Mise à jour de l`état avec le profil résolu et la souscription.');
-      set({ user: resolvedProfile, subscription });
+      
+      console.log('[AuthStore] -> Mise à jour de l\`état avec l\`utilisateur et la souscription.');
+      set({ user: profile, subscription });
 
     } catch (error: any) {
       console.error('[AuthStore] -> ERREUR CATCH dans loadUser:', error);

@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { Mistral } from '@mistralai/mistralai';
 import { useAuth } from '../stores/auth';
 
 /**
@@ -10,9 +11,8 @@ import { useAuth } from '../stores/auth';
  * @returns {string[]} - Une liste de suggestions pour améliorer le texte.
  **/
 
-export function semanticAnalysis(text: string): string[] {
+export function semanticAnalysis(_text: string): string[] {
   // Dans cette première version, nous retournons des suggestions en dur..
-  // TODO: Implémenter l'analyse sémantique réelle du texte: ${text}
   return ["Améliorer la structure de la phrase.", "Ajouter des mots clés pertinents pour le poste.", "Mettre en avant vos expériences les plus significatives."];
 }
 
@@ -133,7 +133,8 @@ export function addAnswer(conversationId: string, answer: string): string[] {
     }
     const lastExchange = conversation.history[conversation.history.length - 1];
     if (!lastExchange || !lastExchange.question) return [];
-    const { feedbacks, note, weakPoints } = analyzeAnswer(answer, lastExchange.question);
+    const jobDescription = conversation.jobDescription;
+    const { feedbacks, note, weakPoints } = analyzeAnswer(answer, lastExchange.question,);
     lastExchange.answer = answer;// On ajoute la réponse
     lastExchange.feedbacks = feedbacks;
     lastExchange.note = note;
@@ -165,6 +166,43 @@ export function getAverageNote(conversationId: string): number {
     return totalNotes / conversation.history.length;
 }
 
+/**
+ * Fonction pour générer une lettre de motivation personnalisée.
+ *
+ * @param {any} cv - Le CV de la personne.
+ * @param {string} jobDescription - La description du poste.
+ * @param {string} language - La langue de la lettre (par défaut : 'fr').
+ * @param {string} tone - Le ton de la lettre (par défaut : 'professional').
+ * @returns {string} - La lettre de motivation générée.
+ */
+async function generateCoverLetterWithMistral(
+  cv: any,
+  jobDescription: string,
+  language: string,
+  tone: 'professional' | 'conversational' | 'enthusiastic'
+): Promise<string> {
+  try {
+    const response = await fetch('/.netlify/functions/generate-cover-letter', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ cv, jobDescription, language, tone, provider: 'mistral' }),
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.json();
+      throw new Error(errorBody.error || `La requête a échoué avec le statut ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.letter;
+  } catch (error) {
+    console.error('Erreur lors de l\`appel à la fonction de génération de lettre de motivation (Mistral):', error);
+    throw error;
+  }
+}
+
 async function generateCoverLetterWithOpenAI(
   cv: any,
   jobDescription: string,
@@ -188,51 +226,13 @@ async function generateCoverLetterWithOpenAI(
     const data = await response.json();
     return data.letter;
   } catch (error) {
-    console.error('Erreur lors de l`appel à la fonction de génération de lettre de motivation:', error);
+    console.error('Erreur lors de l\`appel à la fonction de génération de lettre de motivation:', error);
     throw error;
   }
 }
 
-async function generateCoverLetterWithMammouth(
-  cv: any,
-  jobDescription: string,
-  language: string,
-  tone: 'professional' | 'conversational' | 'enthusiastic'
-): Promise<string> {
-  const cvText = JSON.stringify(cv); // Simplistic CV stringification
-  const prompt = `Rédige une lettre de motivation en ${language} avec un ton ${tone}, basée sur le CV suivant :\n\n${cvText}\n\net pour l'offre d'emploi suivante :\n\n${jobDescription}`;
 
-  try {
-    const response = await fetch('/.netlify/functions/sendPromptToMammouth', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ prompt, model: 'claude-3-sonnet' }), // Using a powerful model for generation
-    });
 
-    if (!response.ok) {
-      const errorBody = await response.json();
-      throw new Error(errorBody.error || `La requête a échoué avec le statut ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.response;
-  } catch (error) {
-    console.error('Erreur lors de l`appel à la fonction de génération de lettre de motivation (Mammouth):', error);
-    throw error;
-  }
-}
-
-/**
- * Fonction pour générer une lettre de motivation personnalisée.
- *
- * @param {any} cv - Le CV de la personne.
- * @param {string} jobDescription - La description du poste.
- * @param {string} language - La langue de la lettre (par défaut : 'fr').
- * @param {string} tone - Le ton de la lettre (par défaut : 'professional').
- * @returns {string} - La lettre de motivation générée.
- */
 export async function generateCoverLetter(
   cv: any,
   jobDescription: string,
@@ -241,16 +241,15 @@ export async function generateCoverLetter(
 ): Promise<string> {
   try {
     const { user } = useAuth.getState();
-    const provider = user?.ai_provider || 'mammouth'; // Mammouth par défaut
+    const provider = user?.ai_provider || 'mistral'; // Mistral par défaut
 
     if (provider === 'openai') {
       return await generateCoverLetterWithOpenAI(cv, jobDescription, language, tone);
     } else {
-      // Par défaut, ou si 'mammouth' est spécifié, on utilise Mammouth.
-      return await generateCoverLetterWithMammouth(cv, jobDescription, language, tone);
+      return await generateCoverLetterWithMistral(cv, jobDescription, language, tone);
     }
   } catch (error) {
-    console.error(`Erreur lors de la génération de la lettre de motivation avec ${useAuth.getState().user?.ai_provider || 'mammouth'}:`, error);
+    console.error(`Erreur lors de la génération de la lettre de motivation avec ${useAuth.getState().user?.ai_provider || 'mistral'}:`, error);
     throw error;
   }
 }
@@ -341,7 +340,7 @@ export async function translateTextsBatch(texts: string[], targetLanguage: strin
 }
 
 export async function generateBulkApplicationMessages(
-  _cv: any,
+  cv: any,
   jobDescriptions: { id: string; description: string }[]
 ): Promise<{ jobId: string; message: string | null }[]> {
   // Stub impl. renvoyant un objet vide pour chaque description
@@ -349,26 +348,27 @@ export async function generateBulkApplicationMessages(
 }
 
 let openai: OpenAI | null = null;
+let mistral: Mistral | null = null;
 
-function getMammouthClient() {
-  // This is a placeholder as Mammouth API is called via Netlify functions
-  // to protect the API key. No client-side SDK is used directly.
-  return { api: 'mammouth' };
+function getMistralClient(): Mistral {
+  if (!mistral) {
+    const apiKey = import.meta.env.VITE_MISTRAL_API_KEY;
+    if (!apiKey) {
+      throw new Error('La clé API Mistral (VITE_MISTRAL_API_KEY) n\'est pas configurée dans les variables d\'environnement.');
+    }
+    mistral = new Mistral({ apiKey });
+  }
+  return mistral;
 }
 
-/**
- * Récupère le client OpenAI.
- *
- * @returns {OpenAI} - Le client OpenAI.
- */
 function getOpenAIClient(): OpenAI {
   if (!openai) {
-    const apiKey = process.env.VITE_OPENAI_API_KEY as string | undefined;
+    const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
     if (!apiKey) {
       throw new Error('La clé API OpenAI (VITE_OPENAI_API_KEY) n\'est pas configurée dans les variables d\'environnement.');
     }
     openai = new OpenAI({
-      apiKey,
+      apiKey: apiKey,
       dangerouslyAllowBrowser: true // AVERTISSEMENT: Pour la production, utilisez une fonction Edge sécurisée.
     });
   }

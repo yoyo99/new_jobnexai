@@ -24,22 +24,17 @@ const SubscriptionPlanCard: React.FC<SubscriptionPlanCardProps> = ({ planName, p
       return;
     }
 
+    // Plus besoin de getSession(), on utilise l'utilisateur du hook
+    console.log(`User ${user.id} attempting to subscribe to price ID: ${priceId}`);
+
     try {
-      console.log('🚨 FRONTEND DEBUG: handleSubscribe called!');
-      console.log('🚨 FRONTEND DEBUG: priceId =', priceId);
-      console.log('🚨 FRONTEND DEBUG: userId =', user.id);
-      console.log('🚨 FRONTEND DEBUG: userType =', userType);
-      
-      console.log('Invoking Stripe checkout function with:', { priceId, userId: user.id, userType });
-      
-      console.log('🚨 FRONTEND DEBUG: About to call supabase.functions.invoke');
-      const { data, error } = await supabase.functions.invoke('create-checkout-session-v2', {
-        body: { priceId, userId: user.id, userType },
+      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+        body: { 
+          priceId: priceId,
+          userId: user.id, // Ajout de l'ID utilisateur
+          userType: userType
+        }, 
       });
-      
-      console.log('🚨 FRONTEND DEBUG: Supabase function response:');
-      console.log('🚨 FRONTEND DEBUG: data =', data);
-      console.log('🚨 FRONTEND DEBUG: error =', error);
 
       if (error) {
         console.error('Error invoking Stripe checkout function:', error);
@@ -47,19 +42,9 @@ const SubscriptionPlanCard: React.FC<SubscriptionPlanCardProps> = ({ planName, p
         return;
       }
 
-      // 🆓 Gestion des offres gratuites
-      if (data && data.isFree) {
-        console.log('Offre gratuite activée:', data.message);
-        alert(data.message || 'Essai gratuit activé avec succès !');
-        window.location.href = data.url; // Redirection vers dashboard
-        return;
-      }
-
-      // Gestion des offres payantes
-      if (data && (data.checkoutUrl || data.url)) {
-        const redirectUrl = data.checkoutUrl || data.url;
-        console.log('Received checkout URL:', redirectUrl);
-        window.location.href = redirectUrl;
+      if (data && data.checkoutUrl) {
+        console.log('Received checkout URL:', data.checkoutUrl);
+        window.location.href = data.checkoutUrl;
       } else {
         console.error('No checkoutUrl received from function:', data);
         alert(t('pricing.alerts.checkoutUrlError'));

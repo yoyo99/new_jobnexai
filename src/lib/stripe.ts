@@ -14,7 +14,7 @@ initStripe()
 
 export async function createCheckoutSession(userId: string, priceId: string) {
   try {
-    const { data, error } = await supabase.functions.invoke('create-checkout-session-v2', {
+    const { data, error } = await supabase.functions.invoke('create-checkout-session', {
       body: { priceId, userId }
     })
 

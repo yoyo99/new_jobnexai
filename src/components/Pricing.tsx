@@ -297,7 +297,7 @@ function Pricing() {
         : priceId
 
       // Créer une session de paiement Stripe
-      const { data, error } = await supabase.functions.invoke('create-checkout-session-v2', {
+      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
         body: { 
           userId: user.id, 
           priceId: selectedPriceId, 

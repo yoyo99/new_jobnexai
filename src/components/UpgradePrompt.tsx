@@ -1,38 +1,20 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../stores/auth'
-import { useState, useEffect } from 'react'
-import { getSupabase } from '../hooks/useSupabaseConfig' // pour requête DB
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { SparklesIcon } from '@heroicons/react/24/outline'
 
 export function UpgradePrompt() {
-  const { user } = useAuth()
-  const [profile, setProfile] = useState<{ subscription_status: string | null; trial_ends_at: string | null } | null>(null)
-
-  useEffect(() => {
-    if (!user) return
-    const supabase = getSupabase()
-    supabase
-      .from('profiles')
-      .select('subscription_status, trial_ends_at')
-      .eq('id', user.id)
-      .single()
-      .then(({ data, error }) => {
-        if (!error) setProfile(data)
-      })
-  }, [user])
+  const { user, subscription } = useAuth()
 
   // Si l'utilisateur a un abonnement actif, ne pas afficher la bannière
-  if (profile?.subscription_status === 'active') {
+  if (subscription?.status === 'active') {
     return null
   }
 
   // Si l'utilisateur est en période d'essai, afficher le temps restant
-  if (!user) return null;
-
-  const isTrialActive = profile?.trial_ends_at && new Date(profile.trial_ends_at) > new Date();
+  const isTrialActive = user?.trial_ends_at && new Date(user.trial_ends_at) > new Date()
   
   return (
     <motion.div
@@ -51,8 +33,8 @@ export function UpgradePrompt() {
               : 'Débloquez toutes les fonctionnalités premium'}
           </h3>
           <p className="text-gray-300 mt-1">
-            {isTrialActive && profile?.trial_ends_at
-              ? `Profitez de toutes les fonctionnalités premium jusqu'au ${format(new Date(profile.trial_ends_at), 'dd MMMM yyyy', { locale: fr })}`
+            {isTrialActive 
+              ? `Profitez de toutes les fonctionnalités premium jusqu'au ${format(new Date(user.trial_ends_at!), 'dd MMMM yyyy', { locale: fr })}`
               : 'Accédez à des fonctionnalités avancées pour optimiser votre recherche d\'emploi'}
           </p>
           

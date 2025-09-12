@@ -64,3 +64,12 @@ public/locales/.DS_Store
 public/locales/.DS_Store
 src/components/.DS_Store
 src/components/.DS_Store
+
+# Custom cleanup for migration/archives/backups
+*.bak
+*.tmp
+*.log
+*.swp
+*.sublime-workspace
+*.sublime-project
+Archives src/

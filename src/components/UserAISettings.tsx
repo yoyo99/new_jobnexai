@@ -13,6 +13,7 @@ const IA_ENGINES = [
   { id: 'claude', label: 'Anthropic Claude', placeholder: 'sk-ant-' },
   { id: 'cohere', label: 'Cohere', placeholder: 'API Key Cohere' },
   { id: 'huggingface', label: 'HuggingFace', placeholder: 'hf_' },
+  { id: 'mistral', label: 'Mistral AI', placeholder: 'API Key Mistral' },
   { id: 'custom', label: 'IA interne/maison', placeholder: 'Token interne' },
 ];
 
@@ -38,11 +39,11 @@ const UserAISettings: React.FC<UserAISettingsProps> = ({ userId, defaultEngine =
   const initializeDefaultEngines = useCallback(() => {
     const initialEngines: Record<string, string> = {};
     AI_FEATURES_CONFIG.forEach(feature => {
-      initialEngines[feature.id] = defaultEngine || feature.defaultEngine;
+      initialEngines[feature.id] = feature.defaultEngine;
     });
     setFeatureEngines(initialEngines);
     setApiKeys(defaultApiKeys);
-  }, [defaultApiKeys, defaultEngine]);
+  }, [defaultApiKeys]);
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -80,25 +81,11 @@ const UserAISettings: React.FC<UserAISettingsProps> = ({ userId, defaultEngine =
       }
     };
     loadSettings();
-  }, [userId, initializeDefaultEngines]); // Retirer onChange et defaultApiKeys des dépendances
-  
-  // Effet séparé pour notifier les changements
-  useEffect(() => {
-    if (onChange && Object.keys(featureEngines).length > 0) {
-      onChange(featureEngines, apiKeys);
-    }
-  }, [featureEngines, apiKeys, onChange]);
+  }, [userId, defaultApiKeys, initializeDefaultEngines]);
 
   const handleFeatureEngineChange = (featureId: string, newEngine: string) => {
-    console.log('[UserAISettings] Changing engine for', featureId, 'to', newEngine);
-    const newFeatureEngines = { ...featureEngines, [featureId]: newEngine };
-    setFeatureEngines(newFeatureEngines);
-    console.log('[UserAISettings] New featureEngines:', newFeatureEngines);
+    setFeatureEngines(prev => ({ ...prev, [featureId]: newEngine }));
     setShowSaveButton(true);
-    // Notifier le parent du changement
-    if (onChange) {
-      onChange(newFeatureEngines, apiKeys);
-    }
     setSaveStatus(null); // Réinitialiser le statut de sauvegarde lors d'un nouveau changement
   };
 

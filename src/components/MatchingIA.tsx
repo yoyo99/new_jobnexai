@@ -51,7 +51,7 @@ const MatchingIA: React.FC<MatchingIAProps> = ({ userSkills, jobKeywords }) => {
       <p className="mb-1">
         Score de compatibilité : <span className="font-bold text-primary-400">{matchResult?.score}%</span>
       </p>
-      <p className="text-xs text-gray-400">{matchResult?.summary}</p>
+      <p className="text-xs text-gray-400">{matchResult?.explanation}</p>
     </div>
   );
 };

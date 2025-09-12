@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../stores/auth';
 import { useTranslation } from 'react-i18next';
-import { CVMetadata, getUserCVs, invokeExtractCvText, invokeGenerateCoverLetter, pollGeneratedContent, GenerationStatus, exportCoverLetterFromContent } from '../lib/supabase'; // Importer aussi les fonctions pour les lettres de motivation plus tard
-import { FaFileAlt, FaSpinner, FaTrash, FaMagic, FaSave, FaDownload, FaPencilAlt, FaEye } from 'react-icons/fa';
-import ReactMarkdown from 'react-markdown';
+import { CVMetadata, getUserCVs, invokeExtractCvText, invokeGenerateCoverLetter } from '../lib/supabase'; // Importer aussi les fonctions pour les lettres de motivation plus tard
+import { FaFileAlt, FaSpinner, FaTrash, FaMagic, FaSave } from 'react-icons/fa';
 
-// Importer CoverLetterMetadata et activer createCoverLetter pour la sauvegarde
-import { CoverLetterMetadata, createCoverLetter /*, getUserCoverLetters, updateCoverLetter, deleteCoverLetter */ } from '../lib/supabase';
+// Importer CoverLetterMetadata et les fonctions associées quand elles seront utilisées activement
+import { CoverLetterMetadata /*, createCoverLetter, getUserCoverLetters, updateCoverLetter, deleteCoverLetter */ } from '../lib/supabase';
 
 interface CoverLetterGeneratorProps {
   initialJobTitle?: string;
@@ -38,44 +37,42 @@ const CoverLetterGenerator: React.FC<CoverLetterGeneratorProps> = ({
   // États pour la lettre générée
   const [generatedLetter, setGeneratedLetter] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [taskId, setTaskId] = useState<string | null>(null);
   const [editingLetter, setEditingLetter] = useState<string>(''); // Pour la modification
   const [isSaving, setIsSaving] = useState(false);
-  const [lastTaskId, setLastTaskId] = useState<string | null>(null); // Pour l'export
-  const [isExporting, setIsExporting] = useState(false);
-  const [isEditing, setIsEditing] = useState(false); // Pour basculer entre l'aperçu et l'édition
 
   // États généraux
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [feedbackMessage, setFeedbackMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   // Charger les CVs de l'utilisateur pour la sélection
   const fetchUserCVs = useCallback(async () => {
     if (user?.id) {
       setIsLoading(true);
+      setError(null);
       setFeedbackMessage(null);
       try {
         const cvs = await getUserCVs(user.id);
-        if (cvs && cvs.length > 0) {
-          setUserCVs(cvs);
-          const primaryCV = cvs.find(cv => cv.is_primary);
-          setSelectedCvId(primaryCV ? primaryCV.id : cvs[0].id);
+        setUserCVs(cvs);
+        if (cvs.find(cv => cv.is_primary)) {
+          setSelectedCvId(cvs.find(cv => cv.is_primary)!.id);
+        } else if (cvs.length > 0) {
+          setSelectedCvId(cvs[0].id);
         }
       } catch (err) {
         console.error('Failed to fetch user CVs:', err);
         const errorMessage = err instanceof Error ? err.message : t('coverLetterGenerator.errors.fetchCvError');
+        setError(errorMessage);
         setFeedbackMessage({ type: 'error', text: errorMessage });
       } finally {
         setIsLoading(false);
       }
     }
-  // La fonction `t` est stable et ne doit pas être dans les dépendances.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]); // Dépendances de la fonction de fetch
+  }, [user?.id, t]);
 
   useEffect(() => {
     fetchUserCVs();
-  }, [fetchUserCVs]); // S'exécute uniquement si la fonction fetchUserCVs change
+  }, [fetchUserCVs]);
 
   // Mettre à jour les états si les props initiales changent
   useEffect(() => {
@@ -90,81 +87,70 @@ const CoverLetterGenerator: React.FC<CoverLetterGeneratorProps> = ({
     setJobDescription(initialJobDescription || '');
   }, [initialJobDescription]);
 
-  // Effect for polling the generation status
-  useEffect(() => {
-    if (!taskId) return;
-
-    const interval = setInterval(async () => {
-      try {
-        const result: GenerationStatus = await pollGeneratedContent(taskId);
-        if (result.status === 'completed') {
-          clearInterval(interval);
-          const finalContent = result.content || '';
-
-          setGeneratedLetter(finalContent);
-          setEditingLetter(finalContent);
-          setIsGenerating(false);
-          setIsEditing(false); // Afficher l'aperçu par défaut
-          setLastTaskId(taskId);
-          setTaskId(null);
-          setFeedbackMessage({ type: 'success', text: t('coverLetterGenerator.feedback.generationSuccess') });
-        } else if (result.status === 'failed') {
-          clearInterval(interval);
-          setFeedbackMessage({ type: 'error', text: result.error || t('coverLetterGenerator.errors.generationError') });
-          setIsGenerating(false);
-          setTaskId(null);
-        }
-        // If status is 'pending', do nothing and wait for the next poll
-      } catch (err) {
-        clearInterval(interval);
-        const errorMessage = err instanceof Error ? err.message : t('coverLetterGenerator.errors.pollingError');
-        setFeedbackMessage({ type: 'error', text: errorMessage });
-        setIsGenerating(false);
-        setTaskId(null);
-      }
-    }, 3000); // Poll every 3 seconds
-
-    // Cleanup function to clear the interval when the component unmounts or taskId changes
-    return () => clearInterval(interval);
-  }, [taskId, t]);
-
   const handleGenerateLetter = async () => {
-    if (!user?.id || !selectedCvId || !jobDescription) {
-      setFeedbackMessage({ type: 'error', text: t('coverLetterGenerator.errors.formInvalid') });
+    if (!user?.id) {
+      setError(t('coverLetterGenerator.errors.notAuthenticated'));
+      return;
+    }
+    if (!selectedCvId) {
+      setError(t('coverLetterGenerator.errors.noCvSelected'));
+      return;
+    }
+    if (!jobDescription) {
+      setError(t('coverLetterGenerator.errors.jobDescriptionRequired'));
       return;
     }
 
     setIsGenerating(true);
+    setError(null);
     setFeedbackMessage(null);
-    setGeneratedLetter('');
-    setEditingLetter('');
-    setTaskId(null);
 
     try {
-      const selectedCV = userCVs.find(cv => cv.id === selectedCvId);
-      if (!selectedCV) {
-        throw new Error('Selected CV not found.');
+      const cvToUse = userCVs.find(cv => cv.id === selectedCvId);
+      if (!cvToUse || !cvToUse.storage_path) {
+        throw new Error(t('coverLetterGenerator.errors.cvPathMissing'));
       }
 
-      const cvText = await invokeExtractCvText(selectedCV.storage_path);
+      // Étape 1: Extraire le texte du CV
+      setFeedbackMessage({ type: 'success', text: t('coverLetterGenerator.feedback.extractingCv') });
+      const cvText = await invokeExtractCvText(cvToUse.storage_path);
+      if (!cvText) {
+        throw new Error(t('coverLetterGenerator.errors.cvExtractionFailed'));
+      }
+      //     targetLanguage,
+      //     // userId: user.id, // L'user ID sera pris du token dans la fonction Edge
+      //     // apiKey: userAISettings.api_keys[userAISettings.feature_engines['cover_letter_generation']] // Logique à affiner
+      //   }
+      // });
 
-      const newTaskId = await invokeGenerateCoverLetter(
-        cvText,
-        jobTitle,
-        companyName,
-        jobDescription,
-        targetLanguage,
-        customInstructions
-      );
+      // if (response.error) throw response.error;
+      // const { letter } = response.data;
+      // setGeneratedLetter(letter);
+      // setEditingLetter(letter);
 
-      setTaskId(newTaskId);
-      // Le polling est maintenant géré par le hook useEffect
+      // --- Placeholder pour la génération --- 
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Simuler l'appel API
+      const placeholderLetter = `Cher/Chère équipe de recrutement de ${companyName || 'l\'entreprise'},
 
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : t('coverLetterGenerator.errors.startGenerationError');
-      setFeedbackMessage({ type: 'error', text: errorMessage });
-      setIsGenerating(false);
+Basé sur mon CV (${cvToUse.file_name}) et votre description pour le poste de ${jobTitle || 'ce poste passionnant'},
+Je suis très intéressé(e) par cette opportunité. Mes compétences en [Compétence 1] et [Compétence 2] correspondent bien à vos besoins.
+${customInstructions ? `\nInstruction spéciale: ${customInstructions}` : ''}
+
+Cordialement,
+${user.full_name || 'Le Candidat'}
+(Généré en ${targetLanguage})`;
+      setGeneratedLetter(placeholderLetter);
+      setEditingLetter(placeholderLetter);
+      // --- Fin Placeholder --- 
+
+      setFeedbackMessage({ type: 'success', text: t('coverLetterGenerator.success.generationSuccess') });
+
+    } catch (err: any) {
+      console.error('Failed to generate cover letter:', err);
+      setError(err.message || t('coverLetterGenerator.errors.generationFailed'));
+      setFeedbackMessage({ type: 'error', text: err.message || t('coverLetterGenerator.errors.generationFailed') });
     }
+    setIsGenerating(false);
   };
   
   const handleSaveLetter = async () => {
@@ -172,7 +158,7 @@ const CoverLetterGenerator: React.FC<CoverLetterGeneratorProps> = ({
       setFeedbackMessage({ type: 'error', text: t('coverLetterGenerator.errors.saveFailed') });
       return;
     }
-    setIsSaving(true);
+    setIsLoading(true);
     try {
       const letterDataToSave: Omit<CoverLetterMetadata, 'id' | 'created_at' | 'updated_at'> & { user_id: string } = {
         user_id: user.id,
@@ -186,9 +172,16 @@ const CoverLetterGenerator: React.FC<CoverLetterGeneratorProps> = ({
         ai_model_used: 'placeholder_model', // TODO: Mettre à jour avec le vrai modèle si applicable
       };
       
-      // Création réelle de la lettre côté base
-      const savedLetter = await createCoverLetter(letterDataToSave);
-      console.log('Lettre sauvegardée:', savedLetter);
+      // Pour l'instant, nous créons toujours une nouvelle lettre.
+      // Une logique pour `updateCoverLetter` pourrait être ajoutée si on modifie une lettre existante.
+      // const savedLetter = await createCoverLetter(letterDataToSave);
+      // console.log('Lettre sauvegardée:', savedLetter);
+
+      // --- Placeholder pour la sauvegarde --- 
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simuler l'appel API
+      const savedLetterPlaceholder = { ...letterDataToSave, id: new Date().toISOString(), created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+      console.log('Lettre sauvegardée (simulation):', savedLetterPlaceholder);
+      // --- Fin Placeholder --- 
 
       setFeedbackMessage({ type: 'success', text: t('coverLetterGenerator.success.saved') });
       if (onLetterGenerated) {
@@ -198,29 +191,7 @@ const CoverLetterGenerator: React.FC<CoverLetterGeneratorProps> = ({
       console.error('Failed to save cover letter:', err);
       setFeedbackMessage({ type: 'error', text: err.message || t('coverLetterGenerator.errors.saveFailed') });
     }
-    setIsSaving(false);
-  };
-
-  const handleExport = async (format: 'pdf' | 'docx') => {
-    if (!editingLetter || editingLetter.trim().length === 0) {
-      setFeedbackMessage({ type: 'error', text: 'Export impossible: aucun contenu de lettre à exporter.' });
-      return;
-    }
-    setIsExporting(true);
-    try {
-      const filenameBase = `${companyName ? companyName + '-' : ''}${jobTitle || 'Cover-Letter'}`.trim() || 'Cover-Letter';
-      const res = await exportCoverLetterFromContent(editingLetter, format, filenameBase);
-      if ((res as any).signedUrl) {
-        window.open((res as any).signedUrl, '_blank');
-        setFeedbackMessage({ type: 'success', text: 'Export réussi. Le téléchargement va démarrer.' });
-      } else {
-        setFeedbackMessage({ type: 'success', text: 'Export terminé.' });
-      }
-    } catch (err: any) {
-      console.error('Export cover letter failed:', err);
-      setFeedbackMessage({ type: 'error', text: err.message || 'Échec de l’export de la lettre.' });
-    }
-    setIsExporting(false);
+    setIsLoading(false);
   };
 
   return (
@@ -230,9 +201,14 @@ const CoverLetterGenerator: React.FC<CoverLetterGeneratorProps> = ({
       </h2>
 
       {feedbackMessage && (
-                        <div role="alert" data-testid="feedback-alert" className={`p-3 rounded-md text-sm ${feedbackMessage.type === 'success' ? 'bg-green-800' : 'bg-red-800'}`}>
+        <div className={`p-3 rounded-md text-sm ${feedbackMessage.type === 'success' ? 'bg-green-800' : 'bg-red-800'}`}>
           {feedbackMessage.text}
         </div>
+      )}
+      {error && !feedbackMessage && (
+         <div className='p-3 rounded-md text-sm bg-red-800'>
+           {error}
+         </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -318,63 +294,23 @@ const CoverLetterGenerator: React.FC<CoverLetterGeneratorProps> = ({
           </>
         )}
           {generatedLetter && (
-            <div className="space-y-4">
-              {isEditing ? (
-                <textarea 
-                  value={editingLetter}
-                  onChange={(e) => setEditingLetter(e.target.value)}
-                  rows={20}
-                  className="w-full bg-gray-700 border-gray-600 rounded-md shadow-sm py-2 px-3 focus:ring-primary-500 focus:border-primary-500 sm:text-sm text-gray-200"
-                  placeholder={t('coverLetterGenerator.placeholders.letterOutput')}
-                />
-              ) : (
-                <div className="bg-gray-700 p-4 rounded-md min-h-[400px]">
-                  <div className="text-right mb-4 text-gray-300">
-                    {new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
-                  </div>
-                  <div className="prose prose-invert max-w-none text-white/90">
-                    <div dangerouslySetInnerHTML={{ 
-                      __html: editingLetter.replace(/\\[Date\\]/g, '').trim()
-                    }} />
-                  </div>
-                </div>
-              )}
-            </div>
+            <textarea 
+              value={editingLetter}
+              onChange={(e) => setEditingLetter(e.target.value)}
+              rows={20}
+              className="w-full bg-gray-700 border-gray-600 rounded-md shadow-sm py-2 px-3 focus:ring-primary-500 focus:border-primary-500 sm:text-sm text-gray-200"
+              placeholder={t('coverLetterGenerator.placeholders.letterOutput')}
+            />
           )}
           {generatedLetter && (
-            <div className="flex flex-col sm:flex-row gap-2 pt-4">
-              <button
-                onClick={() => setIsEditing(!isEditing)}
-                className="w-full sm:w-auto flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                {isEditing ? <FaEye className="mr-2" /> : <FaPencilAlt className="mr-2" />}
-{isEditing ? 'Aperçu' : 'Modifier'}
-              </button>
-              <button 
-                onClick={handleSaveLetter}
-                disabled={isGenerating || isSaving || !editingLetter}
-                className="w-full sm:w-auto flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSaving ? <FaSpinner className="animate-spin mr-2" /> : <FaSave className="mr-2" />}
-                {isSaving ? t('coverLetterGenerator.buttons.saving') : t('coverLetterGenerator.buttons.save')}
-              </button>
-              <button 
-                onClick={() => handleExport('pdf')}
-                disabled={isGenerating || isExporting || !editingLetter.trim()}
-                className="w-full sm:w-auto flex items-center justify-center px-4 py-2 border border-white/10 rounded-md shadow-sm text-sm font-medium text-white bg-white/10 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isExporting ? <FaSpinner className="animate-spin mr-2" /> : <FaDownload className="mr-2" />}
-                Export PDF
-              </button>
-              <button
-                onClick={() => handleExport('docx')}
-                disabled={isGenerating || isExporting || !editingLetter.trim()}
-                className="w-full sm:w-auto flex items-center justify-center px-4 py-2 border border-white/10 rounded-md shadow-sm text-sm font-medium text-white bg-white/10 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isExporting ? <FaSpinner className="animate-spin mr-2" /> : <FaDownload className="mr-2" />}
-                Export DOCX
-              </button>
-            </div>
+            <button 
+              onClick={handleSaveLetter}
+              disabled={isGenerating || isSaving || !editingLetter}
+              className="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSaving ? <FaSpinner className="animate-spin mr-2" /> : <FaSave className="mr-2" />}
+              {isSaving ? t('coverLetterGenerator.buttons.saving') : t('coverLetterGenerator.buttons.save')}
+            </button>
           )}
         </div>
       </div>
