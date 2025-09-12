@@ -3,6 +3,10 @@
     "signIn": "Connexion",
     "signUp": "Créer un compte",
     "welcome": "Bienvenue !",
+    "subtitle": {
+      "login": "Connectez-vous à votre compte",
+      "signup": "Créez un nouveau compte"
+    },
     "signOut": "Déconnexion",
     "email": "Adresse e-mail",
     "password": "Mot de passe",
