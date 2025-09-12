@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -22,7 +22,7 @@ const Auth: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { auth, isLoggedIn, user } = useJobnexai();
+  const { auth } = useJobnexai();
 
   // Récupérer l'URL de redirection si elle existe
   const from = location.state?.from?.pathname || '/app/dashboard';
