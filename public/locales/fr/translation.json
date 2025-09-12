@@ -1,5 +1,12 @@
 {
   "auth": {
+    "title": {
+      "login": "Connexion",
+      "signup": "Créer un compte"
+    },
+    "login": "Connexion",
+    "logout": "Déconnexion",
+    "createAccount": "Créer un compte",
     "signIn": "Connexion",
     "signUp": "Créer un compte",
     "welcome": "Bienvenue !",
@@ -11,9 +18,93 @@
     "email": "Adresse e-mail",
     "password": "Mot de passe",
     "forgotPassword": "Mot de passe oublié ?",
-    "createAccount": "Créer un compte",
     "alreadyRegistered": "Déjà inscrit ? Connexion",
     "startTrial": "Démarrer l'essai gratuit"
+  },
+    "title": {
+      "login": "Connexion",
+      "signup": "Créer un compte"
+    },
+    "login": "Connexion",
+    "logout": "Déconnexion",
+    "createAccount": "Créer un compte",
+    "signIn": "Connexion",
+    "signUp": "Créer un compte",
+    "welcome": "Bienvenue !",
+    "subtitle": {
+      "login": "Connectez-vous à votre compte",
+      "signup": "Créez un nouveau compte"
+    },
+    "signOut": "Déconnexion",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "alreadyRegistered": "Déjà inscrit ? Connexion",
+    "startTrial": "Démarrer l'essai gratuit"
+  },
+    "title": {
+      "login": "Connexion",
+      "signup": "Créer un compte"
+    },
+    "login": "Connexion",
+    "logout": "Déconnexion",
+    "createAccount": "Créer un compte",
+    "signIn": "Connexion",
+    "signUp": "Créer un compte",
+    "welcome": "Bienvenue !",
+    "subtitle": {
+      "login": "Connectez-vous à votre compte",
+      "signup": "Créez un nouveau compte"
+    },
+    "signOut": "Déconnexion",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "alreadyRegistered": "Déjà inscrit ? Connexion",
+    "startTrial": "Démarrer l'essai gratuit"
+  },
+        "signup": "Créer un compte"
+    },
+      "login": "Connectez-vous à votre compte",
+      "signup": "Créez un nouveau compte"
+    },
+  },
+        "signup": "Créer un compte"
+    },
+      "login": "Connectez-vous à votre compte",
+      "signup": "Créez un nouveau compte"
+    },
+  },
+        "signup": "Créer un compte"
+    },
+      "login": "Connectez-vous à votre compte",
+      "signup": "Créez un nouveau compte"
+    },
+  },
+        "signup": "Créer un compte"
+    },
+      "login": "Connectez-vous à votre compte",
+      "signup": "Créez un nouveau compte"
+    },
+  },
+        "signup": "Créer un compte"
+    },
+      "login": "Connectez-vous à votre compte",
+      "signup": "Créez un nouveau compte"
+    },
+  },
+        "signup": "Créer un compte"
+    },
+      "login": "Connectez-vous à votre compte",
+      "signup": "Créez un nouveau compte"
+    },
+        "signup": "Créer un compte"
+    },
+    "createAccount": "Créer un compte"
+  ,
+      "login": "Connectez-vous à votre compte",
+      "signup": "Créez un nouveau compte"
+    },
   },
   "pages": {
     "home": {
