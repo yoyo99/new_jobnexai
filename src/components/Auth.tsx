@@ -47,7 +47,7 @@ const Auth: React.FC = () => {
     }
     try {
       setLoading(true);
-            const { data: user, error } = await auth.register(email, password, { 
+      const { data: user, error } = await auth.register(email, password, { 
         firstName: fullName.split(' ')[0] || '', 
         lastName: fullName.split(' ').slice(1).join(' ') || '' 
       });
@@ -88,7 +88,7 @@ const Auth: React.FC = () => {
     }
     try {
       setLoading(true);
-            const { data: user, error } = await auth.login(email, password);
+      const { data: user, error } = await auth.login(email, password);
       if (error) {
         // Mapping des messages d’erreur Supabase vers des clés i18n si possible
         let errorKey = '';
@@ -130,7 +130,7 @@ const Auth: React.FC = () => {
     }
     try {
       setLoading(true);
-            const { error } = await auth.resetPassword(email);
+      const { error } = await auth.resetPassword(email);
       if (error) {
         setMessage({ type: 'error', text: error.message });
         return;
@@ -152,7 +152,7 @@ const Auth: React.FC = () => {
       >
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
-            {isLogin ? t('auth.login') : t('auth.signup')}
+            {isLogin ? t('auth.signIn') : t('auth.signUp')}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-400">
             {t('common.or')}{' '}
@@ -300,7 +300,7 @@ const Auth: React.FC = () => {
               disabled={loading}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white btn-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? t('common.loading') : isLogin ? t('auth.login') : t('auth.createAccount')}
+              {loading ? t('common.loading') : isLogin ? t('auth.signIn') : t('auth.signUp')}
             </button>
             <button
               type="button"
