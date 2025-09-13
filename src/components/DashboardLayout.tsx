@@ -1,4 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import React, { Fragment, useState, useEffect } from 'react'
+import { Dialog, Transition } from '@headlessui/react'
+import { XMarkIcon } from '@heroicons/react/24/outline'
+import { Link, Outlet, useLocation } from 'react-router-dom'
+import { cn } from '../utils/cn'
+import { Header } from './Header';
 import {
   ChartPieIcon,
   DocumentTextIcon,
@@ -13,7 +18,6 @@ import {
   CreditCardIcon,
   Cog6ToothIcon,
 } from '@heroicons/react/24/outline'
-import { useLocation } from 'react-router-dom' // Already v6 compatible
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../stores/auth'
 
@@ -21,8 +25,7 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { user, signOut } = useAuth()
   const { t } = useTranslation('common')
-  const location = useLocation()
-  const [navigation, setNavigation] = useState<any[]>([])
+    const [navigation, setNavigation] = useState<any[]>([])
 
   useEffect(() => {
     // Définir la navigation en fonction du type d'utilisateur
@@ -64,11 +67,7 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
     }
   }, [user?.user_type, t])
 
-      console.log('[DashboardLayout] Déconnexion via le store...');
-    await signOut();
-    // La redirection est maintenant gérée par le changement d'état et ProtectedRoute.
-  };
-
+  
   return (
     <div>
       {/* <ResendQuotaBanner /> */}
@@ -167,7 +166,7 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
                         to={item.href}
                         className={cn(
                           'text-gray-400 hover:text-white hover:bg-gray-800 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold',
-                          location.pathname === item.href && 'bg-gray-800 text-white'
+                          location.pathname === item.href && 'bg-gray-800 text-white active'
                         )}
                       >
                         <item.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
@@ -177,6 +176,14 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
                       </Link>
                     </li>
                   ))}
+                  <li>
+                    <button
+                      onClick={async () => await signOut()}
+                      className="text-red-500 hover:text-white hover:bg-red-600 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold w-full mt-4"
+                    >
+                      Déconnexion
+                    </button>
+                  </li>
                 </ul>
               </li>
             </ul>
