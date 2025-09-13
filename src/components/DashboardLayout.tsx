@@ -1,34 +1,25 @@
-import React, { Fragment, useState, useEffect } from 'react'
-import { Dialog, Menu, Transition } from '@headlessui/react'
+import React, { useState, useEffect } from 'react'
 import {
-  Bars3Icon,
   ChartPieIcon,
   DocumentTextIcon,
   FolderIcon,
   HomeIcon,
   UserIcon,
   UsersIcon,
-  XMarkIcon,
   ClipboardDocumentListIcon,
   RectangleGroupIcon,
   MagnifyingGlassIcon,
   PlusCircleIcon,
   CreditCardIcon,
-  Cog6ToothIcon, // Ajout de l'icône Paramètres
+  Cog6ToothIcon,
 } from '@heroicons/react/24/outline'
-import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom' // Already v6 compatible
+import { useLocation } from 'react-router-dom' // Already v6 compatible
 import { useTranslation } from 'react-i18next'
-import { cn } from '../utils/cn'
 import { useAuth } from '../stores/auth'
-import { LanguageSwitcher } from './LanguageSwitcher'
-// import ResendQuotaBanner from './ResendQuotaBanner.jsx';
-import { NotificationCenter } from './notifications/NotificationCenter';
-import { Header } from './Header';
 
 export function DashboardLayout({ children }: { children?: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { user, signOut } = useAuth()
-  const navigate = useNavigate()
   const { t } = useTranslation('common')
   const location = useLocation()
   const [navigation, setNavigation] = useState<any[]>([])
@@ -73,8 +64,7 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
     }
   }, [user?.user_type, t])
 
-  const handleSignOut = async () => {
-    console.log('[DashboardLayout] Déconnexion via le store...');
+      console.log('[DashboardLayout] Déconnexion via le store...');
     await signOut();
     // La redirection est maintenant gérée par le changement d'état et ProtectedRoute.
   };
