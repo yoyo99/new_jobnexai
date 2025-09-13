@@ -20,14 +20,14 @@ const publicNavigation = [
 
 // Navigation pour les utilisateurs connectés (avant admin)
 const userCoreNavigation = [
-  { name: 'Dashboard', href: '/dashboard' },
-  { name: 'Job Search', href: '/jobs' },
-  { name: 'Suivi', href: '/suivi' },
-  { name: 'CV Builder', href: '/cv-builder' },
-  { name: 'Network', href: '/network' },
-  { name: 'Market Analysis', href: '/market-analysis' },
-  { name: 'Profile', href: '/profile' },
-  { name: 'Billing', href: '/billing' },
+  { name: 'Dashboard', href: '/app/dashboard' },
+  { name: 'Job Search', href: '/app/jobs' },
+  { name: 'Suivi', href: '/app/suivi' },
+  { name: 'CV Builder', href: '/app/cv-builder' },
+  { name: 'Network', href: '/app/network' },
+  { name: 'Market Analysis', href: '/app/market-analysis' },
+  { name: 'Profile', href: '/app/profile' },
+  { name: 'Billing', href: '/app/billing' },
 ];
 
 const adminSpecificNavigation = [

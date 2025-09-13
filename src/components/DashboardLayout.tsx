@@ -38,22 +38,22 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
     if (user?.user_type === 'freelancer') {
       setNavigation([
         { name: 'Dashboard', href: '/app/dashboard', icon: HomeIcon },
-        { name: 'Projets disponibles', href: '/freelance/projects', icon: RectangleGroupIcon },
-        { name: 'Mon profil freelance', href: '/freelance/profile', icon: UserIcon },
-        { name: 'CV Builder', href: '/cv-builder', icon: DocumentTextIcon },
+        { name: 'Projets disponibles', href: '/app/freelance/projects', icon: RectangleGroupIcon },
+        { name: 'Mon profil freelance', href: '/app/freelance/profile', icon: UserIcon },
+        { name: 'CV Builder', href: '/app/cv-builder', icon: DocumentTextIcon },
         { name: 'Réseau', href: '/network', icon: UsersIcon },
-        { name: 'Analyse du marché', href: '/market-analysis', icon: ChartPieIcon },
+        { name: 'Analyse du marché', href: '/app/market-analysis', icon: ChartPieIcon },
         { name: 'Facturation', href: '/billing', icon: CreditCardIcon },
         { name: 'Paramètres', href: '/settings', icon: Cog6ToothIcon },
       ])
     } else if (user?.user_type === 'recruiter') {
       setNavigation([
-        { name: 'Dashboard', href: '/recruiter/dashboard', icon: HomeIcon },
-        { name: 'Recherche de candidats', href: '/recruiter/candidates', icon: MagnifyingGlassIcon },
-        { name: 'Mes offres d\'emploi', href: '/recruiter/job-postings', icon: ClipboardDocumentListIcon },
-        { name: 'Créer une offre', href: '/recruiter/create-job', icon: PlusCircleIcon },
+        { name: 'Dashboard', href: '/app/recruiter/dashboard', icon: HomeIcon },
+        { name: 'Recherche de candidats', href: '/app/recruiter/candidates', icon: MagnifyingGlassIcon },
+        { name: "Mes offres d'emploi", href: '/app/recruiter/job-postings', icon: ClipboardDocumentListIcon },
+        { name: 'Créer une offre', href: '/app/recruiter/create-job', icon: PlusCircleIcon },
         { name: 'Réseau', href: '/network', icon: UsersIcon },
-        { name: 'Profil', href: '/profile', icon: UserIcon },
+        { name: 'Profil', href: '/app/profile', icon: UserIcon },
         { name: 'Facturation', href: '/billing', icon: CreditCardIcon },
         { name: 'Paramètres', href: '/settings', icon: Cog6ToothIcon },
       ])
@@ -61,8 +61,8 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
       // Navigation par défaut pour les candidats
       setNavigation([
         { name: 'navigation.dashboard', href: '/app/dashboard', icon: HomeIcon },
-        { name: 'navigation.jobSearch', href: '/jobs', icon: FolderIcon },
-        { name: 'navigation.applications', href: '/suivi', icon: ClipboardDocumentListIcon },
+        { name: 'navigation.jobSearch', href: '/app/jobs', icon: FolderIcon },
+        { name: 'navigation.applications', href: '/app/suivi', icon: ClipboardDocumentListIcon },
         { name: 'navigation.cvBuilder', href: '/cv-builder', icon: DocumentTextIcon },
         { name: 'navigation.network', href: '/network', icon: UsersIcon },
         { name: 'navigation.marketAnalysis', href: '/market-analysis', icon: ChartPieIcon },
