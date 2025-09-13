@@ -96,7 +96,7 @@ export async function handler(event, context) {
     const origin = (headers['origin'] || headers['referer'] || '') as string;
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: `${origin.replace(/\/$/, '')}/settings`,
+      return_url: `${origin.replace(/\/$/, '')}/app/billing`,
     });
 
     return {
