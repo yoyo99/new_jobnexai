@@ -1,16 +1,17 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Fragment, useEffect } from 'react';
 import { Menu, Transition } from '@headlessui/react';
 import { GlobeAltIcon } from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
 
+// Seules les langues avec des fichiers de traduction dans /public/locales sont listées.
+// Pour ajouter une langue, créez le fichier correspondant et décommentez/ajoutez la ligne ici.
 const languages = [
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
   { code: 'en', name: 'English', flag: '🇬🇧' },
-  { code: 'es', name: 'Español', flag: '🇪🇸' },
-  { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-  { code: 'it', name: 'Italiano', flag: '🇮🇹' },
+  // { code: 'es', name: 'Español', flag: '🇪🇸' },
+  // { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+  // { code: 'it', name: 'Italiano', flag: '🇮🇹' },
 ];
 
 export function LanguageSwitcher() {

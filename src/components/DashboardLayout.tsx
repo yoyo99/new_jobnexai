@@ -28,44 +28,49 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
     const [navigation, setNavigation] = useState<any[]>([])
 
   useEffect(() => {
-    // Définir la navigation en fonction du type d'utilisateur
-    if (user?.user_type === 'freelancer') {
-      setNavigation([
-        { name: t('navigation.dashboard'), href: '/app/dashboard', icon: HomeIcon },
-        { name: t('navigation.freelanceProjects', 'Projets disponibles'), href: '/app/freelance/projects', icon: RectangleGroupIcon },
-        { name: t('navigation.freelanceProfile', 'Mon profil freelance'), href: '/app/freelance/profile', icon: UserIcon },
-        { name: t('navigation.cvBuilder'), href: '/app/cv-builder', icon: DocumentTextIcon },
-        { name: t('navigation.network'), href: '/app/network', icon: UsersIcon },
-        { name: t('navigation.marketAnalysis'), href: '/app/market-analysis', icon: ChartPieIcon },
-        { name: t('navigation.billing', 'Facturation'), href: '/app/billing', icon: CreditCardIcon },
-        { name: t('navigation.settings'), href: '/app/settings', icon: Cog6ToothIcon },
-      ])
-    } else if (user?.user_type === 'recruiter') {
-      setNavigation([
-        { name: 'Dashboard', href: '/app/recruiter/dashboard', icon: HomeIcon },
-        { name: t('navigation.candidateSearch', 'Recherche de candidats'), href: '/app/recruiter/candidates', icon: MagnifyingGlassIcon },
-        { name: t('navigation.jobPostings', "Mes offres d'emploi"), href: '/app/recruiter/job-postings', icon: ClipboardDocumentListIcon },
-        { name: t('navigation.createJob', 'Créer une offre'), href: '/app/recruiter/create-job', icon: PlusCircleIcon },
-        { name: t('navigation.network'), href: '/app/network', icon: UsersIcon },
-        { name: t('navigation.profile.title'), href: '/app/profile', icon: UserIcon },
-        { name: t('navigation.billing', 'Facturation'), href: '/app/billing', icon: CreditCardIcon },
-        { name: t('navigation.settings'), href: '/app/settings', icon: Cog6ToothIcon },
-      ])
+    let navItems = [];
+    const userType = user?.user_type;
+
+    if (userType === 'freelancer') {
+      navItems = [
+        { nameKey: 'navigation.dashboard', href: '/app/dashboard', icon: HomeIcon },
+        { nameKey: 'navigation.freelanceProjects', href: '/app/freelance/projects', icon: RectangleGroupIcon, fallback: 'Projets disponibles' },
+        { nameKey: 'navigation.freelanceProfile', href: '/app/freelance/profile', icon: UserIcon, fallback: 'Mon profil freelance' },
+        { nameKey: 'navigation.cvBuilder', href: '/app/cv-builder', icon: DocumentTextIcon },
+        { nameKey: 'navigation.network.title', href: '/app/network', icon: UsersIcon },
+        { nameKey: 'navigation.marketAnalysis', href: '/app/market-analysis', icon: ChartPieIcon },
+        { nameKey: 'navigation.billing', href: '/app/billing', icon: CreditCardIcon, fallback: 'Facturation' },
+        { nameKey: 'navigation.settings', href: '/app/settings', icon: Cog6ToothIcon },
+      ];
+    } else if (userType === 'recruiter') {
+      navItems = [
+        { nameKey: 'navigation.dashboard', href: '/app/recruiter/dashboard', icon: HomeIcon },
+        { nameKey: 'navigation.candidateSearch', href: '/app/recruiter/candidates', icon: MagnifyingGlassIcon, fallback: 'Recherche de candidats' },
+        { nameKey: 'navigation.jobPostings', href: '/app/recruiter/job-postings', icon: ClipboardDocumentListIcon, fallback: "Mes offres d'emploi" },
+        { nameKey: 'navigation.createJob', href: '/app/recruiter/create-job', icon: PlusCircleIcon, fallback: 'Créer une offre' },
+        { nameKey: 'navigation.network.title', href: '/app/network', icon: UsersIcon },
+        { nameKey: 'navigation.profile', href: '/app/profile', icon: UserIcon },
+        { nameKey: 'navigation.billing', href: '/app/billing', icon: CreditCardIcon, fallback: 'Facturation' },
+        { nameKey: 'navigation.settings', href: '/app/settings', icon: Cog6ToothIcon },
+      ];
     } else {
-      // Navigation par défaut pour les candidats
-      setNavigation([
-        { name: 'navigation.dashboard', href: '/app/dashboard', icon: HomeIcon },
-        { name: 'navigation.jobSearch', href: '/app/jobs', icon: FolderIcon },
-        { name: 'navigation.applications', href: '/app/suivi', icon: ClipboardDocumentListIcon },
-        { name: 'navigation.cvBuilder', href: '/app/cv-builder', icon: DocumentTextIcon },
-        { name: 'navigation.network', href: '/app/network', icon: UsersIcon },
-        { name: 'navigation.marketAnalysis', href: '/app/market-analysis', icon: ChartPieIcon },
-        { name: 'navigation.profile.title', href: '/app/profile', icon: UserIcon },
-        { name: t('navigation.billing', 'Facturation'), href: '/app/billing', icon: CreditCardIcon },
-        { name: t('navigation.settings'), href: '/app/settings', icon: Cog6ToothIcon },
-      ])
+      // Default navigation for candidates
+      navItems = [
+        { nameKey: 'navigation.dashboard', href: '/app/dashboard', icon: HomeIcon },
+        { nameKey: 'navigation.jobSearch', href: '/app/jobs', icon: FolderIcon },
+        { nameKey: 'navigation.applications', href: '/app/suivi', icon: ClipboardDocumentListIcon },
+        { nameKey: 'navigation.cvBuilder', href: '/app/cv-builder', icon: DocumentTextIcon },
+        { nameKey: 'navigation.network.title', href: '/app/network', icon: UsersIcon },
+        { nameKey: 'navigation.marketAnalysis', href: '/app/market-analysis', icon: ChartPieIcon },
+        { nameKey: 'navigation.profile', href: '/app/profile', icon: UserIcon },
+        { nameKey: 'navigation.billing', href: '/app/billing', icon: CreditCardIcon, fallback: 'Facturation' },
+        { nameKey: 'navigation.settings', href: '/app/settings', icon: Cog6ToothIcon },
+      ];
     }
-  }, [user?.user_type, t])
+
+    setNavigation(navItems.map(item => ({ ...item, name: t(item.nameKey, item.fallback || '') })));
+
+  }, [user?.user_type, t]);
 
   
   return (
@@ -132,9 +137,7 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
                                 )}
                               >
                                 <item.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
-                                {typeof item.name === 'string' && item.name.startsWith('navigation.') 
-                                  ? t(item.name) 
-                                  : item.name}
+                                {item.name}
                               </Link>
                             </li>
                           ))}
@@ -170,9 +173,7 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
                         )}
                       >
                         <item.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
-                        {typeof item.name === 'string' && item.name.startsWith('navigation.') 
-                          ? t(item.name) 
-                          : item.name}
+                        {t(item.name)}
                       </Link>
                     </li>
                   ))}

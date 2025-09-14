@@ -17,6 +17,7 @@ import { SubscriptionBanner } from './components/SubscriptionBanner'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { AuthProvider } from './components/AuthProvider';
 import { PublicRoute } from './components/PublicRoute';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { LoadingFallback } from './components/LoadingFallback';
 
 // Wrapper pour les composants lazy-loaded avec ErrorBoundary spécifique
@@ -118,7 +119,8 @@ function App() {
         </button>
       </div>
     </div>}>
-              <AuthProvider>
+              <ThemeProvider defaultTheme="dark" storageKey="jobnexai-ui-theme">
+        <AuthProvider>
           <Router>
         <Toaster
           position="bottom-right"
@@ -217,6 +219,7 @@ function App() {
             <ToastContainer />
           </Router>
         </AuthProvider>
+      </ThemeProvider>
           </ErrorBoundary>
   );
 }

@@ -3,7 +3,7 @@ import { Dialog } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon, UserCircleIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline'
 import { Menu, Transition } from '@headlessui/react'
 import { Fragment } from 'react' // Nécessaire pour Transition
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { ThemeToggle } from './ui/theme-toggle'
 import { useTranslation } from 'react-i18next'
@@ -20,14 +20,14 @@ const publicNavigation = [
 
 // Navigation pour les utilisateurs connectés (avant admin)
 const userCoreNavigation = [
-  { name: 'Dashboard', href: '/app/dashboard' },
-  { name: 'Job Search', href: '/app/jobs' },
-  { name: 'Suivi', href: '/app/suivi' },
-  { name: 'CV Builder', href: '/app/cv-builder' },
-  { name: 'Network', href: '/app/network' },
-  { name: 'Market Analysis', href: '/app/market-analysis' },
-  { name: 'Profile', href: '/app/profile' },
-  { name: 'Billing', href: '/app/billing' },
+  { name: 'navigation.dashboard', href: '/app/dashboard' },
+  { name: 'navigation.jobSearch', href: '/app/jobs' },
+  { name: 'navigation.applications', href: '/app/suivi' },
+  { name: 'navigation.cvBuilder', href: '/app/cv-builder' },
+  { name: 'navigation.network.title', href: '/app/network' },
+  { name: 'navigation.marketAnalysis', href: '/app/market-analysis' },
+  { name: 'navigation.profile', href: '/app/profile' },
+  { name: 'navigation.billing', href: '/app/billing' },
 ];
 
 const adminSpecificNavigation = [
@@ -40,8 +40,6 @@ export function Header() {
   const { t } = useTranslation()
   const { user, subscription, signOut } = useAuth()
   console.log('[Header] User from useAuth in Header:', user);
-  const location = useLocation()
-  const navigate = useNavigate() // Ajout pour la redirection après déconnexion
 
   // Déterminer la navigation à afficher
   let currentNavigation;
@@ -95,19 +93,6 @@ export function Header() {
               <span className="sr-only">Open main menu</span>
               <Bars3Icon className="h-6 w-6" aria-hidden="true" />
             </button>
-          </div>
-          }
-          {((): boolean => true)() && // Re-enable desktop navigation links
-          <div className="hidden lg:flex lg:gap-x-12">
-            {currentNavigation.map((item) => (
-              <Link
-                key={item.name}
-                to={item.href}
-                className="text-sm font-semibold leading-6 text-white hover:text-primary-400 transition-colors"
-              >
-                {t(item.name)}
-              </Link>
-            ))}
           </div>
           }
           {((): boolean => true)() && // Restore user section display
