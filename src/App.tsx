@@ -84,8 +84,6 @@ const JobPostings = React.lazy(() => import('./components/recruiter/JobPostings'
 const CreateJobPosting = React.lazy(() => import('./components/recruiter/CreateJobPosting'));
 const ModernComponentsDemo = React.lazy(() => import('./components/ModernComponentsDemo').then(m => ({ default: m.ModernComponentsDemo })));
 
-import { I18nextProvider } from 'react-i18next';
-import i18n from './i18n'; // TypeScript version
 
 function App() {
   // Gestionnaires d'erreurs globaux
@@ -120,8 +118,7 @@ function App() {
         </button>
       </div>
     </div>}>
-      <I18nextProvider i18n={i18n}>
-        <AuthProvider>
+              <AuthProvider>
           <Router>
         <Toaster
           position="bottom-right"
@@ -220,8 +217,7 @@ function App() {
             <ToastContainer />
           </Router>
         </AuthProvider>
-      </I18nextProvider>
-    </ErrorBoundary>
+          </ErrorBoundary>
   );
 }
 

@@ -7,7 +7,7 @@ import { BillingHistory } from './BillingHistory'
 import { StripeWebhookInfo } from './StripeWebhookInfo'
 
 function Billing() {
-  const { t } = useTranslation('common')
+  const { t } = useTranslation()
   const { user } = useAuth()
   const [activeTab, setActiveTab] = useState<'subscription' | 'history' | 'webhook'>('subscription')
 

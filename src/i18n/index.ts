@@ -10,7 +10,7 @@ i18n
   .init({
     fallbackLng: 'fr',
     supportedLngs: ['fr', 'en', 'de', 'es', 'it'],
-    ns: ['common', 'translation'],
+    ns: ['translation'],
     defaultNS: 'translation',
     interpolation: {
       escapeValue: false,
@@ -30,7 +30,7 @@ i18n
     react: {
       useSuspense: false,
     },
-    debug: true,
+    debug: false,
   })
 
 // Pour le debug : log la langue courante et les namespaces chargés

@@ -8,7 +8,7 @@ import { NotificationPreferences } from './notifications/NotificationPreferences
 import { initializeChat, disconnectChat } from '../lib/chat'
 
 function NetworkPage() {
-  const { t } = useTranslation('common')
+  const { t } = useTranslation()
   const { user } = useAuth()
   const [showPreferences, setShowPreferences] = useState(false)
   const [activeChatRoom, setActiveChatRoom] = useState<{

@@ -24,7 +24,7 @@ import { useAuth } from '../stores/auth'
 export function DashboardLayout({ children }: { children?: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { user, signOut } = useAuth()
-  const { t } = useTranslation('common')
+  const { t } = useTranslation()
     const [navigation, setNavigation] = useState<any[]>([])
 
   useEffect(() => {
