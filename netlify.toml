@@ -46,3 +46,9 @@
   for = "/*.css"
   [headers.values]
     Cache-Control = "no-cache, no-store, must-revalidate"
+
+# Règle de redirection pour Single Page Application (SPA)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

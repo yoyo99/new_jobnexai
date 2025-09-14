@@ -12,17 +12,14 @@ console.log('Initialisation du module i18n...');
 try {
   i18n
     .use(Backend) // Charge les traductions depuis le serveur (public/locales)
-    // .use(LanguageDetector) // Désactivé pour forcer la langue FR
+    .use(LanguageDetector) // Détecte la langue du navigateur
     .use(initReactI18next)
     .init({
     // Plus besoin de pré-charger les ressources, elles seront chargées dynamiquement
     lng: 'fr', // langue par défaut
     fallbackLng: 'fr',
-    ns: [
-      'common', // Contient les traductions communes (navigation, auth, forms, etc.)
-      'translation' // Contient les traductions spécifiques aux pages
-    ],
-    defaultNS: 'common',
+    ns: ['translation'],
+    defaultNS: 'translation',
     interpolation: { escapeValue: false },
     react: { useSuspense: false },
     // Améliorations pour la résilience
