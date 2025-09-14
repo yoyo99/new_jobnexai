@@ -34,55 +34,47 @@ if (process.env.VITE_SENTRY_AUTH_TOKEN) {
 }
 
 export default defineConfig(({ mode }) => {
-  // Charge les variables d'environnement en fonction du mode (development, production)
   const env = loadEnv(mode, process.cwd(), '');
-
   return {
-    // Définit les variables à remplacer dans le code client
+    publicDir: 'public',
     define: {
       'process.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL),
       'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY),
       'process.env.VITE_STRIPE_PUBLIC_KEY': JSON.stringify(env.VITE_STRIPE_PUBLIC_KEY),
       'process.env.VITE_MISTRAL_API_KEY': JSON.stringify(env.VITE_MISTRAL_API_KEY),
     },
-  plugins,
-  optimizeDeps: {
-    include: ['@tanstack/react-virtual'],
-  },
-  // Améliorer la résolution des modules
-  resolve: {
-    extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.css', '.vue'],
-    alias: {
-      // Utiliser fileURLToPath pour ESM moderne
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
-      'src': fileURLToPath(new URL('./src', import.meta.url))
+    plugins,
+    optimizeDeps: {
+      include: ['@tanstack/react-virtual'],
     },
-    // Activer ces options pour aider à la résolution des modules
-    preserveSymlinks: true,
-    mainFields: ['module', 'jsnext:main', 'jsnext', 'browser', 'main']
-  },
-  build: {
-    emptyOutDir: true,
-    sourcemap: true,
-    target: 'esnext', // Set the build target to esnext to support top-level await
-    modulePreload: { polyfill: false }, // Disable module preload polyfill for modern builds
-    // Assurer que des fichiers spécifiques sont exclus du build
-    outDir: 'dist',
-    assetsDir: 'assets',
-    // Ne pas copier les fichiers statiques qui ne sont pas nécessaires
-    copyPublicDir: true,
-    rollupOptions: {
-      // Exclure les modules problématiques pour Netlify
-      external: ['pnpapi', 'node_modules', /^puppeteer($|\/.*$)/, /\.git\//],
-      output: {
-        // Optimisation des chunks pour une meilleure performance
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          ui: ['@headlessui/react', '@heroicons/react'],
-          i18n: ['i18next', 'react-i18next'],
-          motion: ['framer-motion'],
+    resolve: {
+      extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.css', '.vue'],
+      alias: {
+        '@': fileURLToPath(new URL('./src', import.meta.url)),
+        'src': fileURLToPath(new URL('./src', import.meta.url))
+      },
+      preserveSymlinks: true,
+      mainFields: ['module', 'jsnext:main', 'jsnext', 'browser', 'main']
+    },
+    build: {
+      emptyOutDir: true,
+      sourcemap: true,
+      target: 'esnext',
+      modulePreload: { polyfill: false },
+      outDir: 'dist',
+      assetsDir: 'assets',
+      copyPublicDir: true,
+      rollupOptions: {
+        external: ['pnpapi', 'node_modules', /^puppeteer($|\/.*$)/, /\.git\//],
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom', 'react-router-dom'],
+            ui: ['@headlessui/react', '@heroicons/react'],
+            i18n: ['i18next', 'react-i18next'],
+            motion: ['framer-motion'],
+          },
         },
       },
-    },
+    }
   }
-}})
+})

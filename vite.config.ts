@@ -166,6 +166,14 @@ export default defineConfig({
     preserveSymlinks: true,
     mainFields: ['module', 'jsnext:main', 'jsnext', 'browser', 'main']
   },
+  server: {
+    // Assurer que le serveur de dev utilise le dossier public
+    // et gère correctement les chemins
+    fs: {
+      strict: false,
+    },
+  },
+  publicDir: 'public',
   build: {
     emptyOutDir: true,
     sourcemap: true,

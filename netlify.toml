@@ -21,11 +21,6 @@
   included_files = ["src/lib/ai_logic/**", "functions/rome-search/rome_appellations.csv", "data/unix_arborescence_competences_v459_utf8.csv"]
   # node_bundler et external_node_modules sont maintenant sous [build.functions]
 
-# Configuration des redirections
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
 
 # Configuration du cache - DÉSACTIVÉ TEMPORAIREMENT POUR DEBUG
 [[headers]]
@@ -41,6 +36,11 @@
   for = "/*.js"
   [headers.values]
     Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/locales/*.json"
+  [headers.values]
+    Content-Type = "application/json"
 
 [[headers]]
   for = "/*.css"
