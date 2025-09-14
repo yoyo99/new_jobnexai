@@ -97,7 +97,7 @@ export function Settings() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Paramètres</h1>
+        <h1 className="text-2xl font-bold text-white">{t('settings.title', 'Paramètres')}</h1>
         <p className="text-gray-400 mt-1">
           Gérez vos préférences de sécurité, de confidentialité et de notifications
         </p>
@@ -155,9 +155,7 @@ export function Settings() {
           className="space-y-6"
         >
           <div className="card">
-            <h2 className="text-lg font-medium text-white mb-6">
-              Paramètres de sécurité
-            </h2>
+            <h2 className="text-lg font-medium text-white mb-6">{t('settings.security.title', 'Paramètres de sécurité')}</h2>
 
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -249,9 +247,7 @@ export function Settings() {
           className="space-y-6"
         >
           <div className="card">
-            <h2 className="text-lg font-medium text-white mb-6">
-              Paramètres de notification
-            </h2>
+            <h2 className="text-lg font-medium text-white mb-6">{t('settings.notifications.title', 'Paramètres de notification')}</h2>
 
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -395,9 +391,7 @@ export function Settings() {
           className="space-y-6"
         >
           <div className="card">
-            <h2 className="text-lg font-medium text-white mb-6">
-              Paramètres de confidentialité
-            </h2>
+            <h2 className="text-lg font-medium text-white mb-6">{t('settings.privacy.title', 'Paramètres de confidentialité')}</h2>
 
             <div className="space-y-4">
               <div>
@@ -507,9 +501,7 @@ export function Settings() {
           className="space-y-6"
         >
           <div className="card">
-            <h2 className="text-lg font-medium text-white mb-6">
-              Paramètres de langue
-            </h2>
+            <h2 className="text-lg font-medium text-white mb-6">{t('settings.language.title', 'Paramètres de langue')}</h2>
 
             <div className="grid grid-cols-1 gap-4">
               {languages.map((language) => (

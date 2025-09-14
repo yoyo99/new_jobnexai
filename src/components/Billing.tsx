@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { useAuth } from '../stores/auth'
 import { SubscriptionManager } from './SubscriptionManager'
@@ -6,6 +7,7 @@ import { BillingHistory } from './BillingHistory'
 import { StripeWebhookInfo } from './StripeWebhookInfo'
 
 function Billing() {
+  const { t } = useTranslation('common')
   const { user } = useAuth()
   const [activeTab, setActiveTab] = useState<'subscription' | 'history' | 'webhook'>('subscription')
 
@@ -20,9 +22,9 @@ function Billing() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="text-2xl font-bold text-white">Facturation</h1>
+        <h1 className="text-2xl font-bold text-white">{t('billing.title', 'Facturation')}</h1>
         <p className="text-gray-400 mt-1">
-          Gérez votre abonnement et consultez votre historique de facturation
+          {t('billing.description', 'Gérez votre abonnement et consultez votre historique de facturation')}
         </p>
       </motion.div>
 

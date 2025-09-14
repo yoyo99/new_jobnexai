@@ -21,12 +21,6 @@
     "alreadyRegistered": "Déjà inscrit ? Connexion",
     "startTrial": "Démarrer l'essai gratuit"
   },
-    "title": {
-      "login": "Connexion",
-      "signup": "Créer un compte"
-    },
-    "login": "Connexion",
-    "logout": "Déconnexion",
     "createAccount": "Créer un compte",
     "signIn": "Connexion",
     "signUp": "Créer un compte",
@@ -455,7 +449,12 @@
     "applications": "Mes candidatures",
     "letters": "Lettres de motivation",
     "cvBuilder": "Mon CV",
-    "network": "Réseau",
+    "network": {
+      "title": "Réseau professionnel",
+      "connections": "Mes connections",
+      "requests": "Demandes de connexion",
+      "messages": "Messages"
+    },
     "marketAnalysis": "Analyse du marché",
     "profile": "Mon profil",
     "changeLanguage": "Changer de langue",

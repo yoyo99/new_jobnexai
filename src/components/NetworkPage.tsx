@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { useAuth } from '../stores/auth'
 import { Network } from './Network'
@@ -7,6 +8,7 @@ import { NotificationPreferences } from './notifications/NotificationPreferences
 import { initializeChat, disconnectChat } from '../lib/chat'
 
 function NetworkPage() {
+  const { t } = useTranslation('common')
   const { user } = useAuth()
   const [showPreferences, setShowPreferences] = useState(false)
   const [activeChatRoom, setActiveChatRoom] = useState<{
@@ -34,7 +36,7 @@ function NetworkPage() {
     <div className="max-w-7xl mx-auto">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Réseau professionnel</h1>
+          <h1 className="text-2xl font-bold text-white">{t('network.title', 'Réseau professionnel')}</h1>
           <p className="text-gray-400 mt-1">
             Gérez vos connexions et échangez avec d'autres professionnels
           </p>

@@ -1,7 +1,7 @@
 import React, { Fragment, useState, useEffect } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
-import { Link, Outlet, useLocation } from 'react-router-dom'
+import { Link, Outlet } from 'react-router-dom'
 import { cn } from '../utils/cn'
 import { Header } from './Header';
 import {
@@ -31,25 +31,25 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
     // Définir la navigation en fonction du type d'utilisateur
     if (user?.user_type === 'freelancer') {
       setNavigation([
-        { name: 'Dashboard', href: '/app/dashboard', icon: HomeIcon },
-        { name: 'Projets disponibles', href: '/app/freelance/projects', icon: RectangleGroupIcon },
-        { name: 'Mon profil freelance', href: '/app/freelance/profile', icon: UserIcon },
-        { name: 'CV Builder', href: '/app/cv-builder', icon: DocumentTextIcon },
-        { name: 'Réseau', href: '/app/network', icon: UsersIcon },
-        { name: 'Analyse du marché', href: '/app/market-analysis', icon: ChartPieIcon },
-        { name: 'Facturation', href: '/app/billing', icon: CreditCardIcon },
-        { name: 'Paramètres', href: '/app/settings', icon: Cog6ToothIcon },
+        { name: t('navigation.dashboard'), href: '/app/dashboard', icon: HomeIcon },
+        { name: t('navigation.freelanceProjects', 'Projets disponibles'), href: '/app/freelance/projects', icon: RectangleGroupIcon },
+        { name: t('navigation.freelanceProfile', 'Mon profil freelance'), href: '/app/freelance/profile', icon: UserIcon },
+        { name: t('navigation.cvBuilder'), href: '/app/cv-builder', icon: DocumentTextIcon },
+        { name: t('navigation.network'), href: '/app/network', icon: UsersIcon },
+        { name: t('navigation.marketAnalysis'), href: '/app/market-analysis', icon: ChartPieIcon },
+        { name: t('navigation.billing', 'Facturation'), href: '/app/billing', icon: CreditCardIcon },
+        { name: t('navigation.settings'), href: '/app/settings', icon: Cog6ToothIcon },
       ])
     } else if (user?.user_type === 'recruiter') {
       setNavigation([
         { name: 'Dashboard', href: '/app/recruiter/dashboard', icon: HomeIcon },
-        { name: 'Recherche de candidats', href: '/app/recruiter/candidates', icon: MagnifyingGlassIcon },
-        { name: "Mes offres d'emploi", href: '/app/recruiter/job-postings', icon: ClipboardDocumentListIcon },
-        { name: 'Créer une offre', href: '/app/recruiter/create-job', icon: PlusCircleIcon },
-        { name: 'Réseau', href: '/app/network', icon: UsersIcon },
-        { name: 'Profil', href: '/app/profile', icon: UserIcon },
-        { name: 'Facturation', href: '/app/billing', icon: CreditCardIcon },
-        { name: 'Paramètres', href: '/app/settings', icon: Cog6ToothIcon },
+        { name: t('navigation.candidateSearch', 'Recherche de candidats'), href: '/app/recruiter/candidates', icon: MagnifyingGlassIcon },
+        { name: t('navigation.jobPostings', "Mes offres d'emploi"), href: '/app/recruiter/job-postings', icon: ClipboardDocumentListIcon },
+        { name: t('navigation.createJob', 'Créer une offre'), href: '/app/recruiter/create-job', icon: PlusCircleIcon },
+        { name: t('navigation.network'), href: '/app/network', icon: UsersIcon },
+        { name: t('navigation.profile.title'), href: '/app/profile', icon: UserIcon },
+        { name: t('navigation.billing', 'Facturation'), href: '/app/billing', icon: CreditCardIcon },
+        { name: t('navigation.settings'), href: '/app/settings', icon: Cog6ToothIcon },
       ])
     } else {
       // Navigation par défaut pour les candidats
@@ -61,8 +61,8 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
         { name: 'navigation.network', href: '/app/network', icon: UsersIcon },
         { name: 'navigation.marketAnalysis', href: '/app/market-analysis', icon: ChartPieIcon },
         { name: 'navigation.profile.title', href: '/app/profile', icon: UserIcon },
-        { name: 'Facturation', href: '/app/billing', icon: CreditCardIcon },
-        { name: 'Paramètres', href: '/app/settings', icon: Cog6ToothIcon },
+        { name: t('navigation.billing', 'Facturation'), href: '/app/billing', icon: CreditCardIcon },
+        { name: t('navigation.settings'), href: '/app/settings', icon: Cog6ToothIcon },
       ])
     }
   }, [user?.user_type, t])
