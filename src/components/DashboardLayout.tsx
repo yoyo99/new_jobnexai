@@ -17,9 +17,17 @@ import {
   PlusCircleIcon,
   CreditCardIcon,
   Cog6ToothIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/outline'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../stores/auth'
+
+interface NavItem {
+  nameKey: string;
+  href: string;
+  icon: React.ForwardRefExoticComponent<React.SVGProps<SVGSVGElement>>;
+  fallback?: string;
+}
 
 export function DashboardLayout({ children }: { children?: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -28,8 +36,13 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
     const [navigation, setNavigation] = useState<any[]>([])
 
   useEffect(() => {
-    let navItems = [];
+    let navItems: NavItem[] = [];
     const userType = user?.user_type;
+
+    const commonItems = [
+      { nameKey: 'navigation.coverLetterGenerator', href: '/app/cover-letter-generator', icon: SparklesIcon, fallback: 'Générateur de lettres' },
+      { nameKey: 'navigation.myLetters', href: '/app/cover-letters', icon: ClipboardDocumentListIcon, fallback: 'Mes lettres' },
+    ];
 
     if (userType === 'freelancer') {
       navItems = [
@@ -37,6 +50,7 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
         { nameKey: 'navigation.freelanceProjects', href: '/app/freelance/projects', icon: RectangleGroupIcon, fallback: 'Projets disponibles' },
         { nameKey: 'navigation.freelanceProfile', href: '/app/freelance/profile', icon: UserIcon, fallback: 'Mon profil freelance' },
         { nameKey: 'navigation.cvBuilder', href: '/app/cv-builder', icon: DocumentTextIcon },
+        ...commonItems,
         { nameKey: 'navigation.network.title', href: '/app/network', icon: UsersIcon },
         { nameKey: 'navigation.marketAnalysis', href: '/app/market-analysis', icon: ChartPieIcon },
         { nameKey: 'navigation.billing', href: '/app/billing', icon: CreditCardIcon, fallback: 'Facturation' },
@@ -48,6 +62,7 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
         { nameKey: 'navigation.candidateSearch', href: '/app/recruiter/candidates', icon: MagnifyingGlassIcon, fallback: 'Recherche de candidats' },
         { nameKey: 'navigation.jobPostings', href: '/app/recruiter/job-postings', icon: ClipboardDocumentListIcon, fallback: "Mes offres d'emploi" },
         { nameKey: 'navigation.createJob', href: '/app/recruiter/create-job', icon: PlusCircleIcon, fallback: 'Créer une offre' },
+        ...commonItems,
         { nameKey: 'navigation.network.title', href: '/app/network', icon: UsersIcon },
         { nameKey: 'navigation.profile', href: '/app/profile', icon: UserIcon },
         { nameKey: 'navigation.billing', href: '/app/billing', icon: CreditCardIcon, fallback: 'Facturation' },
@@ -60,6 +75,7 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
         { nameKey: 'navigation.jobSearch', href: '/app/jobs', icon: FolderIcon },
         { nameKey: 'navigation.applications', href: '/app/suivi', icon: ClipboardDocumentListIcon },
         { nameKey: 'navigation.cvBuilder', href: '/app/cv-builder', icon: DocumentTextIcon },
+        ...commonItems,
         { nameKey: 'navigation.network.title', href: '/app/network', icon: UsersIcon },
         { nameKey: 'navigation.marketAnalysis', href: '/app/market-analysis', icon: ChartPieIcon },
         { nameKey: 'navigation.profile', href: '/app/profile', icon: UserIcon },

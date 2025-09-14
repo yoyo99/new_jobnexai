@@ -1,6 +1,10 @@
-import { create } from 'zustand'
-import { supabase, type Profile, type Subscription } from '../lib/supabase'
-import { AuthService } from '../lib/auth-service'
+import { create } from 'zustand';
+import { supabase } from '../src/lib/supabase';
+import { AuthService } from '../auth-service';
+import type { Database } from '../types/supabase';
+
+export type Profile = Database['public']['Tables']['profiles']['Row'];
+export type Subscription = Database['public']['Tables']['subscriptions']['Row'];
 
 interface AuthState {
   user: Profile | null
@@ -24,8 +28,10 @@ export const useAuth = create<AuthState>((set, get) => ({
     try {
       set({ loading: true })
       
-      // Vérifier si l'utilisateur est connecté
-      const { user: authUser } = await AuthService.getCurrentUser()
+      // Récupérer la session de manière fiable
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+      const authUser = session?.user;
       
       if (!authUser) {
         set({ user: null, subscription: null, loading: false, initialized: true })

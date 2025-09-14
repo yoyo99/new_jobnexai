@@ -336,6 +336,9 @@
     },
     "marketAnalysis": "Analyse du marché",
     "profile": "Mon profil",
+    "settings": "Paramètres",
+    "coverLetterGenerator": "Générateur de lettres",
+    "myLetters": "Mes lettres",
     "changeLanguage": "Changer de langue",
     "languageSwitcher": {
       "title": "Sélection de la langue",

@@ -84,6 +84,8 @@ const CandidateSearch = React.lazy(() => import('./components/recruiter/Candidat
 const JobPostings = React.lazy(() => import('./components/recruiter/JobPostings'));
 const CreateJobPosting = React.lazy(() => import('./components/recruiter/CreateJobPosting'));
 const ModernComponentsDemo = React.lazy(() => import('./components/ModernComponentsDemo').then(m => ({ default: m.ModernComponentsDemo })));
+const CoverLetterGenerator = React.lazy(() => import('./components/applications/CoverLetterGenerator').then(module => ({ default: module.CoverLetterGenerator })));
+const UserCoverLetters = React.lazy(() => import('./components/applications/UserCoverLetters'));
 
 
 function App() {
@@ -198,6 +200,8 @@ function App() {
                 <Route path="cv-builder" element={<ProtectedRoute requiresSubscription><LazyComponentWrapper><CVBuilder /></LazyComponentWrapper></ProtectedRoute>} />
                 <Route path="network" element={<ProtectedRoute requiresSubscription><LazyComponentWrapper><NetworkPage /></LazyComponentWrapper></ProtectedRoute>} />
                 <Route path="market-trends" element={<ProtectedRoute requiresSubscription><LazyComponentWrapper><MarketTrendsPage /></LazyComponentWrapper></ProtectedRoute>} />
+                <Route path="cover-letter-generator" element={<ProtectedRoute requiresSubscription><LazyComponentWrapper><CoverLetterGenerator /></LazyComponentWrapper></ProtectedRoute>} />
+                <Route path="cover-letters" element={<ProtectedRoute requiresSubscription><LazyComponentWrapper><UserCoverLetters /></LazyComponentWrapper></ProtectedRoute>} />
 
                 {/* Routes Freelance (avec abonnement) */}
                 <Route path="freelance/projects" element={<ProtectedRoute requiresSubscription><LazyComponentWrapper><FreelanceProjects /></LazyComponentWrapper></ProtectedRoute>} />
