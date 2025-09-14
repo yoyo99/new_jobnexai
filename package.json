@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
+    "postbuild:locales": "mkdir -p dist/locales/fr dist/locales/en dist/locales/de dist/locales/es dist/locales/it && cp public/locales/fr/translation.json dist/locales/fr/translation.json && cp public/locales/en/translation.json dist/locales/en/translation.json && cp public/locales/de/translation.json dist/locales/de/translation.json && cp public/locales/es/translation.json dist/locales/es/translation.json && cp public/locales/it/translation.json dist/locales/it/translation.json",
     "dev": "vite --host",
     "start": "netlify dev",
     "check-imports": "node check-imports.js",
@@ -17,7 +18,7 @@
     "build:clean": "rimraf dist && node verify-deps.js && node check-imports.js && tsc && vite build --config vite.config.mts && node clean-build.js",
     "fix-imports": "node fix-component-imports.js",
     "fix-router-imports": "node fix-router-imports.js",
-    "build:netlify": "rimraf dist && vite build --config vite.config.mts && echo 'Contenu du dossier dist après le build:' && ls -R dist && npx netlify functions:build --src functions",
+    "build:netlify": "rimraf dist && vite build --config vite.config.mts && npm run postbuild:locales && echo 'Contenu du dossier dist après le build:' && ls -R dist && npx netlify functions:build --src functions",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "listfiles": "find . -not -path \"*/node_modules/*\" -not -path \"*/.git/*\" -not -path \"*/dist/*\"",
