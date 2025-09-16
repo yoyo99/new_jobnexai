@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
-import netlifyIdentity, { User } from 'netlify-identity-widget';
+import netlifyIdentity from 'netlify-identity-widget';
+import type { User } from 'netlify-identity-widget';
 
 interface NetlifyAuthContextType {
   user: User | null;
@@ -15,9 +16,24 @@ export const NetlifyAuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
 
+  // Synchronise le token Netlify Identity avec Supabase à chaque login/session
+  useEffect(() => {
+    async function syncNetlifyToSupabase() {
+      if (user && window.netlifyIdentity && window.netlifyIdentity.currentUser) {
+        const jwt = await window.netlifyIdentity.currentUser().jwt();
+        console.log('[DEBUG][Provider] Netlify JWT utilisé pour Supabase :', jwt);
+        const supabase = require('../hooks/useSupabaseConfig').getSupabase();
+        if (supabase.auth && supabase.auth.setSession) {
+          await supabase.auth.setSession({ access_token: jwt, refresh_token: jwt });
+        }
+      }
+    }
+    syncNetlifyToSupabase();
+  }, [user]);
+
   useEffect(() => {
     // Event listener for login
-    netlifyIdentity.on('login', (user) => {
+    netlifyIdentity.on('login', (user: User | null) => {
       setUser(user);
       netlifyIdentity.close(); // Close the modal on login
     });
@@ -28,7 +44,7 @@ export const NetlifyAuthProvider = ({ children }: { children: ReactNode }) => {
     });
     
     // Event listener for init. This will check if a user is already logged in
-    netlifyIdentity.on('init', (user) => {
+    netlifyIdentity.on('init', (user: User | null) => {
         setUser(user);
         setAuthReady(true);
     });
