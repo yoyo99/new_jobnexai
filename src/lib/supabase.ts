@@ -766,3 +766,40 @@ export const deleteCoverLetter = async (id: string): Promise<void> => {
     throw error;
   }
 };
+
+/**
+ * Appelle la fonction Edge 'export-cover-letter' pour générer un fichier (PDF/DOCX) à partir du contenu.
+ * @param content Le contenu de la lettre.
+ * @param format Le format de sortie ('pdf' ou 'docx').
+ * @param baseName Le nom de base pour le fichier généré.
+ * @returns Un objet contenant l'URL signée pour le téléchargement.
+ */
+export const exportCoverLetterFromContent = async (content: string, format: 'pdf' | 'docx', baseName: string): Promise<{ signedUrl: string }> => {
+  if (!supabaseExport) throw new Error('Supabase client is not initialized');
+
+  const { data, error } = await supabaseExport.functions.invoke('export-cover-letter', {
+    body: { content, format, baseName },
+  });
+
+  if (error) {
+    console.error('Error invoking export-cover-letter function:', error);
+    throw error;
+  }
+
+  if (data.error) {
+    console.error('Error from export-cover-letter function:', data.error);
+    throw new Error(data.error);
+  }
+
+  return data;
+};
+  const { error } = await supabase
+    .from('user_cover_letters')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error deleting cover letter:', error);
+    throw error;
+  }
+};
