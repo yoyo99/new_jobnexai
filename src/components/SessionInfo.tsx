@@ -23,11 +23,6 @@ export const SessionInfo = () => {
 
   return (
     <div className="text-xs text-gray-400 text-right hidden lg:block">
-      {user.last_sign_in_at && (
-        <p>
-          Dernière connexion: {format(new Date(user.last_sign_in_at), 'dd/MM/yyyy HH:mm:ss', { locale: fr })}
-        </p>
-      )}
       <p>
         Actuellement: {format(currentTime, 'dd/MM/yyyy HH:mm:ss', { locale: fr })}
       </p>
