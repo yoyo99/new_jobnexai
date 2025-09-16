@@ -62,6 +62,18 @@ export const useAuth = create<AuthState>((set) => ({
       }
       console.log('[AuthStore] -> Profil trouvé:', profile);
 
+      // Met à jour last_sign_in_at à chaque récupération de profil utilisateur
+      if (profile && profile.id) {
+        try {
+          await getSupabase()
+            .from('profiles')
+            .update({ last_sign_in_at: new Date().toISOString() })
+            .eq('id', profile.id);
+        } catch (e) {
+          console.error('[AuthStore] -> Erreur update last_sign_in_at:', e);
+        }
+      }
+
       let subscription: Subscription | null = null;
       if (profile) {
         console.log(`[AuthStore] -> Profil trouvé pour l'utilisateur ID: ${profile.id}. Tentative de fetch la souscription...`);
