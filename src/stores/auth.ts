@@ -1,24 +1,6 @@
 import { create } from 'zustand';
 import { getSupabase } from '../hooks/useSupabaseConfig';
-
-// --- Type Definitions ---
-export interface Profile {
-  id: string;
-  email?: string;
-  full_name?: string;
-  title?: string;
-  phone?: string;
-  location?: string;
-  linkedin?: string;
-  website?: string;
-  user_type?: string;
-  is_admin?: boolean;
-  trial_ends_at?: string | null;
-  created_at: string;
-  updated_at: string;
-  ai_provider?: 'openai' | 'mistral'; // Ajout du fournisseur d'IA
-  last_sign_in_at?: string | null;
-}
+import type { Profile } from '../lib/supabase'; // Importer le type centralisé
 
 export interface Subscription {
   id: string;
@@ -70,7 +52,7 @@ export const useAuth = create<AuthState>((set) => ({
       console.log(`[AuthStore] -> Session trouvée pour l'utilisateur ID: ${session.user.id}. Tentative de fetch le profil...`);
       const { data: profile, error: profileError } = await getSupabase()
         .from('profiles')
-        .select('*')
+        .select('*, last_sign_in_at')
         .eq('id', session.user.id)
         .single();
       
