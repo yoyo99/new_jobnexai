@@ -9,6 +9,7 @@ import { ThemeToggle } from './ui/theme-toggle'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../stores/auth'
 import simpleLogoSrc from '../assets/images/simple_logo.svg'; // Import SVG as a source URL
+import { SessionInfo } from './SessionInfo';
 
 // Navigation pour les utilisateurs non connectés
 const publicNavigation = [
@@ -74,7 +75,6 @@ export function Header() {
     return (
       <header className="backdrop-blur-sm border-b border-white/10">
         <nav className="flex items-center justify-between p-6 lg:px-8" aria-label="Global">
-          {((): boolean => true)() && // Re-enable Logo section's parent div
           <div className="flex lg:flex-1">
             <Link to="/" className="-m-1.5 p-1.5 flex items-center">
               <span className="sr-only">JobNexAI</span>
@@ -82,8 +82,6 @@ export function Header() {
               {/* Link Text Test */}
             </Link>
           </div>
-          }
-          {((): boolean => true)() && // Enable mobile menu button
           <div className="flex lg:hidden">
             <button
               type="button"
@@ -94,14 +92,15 @@ export function Header() {
               <Bars3Icon className="h-6 w-6" aria-hidden="true" />
             </button>
           </div>
-          }
-          {((): boolean => true)() && // Restore user section display
           <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:items-center">
             <div className="mr-4">
               <LanguageSwitcher />
             </div>
             <div className="mr-4">
               <ThemeToggle />
+            </div>
+            <div className="mr-4">
+              <SessionInfo />
             </div>
             {user ? (
               <Menu as="div" className="relative">
@@ -205,9 +204,7 @@ export function Header() {
               </div>
             )}
           </div>
-          }
         </nav>
-        {((): boolean => true)() && // Re-enable Mobile Menu Dialog
         <Dialog as="div" className="lg:hidden" open={mobileMenuOpen} onClose={setMobileMenuOpen}>
           <div className="fixed inset-0 z-50" />
           <Dialog.Panel className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-background px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-white/10">
@@ -295,7 +292,6 @@ export function Header() {
             </div>
           </Dialog.Panel>
         </Dialog>
-        }
       </header>
     );
   }

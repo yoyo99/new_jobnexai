@@ -17,6 +17,7 @@ export interface Profile {
   created_at: string;
   updated_at: string;
   ai_provider?: 'openai' | 'mistral'; // Ajout du fournisseur d'IA
+  last_sign_in_at?: string | null;
 }
 
 export interface Subscription {
@@ -110,8 +111,22 @@ export const useAuth = create<AuthState>((set) => ({
   signIn: async (email, password) => {
     set({ loading: true, error: null });
     try {
-      const { error } = await getSupabase().auth.signInWithPassword({ email, password });
+      const { data, error } = await getSupabase().auth.signInWithPassword({ email, password });
       if (error) throw error;
+      if (!data.user) throw new Error('Connexion réussie mais aucun utilisateur retourné.');
+
+      // Mettre à jour la date de dernière connexion
+      const { error: updateError } = await getSupabase()
+        .from('profiles')
+        .update({ last_sign_in_at: new Date().toISOString() })
+        .eq('id', data.user.id);
+
+      if (updateError) {
+        // Ne pas bloquer la connexion si la mise à jour échoue, mais logger l'erreur
+        console.error('Échec de la mise à jour de last_sign_in_at:', updateError);
+      }
+
+      // Le listener onAuthStateChange s'occupera de recharger les données utilisateur
       return { error: null };
     } catch (error: any) {
       set({ error: error.message, loading: false });

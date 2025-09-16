@@ -349,6 +349,25 @@
     "welcome": "Bienvenue sur votre tableau de bord",
     "greeting": "Bonjour, {{name}} !",
     "userDefault": "Utilisateur",
-    "documentTitle": "Tableau de bord"
+    "documentTitle": "Tableau de bord",
+    "timeframe": {
+      "week": "Semaine",
+      "month": "Mois",
+      "year": "Année"
+    },
+    "stats": {
+      "applications": "Candidatures",
+      "interviewsUpcoming": "Entretiens à venir",
+      "topCompanies": "Top entreprises",
+      "topLocations": "Top localisations",
+      "recentActivity": "Activité récente"
+    },
+    "activity": {
+      "application": "Candidature",
+      "interview": "Entretien",
+      "offer": "Offre",
+      "favorite": "Favori",
+      "status_change": "Changement de statut"
+    }
   }
 }

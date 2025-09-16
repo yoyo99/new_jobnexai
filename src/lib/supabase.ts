@@ -32,6 +32,7 @@ export interface Profile {
   created_at: string;
   updated_at: string;
   user_metadata?: Record<string, any>; // Ajout de user_metadata
+  last_sign_in_at?: string | null;
 }
 
 export interface Subscription {
