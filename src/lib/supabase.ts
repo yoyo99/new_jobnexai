@@ -775,9 +775,9 @@ export const deleteCoverLetter = async (id: string): Promise<void> => {
  * @returns Un objet contenant l'URL signée pour le téléchargement.
  */
 export const exportCoverLetterFromContent = async (content: string, format: 'pdf' | 'docx', baseName: string): Promise<{ signedUrl: string }> => {
-  if (!supabaseExport) throw new Error('Supabase client is not initialized');
+  if (!supabase) throw new Error('Supabase client is not initialized');
 
-  const { data, error } = await supabaseExport.functions.invoke('export-cover-letter', {
+  const { data, error } = await supabase.functions.invoke('export-cover-letter', {
     body: { content, format, baseName },
   });
 
@@ -792,14 +792,4 @@ export const exportCoverLetterFromContent = async (content: string, format: 'pdf
   }
 
   return data;
-};
-  const { error } = await supabase
-    .from('user_cover_letters')
-    .delete()
-    .eq('id', id);
-
-  if (error) {
-    console.error('Error deleting cover letter:', error);
-    throw error;
-  }
 };
