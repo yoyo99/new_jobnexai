@@ -171,10 +171,15 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col" style={{ zIndex: 50 }}>
         {/* Le cercle jaune de débogage était ici */}
         <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-background px-6 pb-4 border-r border-white/10">
-          <div className="flex h-16 shrink-0 items-center">
+          <div className="flex flex-col h-16 shrink-0 items-start justify-center">
             <Link to="/" className="text-2xl font-bold bg-gradient-to-r from-primary-400 to-secondary-400 text-transparent bg-clip-text">
               JobNexAI
             </Link>
+            {user?.last_sign_in_at && (
+              <span className="mt-2 text-xs text-gray-400">
+                Dernière connexion : {new Date(user.last_sign_in_at).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'medium' })}
+              </span>
+            )}
           </div>
           <nav className="flex flex-1 flex-col">
             <ul role="list" className="flex flex-1 flex-col gap-y-7">
