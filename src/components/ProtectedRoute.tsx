@@ -1,13 +1,14 @@
 import * as React from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../stores/auth'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
   requiresSubscription?: boolean
+  adminOnly?: boolean
 }
 
-export function ProtectedRoute({ children, requiresSubscription = false }: ProtectedRouteProps) {
+export function ProtectedRoute({ children, requiresSubscription = false, adminOnly = false }: ProtectedRouteProps) {
   const { user, subscription, loading, initialized } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -74,8 +75,15 @@ export function ProtectedRoute({ children, requiresSubscription = false }: Prote
   //    Vérifier si l'utilisateur existe et remplit les conditions d'abonnement.
   //    Si une redirection est nécessaire (gérée par useEffect), rendre null pour éviter d'afficher les enfants prématurément.
   if (!user) {
-    // L'utilisateur n'est pas là, useEffect devrait avoir déclenché une redirection.
-    // Rendre null pour attendre que la redirection prenne effet.
+    return null;
+  }
+
+  // Protection adminOnly
+  if (adminOnly && !user.is_admin) {
+    // Rediriger les non-admins vers le dashboard
+    setTimeout(() => {
+      navigate('/app/dashboard', { replace: true });
+    }, 0);
     return null;
   }
 
