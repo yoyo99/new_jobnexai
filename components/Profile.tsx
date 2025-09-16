@@ -1,9 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '../stores/auth'
-import { supabase } from '../lib/supabase'
-import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
 import { UserPreferences } from './UserPreferences'
 import { UserSkills } from './UserSkills'
 import { JobAlerts } from './JobAlerts'
@@ -12,7 +9,7 @@ import { SubscriptionManager } from './SubscriptionManager'
 import { StripeWebhookInfo } from './StripeWebhookInfo'
 
 export function Profile() {
-  const { user, subscription, loadUser } = useAuth()
+  const { user, loadUser } = useAuth()
   const [loading, setLoading] = useState(false)
   const [fullName, setFullName] = useState(user?.full_name || '')
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
