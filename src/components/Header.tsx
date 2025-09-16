@@ -78,8 +78,7 @@ export function Header() {
           <div className="flex lg:flex-1">
             <Link to="/" className="-m-1.5 p-1.5 flex items-center">
               <span className="sr-only">JobNexAI</span>
-              <img src={simpleLogoSrc} alt="JobNexAI Logo" className="h-10 w-auto" />
-              {/* Link Text Test */}
+                            {/* Link Text Test */}
             </Link>
           </div>
           <div className="flex lg:hidden">
@@ -211,8 +210,7 @@ export function Header() {
             <div className="flex items-center justify-between">
               <Link to="/" className="-m-1.5 p-1.5">
                 <span className="sr-only">JobNexAI</span>
-                <img src={simpleLogoSrc} alt="JobNexAI Logo" className="h-10 w-auto" />
-              </Link>
+                              </Link>
               <button
                 type="button"
                 className="-m-2.5 rounded-md p-2.5 text-white"
