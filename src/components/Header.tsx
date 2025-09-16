@@ -143,8 +143,7 @@ export function Header() {
                             to="/admin"
                             className={`${active ? 'bg-gray-700' : ''} group flex items-center px-4 py-2 text-sm text-yellow-400 hover:text-yellow-300 w-full`}
                           >
-                            {/* Vous pouvez ajouter une icône spécifique pour Admin si vous le souhaitez */}
-                            Admin Panel
+                            Admin
                           </Link>
                         )}
                       </Menu.Item>
