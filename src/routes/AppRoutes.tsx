@@ -49,6 +49,8 @@ const UserCoverLetters = React.lazy(() => import('../components/applications/Use
 export const AppRoutes = () => {
   return (
     <Routes>
+      {/* Route Admin accessible partout si admin */}
+      <Route path="/admin" element={<ProtectedRoute adminOnly={true}><AdminDashboard /></ProtectedRoute>} />
       <Route 
         path="/app" 
         element={
