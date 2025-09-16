@@ -62,6 +62,17 @@ export const useAuth = create<AuthState>((set) => ({
       }
       console.log('[AuthStore] -> Profil trouvé:', profile);
 
+      // @ts-ignore
+      if (window.netlifyIdentity && window.netlifyIdentity.currentUser()) {
+        const jwt = await window.netlifyIdentity.currentUser().jwt();
+        console.log('[DEBUG] Netlify JWT utilisé pour Supabase :', jwt);
+        if (getSupabase().auth && getSupabase().auth.setSession) {
+          await getSupabase().auth.setSession({
+            access_token: jwt,
+            refresh_token: jwt,
+          });
+        }
+      }
       // Met à jour last_sign_in_at à chaque récupération de profil utilisateur
       if (profile && profile.id) {
         try {
