@@ -10,7 +10,7 @@ export default function PlansManager() {
     async function fetchSubs() {
       setLoading(true);
       setError(null);
-      const { data, error } = await supabase.from('user_subscriptions').select('*');
+      const { data, error } = await supabase.from('admin_complete_dashboard').select('subscription_id, user_id, email, subscription_plan, subscription_status, subscription_created_at, subscription_updated_at').not('subscription_id', 'is', null);
       if (error) {
         setError('Erreur lors du chargement des abonnements');
         setSubs([]);
@@ -40,13 +40,13 @@ export default function PlansManager() {
         </thead>
         <tbody>
           {subs.map(sub => (
-            <tr key={sub.id} className="border-t border-white/10">
-              <td className="px-4 py-2">{sub.id}</td>
-              <td className="px-4 py-2">{sub.user_id}</td>
-              <td className="px-4 py-2">{sub.type}</td>
-              <td className="px-4 py-2">{sub.status}</td>
-              <td className="px-4 py-2">{sub.start_date ? new Date(sub.start_date).toLocaleDateString() : ''}</td>
-              <td className="px-4 py-2">{sub.end_date ? new Date(sub.end_date).toLocaleDateString() : ''}</td>
+            <tr key={sub.subscription_id} className="border-t border-white/10">
+              <td className="px-4 py-2">{sub.subscription_id}</td>
+              <td className="px-4 py-2">{sub.email || sub.user_id}</td>
+              <td className="px-4 py-2">{sub.subscription_plan || 'N/A'}</td>
+              <td className="px-4 py-2">{sub.subscription_status || 'N/A'}</td>
+              <td className="px-4 py-2">{sub.subscription_created_at ? new Date(sub.subscription_created_at).toLocaleDateString() : 'N/A'}</td>
+              <td className="px-4 py-2">{sub.subscription_updated_at ? new Date(sub.subscription_updated_at).toLocaleDateString() : 'N/A'}</td>
             </tr>
           ))}
         </tbody>

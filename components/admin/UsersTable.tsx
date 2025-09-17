@@ -14,7 +14,7 @@ export default function UsersTable() {
     async function fetchUsers() {
       setLoading(true);
       setError(null);
-      const { data, error } = await supabase.from('users').select('*');
+      const { data, error } = await supabase.from('admin_complete_dashboard').select('user_id, email, full_name, is_admin, registered_at');
       if (error) {
         setError('Erreur lors du chargement des utilisateurs');
         setUsers([]);
@@ -33,7 +33,7 @@ export default function UsersTable() {
         (!q ||
           (u.email && u.email.toLowerCase().includes(q)) ||
           (u.full_name && u.full_name.toLowerCase().includes(q)) ||
-          (u.id && u.id.toLowerCase().includes(q))
+          (u.user_id && u.user_id.toLowerCase().includes(q))
         )
       )
     );
@@ -49,21 +49,21 @@ export default function UsersTable() {
   const handlePromote = async (userId: string) => {
     setActionMsg(null);
     await confirmAndRun('Confirmer la promotion admin ?', async () => {
-      const { error } = await supabase.from('users').update({ is_admin: true }).eq('id', userId);
+      const { error } = await supabase.from('profiles').update({ is_admin: true }).eq('id', userId);
       setActionMsg(error ? 'Erreur lors de la promotion admin' : 'Utilisateur promu admin');
     });
   };
   const handleSuspend = async (userId: string) => {
     setActionMsg(null);
     await confirmAndRun('Confirmer la suspension de cet utilisateur ?', async () => {
-      const { error } = await supabase.from('users').update({ is_suspended: true }).eq('id', userId);
+      const { error } = await supabase.from('profiles').update({ is_suspended: true }).eq('id', userId);
       setActionMsg(error ? 'Erreur lors de la suspension' : 'Utilisateur suspendu');
     });
   };
   const handleDelete = async (userId: string) => {
     setActionMsg(null);
     await confirmAndRun('Supprimer définitivement cet utilisateur ?', async () => {
-      const { error } = await supabase.from('users').delete().eq('id', userId);
+      const { error } = await supabase.from('profiles').delete().eq('id', userId);
       setActionMsg(error ? 'Erreur lors de la suppression' : 'Utilisateur supprimé');
     });
   };
@@ -96,16 +96,16 @@ export default function UsersTable() {
         </thead>
         <tbody>
           {filtered.map(user => (
-            <tr key={user.id} className="border-t border-white/10">
-              <td className="px-4 py-2">{user.id}</td>
+            <tr key={user.user_id} className="border-t border-white/10">
+              <td className="px-4 py-2">{user.user_id}</td>
               <td className="px-4 py-2">{user.email || <span className="text-gray-500 italic">-</span>}</td>
-              <td className="px-4 py-2">{user.role || (user.is_admin ? 'Admin' : 'Utilisateur')}</td>
-              <td className="px-4 py-2">{user.is_suspended ? <span className="text-red-400">Suspendu</span> : <span className="text-green-400">Actif</span>}</td>
-              <td className="px-4 py-2">{user.created_at ? new Date(user.created_at).toLocaleString() : ''}</td>
+              <td className="px-4 py-2">{user.is_admin ? 'Admin' : 'Utilisateur'}</td>
+              <td className="px-4 py-2"><span className="text-green-400">Actif</span></td>
+              <td className="px-4 py-2">{user.registered_at ? new Date(user.registered_at).toLocaleString() : ''}</td>
               <td className="px-4 py-2 flex gap-2">
-                <button className="text-xs text-yellow-400 hover:underline disabled:opacity-50" disabled={user.is_admin} onClick={() => handlePromote(user.id)}>Promouvoir admin</button>
-                <button className="text-xs text-orange-400 hover:underline disabled:opacity-50" disabled={user.is_suspended} onClick={() => handleSuspend(user.id)}>Suspendre</button>
-                <button className="text-xs text-red-400 hover:underline" onClick={() => handleDelete(user.id)}>Supprimer</button>
+                <button className="text-xs text-yellow-400 hover:underline disabled:opacity-50" disabled={user.is_admin} onClick={() => handlePromote(user.user_id)}>Promouvoir admin</button>
+                <button className="text-xs text-orange-400 hover:underline disabled:opacity-50" disabled={false} onClick={() => handleSuspend(user.user_id)}>Suspendre</button>
+                <button className="text-xs text-red-400 hover:underline" onClick={() => handleDelete(user.user_id)}>Supprimer</button>
               </td>
             </tr>
           ))}

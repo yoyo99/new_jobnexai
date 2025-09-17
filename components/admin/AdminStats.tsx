@@ -12,10 +12,13 @@ export default function AdminStats() {
       setLoading(true);
       setError(null);
       try {
-        const { count: users } = await supabase.from('users').select('*', { count: 'exact', head: true });
+        // Utilise la vue consolidée pour des stats fiables
+        const { data: dashboardData } = await supabase.from('admin_complete_dashboard').select('user_count, subscription_count');
         const { count: jobs } = await supabase.from('jobs').select('*', { count: 'exact', head: true });
-        const { count: subs } = await supabase.from('user_subscriptions').select('*', { count: 'exact', head: true });
-        setStats({ users: users ?? 0, jobs: jobs ?? 0, subs: subs ?? 0 });
+        
+        const users = dashboardData?.length ?? 0;
+        const subs = dashboardData?.reduce((sum, row) => sum + row.subscription_count, 0) ?? 0;
+        setStats({ users, jobs: jobs ?? 0, subs });
       } catch (e) {
         setError('Erreur lors du chargement des statistiques');
       }
