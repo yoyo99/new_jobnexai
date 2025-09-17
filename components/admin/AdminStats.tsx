@@ -15,7 +15,7 @@ export default function AdminStats() {
         const { count: users } = await supabase.from('users').select('*', { count: 'exact', head: true });
         const { count: jobs } = await supabase.from('jobs').select('*', { count: 'exact', head: true });
         const { count: subs } = await supabase.from('user_subscriptions').select('*', { count: 'exact', head: true });
-        setStats({ users: users || 0, jobs: jobs || 0, subs: subs || 0 });
+        setStats({ users: users ?? 0, jobs: jobs ?? 0, subs: subs ?? 0 });
       } catch (e) {
         setError('Erreur lors du chargement des statistiques');
       }

@@ -32,7 +32,7 @@ export default function PlansManager() {
           <tr>
             <th className="px-4 py-2 text-left">ID</th>
             <th className="px-4 py-2 text-left">Utilisateur</th>
-            <th className="px-4 py-2 text-left">Type d'abonnement</th>
+            <th className="px-4 py-2 text-left">Type</th>
             <th className="px-4 py-2 text-left">Statut</th>
             <th className="px-4 py-2 text-left">Début</th>
             <th className="px-4 py-2 text-left">Fin</th>
@@ -43,7 +43,7 @@ export default function PlansManager() {
             <tr key={sub.id} className="border-t border-white/10">
               <td className="px-4 py-2">{sub.id}</td>
               <td className="px-4 py-2">{sub.user_id}</td>
-              <td className="px-4 py-2">{sub.plan_type || sub.type}</td>
+              <td className="px-4 py-2">{sub.type}</td>
               <td className="px-4 py-2">{sub.status}</td>
               <td className="px-4 py-2">{sub.start_date ? new Date(sub.start_date).toLocaleDateString() : ''}</td>
               <td className="px-4 py-2">{sub.end_date ? new Date(sub.end_date).toLocaleDateString() : ''}</td>

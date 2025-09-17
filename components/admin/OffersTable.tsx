@@ -34,17 +34,21 @@ export default function OffersTable() {
             <th className="px-4 py-2 text-left">Titre</th>
             <th className="px-4 py-2 text-left">Entreprise</th>
             <th className="px-4 py-2 text-left">Lieu</th>
-            <th className="px-4 py-2 text-left">Créé le</th>
+            <th className="px-4 py-2 text-left">Type</th>
+            <th className="px-4 py-2 text-left">URL</th>
+            <th className="px-4 py-2 text-left">Publiée le</th>
           </tr>
         </thead>
         <tbody>
           {offers.map(offer => (
             <tr key={offer.id} className="border-t border-white/10">
               <td className="px-4 py-2">{offer.id}</td>
-              <td className="px-4 py-2">{offer.title || offer.job_title || ''}</td>
-              <td className="px-4 py-2">{offer.company_name || offer.company || ''}</td>
-              <td className="px-4 py-2">{offer.location || offer.city || ''}</td>
-              <td className="px-4 py-2">{offer.created_at ? new Date(offer.created_at).toLocaleString() : ''}</td>
+              <td className="px-4 py-2">{offer.title}</td>
+              <td className="px-4 py-2">{offer.company}</td>
+              <td className="px-4 py-2">{offer.location}</td>
+              <td className="px-4 py-2">{offer.job_type}</td>
+              <td className="px-4 py-2"><a href={offer.url} className="text-blue-400 underline" target="_blank" rel="noopener noreferrer">{offer.url}</a></td>
+              <td className="px-4 py-2">{offer.posted_at ? new Date(offer.posted_at).toLocaleDateString() : ''}</td>
             </tr>
           ))}
         </tbody>
