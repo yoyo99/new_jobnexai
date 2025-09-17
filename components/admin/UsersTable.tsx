@@ -14,7 +14,7 @@ export default function UsersTable() {
     async function fetchUsers() {
       setLoading(true);
       setError(null);
-      const { data, error } = await supabase.from('admin_complete_dashboard').select('user_id, email, full_name, is_admin, user_type, registered_at, last_sign_in_at, email_confirmed_at');
+      const { data, error } = await supabase.rpc('get_admin_dashboard');
       if (error) {
         setError('Erreur lors du chargement des utilisateurs');
         setUsers([]);

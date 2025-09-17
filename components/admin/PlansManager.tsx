@@ -10,12 +10,16 @@ export default function PlansManager() {
     async function fetchSubs() {
       setLoading(true);
       setError(null);
-      const { data, error } = await supabase.from('admin_complete_dashboard').select('subscription_id, user_id, email, subscription_plan, subscription_status, subscription_created_at, subscription_updated_at').not('subscription_id', 'is', null);
+      const { data, error } = await supabase.rpc('get_admin_dashboard');
       if (error) {
         setError('Erreur lors du chargement des abonnements');
         setSubs([]);
+      } else if (data) {
+        // Filtrer seulement ceux qui ont des abonnements
+        const subsData = data.filter((item: any) => item.subscription_id !== null);
+        setSubs(subsData);
       } else {
-        setSubs(data || []);
+        setSubs([]);
       }
       setLoading(false);
     }
