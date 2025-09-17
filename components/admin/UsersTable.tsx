@@ -8,6 +8,7 @@ export default function UsersTable() {
   const [error, setError] = useState<string|null>(null);
   const [search, setSearch] = useState('');
   const [actionMsg, setActionMsg] = useState<string|null>(null);
+  const [refreshFlag, setRefreshFlag] = useState(0);
 
   useEffect(() => {
     async function fetchUsers() {
@@ -23,7 +24,7 @@ export default function UsersTable() {
       setLoading(false);
     }
     fetchUsers();
-  }, []);
+  }, [refreshFlag]);
 
   useEffect(() => {
     const q = search.toLowerCase();
@@ -38,24 +39,33 @@ export default function UsersTable() {
     );
   }, [search, users]);
 
+  const confirmAndRun = async (message: string, cb: () => Promise<void>) => {
+    if (window.confirm(message)) {
+      await cb();
+      setRefreshFlag(f => f + 1);
+    }
+  };
+
   const handlePromote = async (userId: string) => {
     setActionMsg(null);
-    // À adapter selon ta logique Supabase (champ is_admin ou table roles)
-    const { error } = await supabase.from('users').update({ is_admin: true }).eq('id', userId);
-    if (error) setActionMsg("Erreur lors de la promotion admin");
-    else setActionMsg("Utilisateur promu admin");
+    await confirmAndRun('Confirmer la promotion admin ?', async () => {
+      const { error } = await supabase.from('users').update({ is_admin: true }).eq('id', userId);
+      setActionMsg(error ? 'Erreur lors de la promotion admin' : 'Utilisateur promu admin');
+    });
   };
   const handleSuspend = async (userId: string) => {
     setActionMsg(null);
-    const { error } = await supabase.from('users').update({ is_suspended: true }).eq('id', userId);
-    if (error) setActionMsg("Erreur lors de la suspension");
-    else setActionMsg("Utilisateur suspendu");
+    await confirmAndRun('Confirmer la suspension de cet utilisateur ?', async () => {
+      const { error } = await supabase.from('users').update({ is_suspended: true }).eq('id', userId);
+      setActionMsg(error ? 'Erreur lors de la suspension' : 'Utilisateur suspendu');
+    });
   };
   const handleDelete = async (userId: string) => {
     setActionMsg(null);
-    const { error } = await supabase.from('users').delete().eq('id', userId);
-    if (error) setActionMsg("Erreur lors de la suppression");
-    else setActionMsg("Utilisateur supprimé");
+    await confirmAndRun('Supprimer définitivement cet utilisateur ?', async () => {
+      const { error } = await supabase.from('users').delete().eq('id', userId);
+      setActionMsg(error ? 'Erreur lors de la suppression' : 'Utilisateur supprimé');
+    });
   };
 
   if (loading) return <div className="p-4 text-gray-400">Chargement...</div>;
@@ -88,17 +98,13 @@ export default function UsersTable() {
           {filtered.map(user => (
             <tr key={user.id} className="border-t border-white/10">
               <td className="px-4 py-2">{user.id}</td>
-              <td className="px-4 py-2">{user.email}</td>
+              <td className="px-4 py-2">{user.email || <span className="text-gray-500 italic">-</span>}</td>
               <td className="px-4 py-2">{user.role || (user.is_admin ? 'Admin' : 'Utilisateur')}</td>
               <td className="px-4 py-2">{user.is_suspended ? <span className="text-red-400">Suspendu</span> : <span className="text-green-400">Actif</span>}</td>
               <td className="px-4 py-2">{user.created_at ? new Date(user.created_at).toLocaleString() : ''}</td>
               <td className="px-4 py-2 flex gap-2">
-                {!user.is_admin && (
-                  <button className="text-xs text-yellow-400 hover:underline" onClick={() => handlePromote(user.id)}>Promouvoir admin</button>
-                )}
-                {!user.is_suspended && (
-                  <button className="text-xs text-orange-400 hover:underline" onClick={() => handleSuspend(user.id)}>Suspendre</button>
-                )}
+                <button className="text-xs text-yellow-400 hover:underline disabled:opacity-50" disabled={user.is_admin} onClick={() => handlePromote(user.id)}>Promouvoir admin</button>
+                <button className="text-xs text-orange-400 hover:underline disabled:opacity-50" disabled={user.is_suspended} onClick={() => handleSuspend(user.id)}>Suspendre</button>
                 <button className="text-xs text-red-400 hover:underline" onClick={() => handleDelete(user.id)}>Supprimer</button>
               </td>
             </tr>
