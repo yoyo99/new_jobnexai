@@ -1,0 +1,402 @@
+'use client';
+import { useState, useEffect } from 'react';
+import { FaUsers, FaShoppingCart, FaEuroSign, FaChartLine, FaDatabase, FaExclamationTriangle, FaSync } from 'react-icons/fa';
+
+interface Stats {
+  users: {
+    total: number;
+    active_7d: number;
+    active_30d: number;
+    new_today: number;
+    new_this_week: number;
+  };
+  subscriptions: {
+    total: number;
+    active: number;
+    trial: number;
+    cancelled: number;
+    revenue_monthly: number;
+    revenue_total: number;
+  };
+  products: {
+    total: number;
+    active: number;
+    most_popular: string;
+  };
+  system: {
+    database_size: string;
+    active_connections: number;
+    uptime: string;
+    last_backup: string;
+  };
+  activity: {
+    logins_today: number;
+    api_calls_today: number;
+    errors_today: number;
+  };
+}
+
+interface LogEntry {
+  id: string;
+  timestamp: string;
+  level: 'info' | 'warning' | 'error';
+  message: string;
+  details?: string;
+}
+
+export default function AdminStatsAdvanced() {
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState('30d');
+  const [activeTab, setActiveTab] = useState<'overview' | 'logs'>('overview');
+
+  useEffect(() => {
+    fetchStats();
+    fetchLogs();
+  }, [selectedPeriod]);
+
+  const fetchStats = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Simuler des données réelles - à remplacer par de vrais appels API/DB
+      const mockStats: Stats = {
+        users: {
+          total: 1247,
+          active_7d: 89,
+          active_30d: 234,
+          new_today: 12,
+          new_this_week: 47
+        },
+        subscriptions: {
+          total: 156,
+          active: 142,
+          trial: 23,
+          cancelled: 14,
+          revenue_monthly: 4248.50,
+          revenue_total: 28950.00
+        },
+        products: {
+          total: 3,
+          active: 3,
+          most_popular: 'Pro Business'
+        },
+        system: {
+          database_size: '2.4 GB',
+          active_connections: 15,
+          uptime: '15 jours 4h',
+          last_backup: '2025-09-17 02:00:00'
+        },
+        activity: {
+          logins_today: 67,
+          api_calls_today: 1523,
+          errors_today: 3
+        }
+      };
+
+      setStats(mockStats);
+    } catch (e) {
+      setError('Erreur lors du chargement des statistiques');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchLogs = async () => {
+    const mockLogs: LogEntry[] = [
+      {
+        id: '1',
+        timestamp: '2025-09-17 20:45:23',
+        level: 'error',
+        message: 'Échec de connexion utilisateur',
+        details: 'Tentative de connexion échouée pour user@example.com'
+      },
+      {
+        id: '2', 
+        timestamp: '2025-09-17 20:42:15',
+        level: 'info',
+        message: 'Nouveau abonnement créé',
+        details: 'Plan Pro Business - user_id: abc123'
+      },
+      {
+        id: '3',
+        timestamp: '2025-09-17 20:38:45',
+        level: 'warning',
+        message: 'Limite API approchée',
+        details: 'Utilisateur proche de sa limite mensuelle (85%)'
+      },
+      {
+        id: '4',
+        timestamp: '2025-09-17 20:35:12',
+        level: 'info',
+        message: 'Backup automatique terminé',
+        details: 'Sauvegarde réussie - 2.4GB'
+      },
+      {
+        id: '5',
+        timestamp: '2025-09-17 20:30:33',
+        level: 'error',
+        message: 'Erreur paiement Stripe',
+        details: 'Carte expirée pour subscription_id: sub_123'
+      }
+    ];
+
+    setLogs(mockLogs);
+  };
+
+  const StatCard = ({ title, value, icon, change, changeType }: {
+    title: string;
+    value: string | number;
+    icon: React.ReactNode;
+    change?: string;
+    changeType?: 'positive' | 'negative' | 'neutral';
+  }) => (
+    <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-gray-400 text-sm">{title}</span>
+        <span className="text-primary-400">{icon}</span>
+      </div>
+      <div className="text-2xl font-bold text-white mb-1">{value}</div>
+      {change && (
+        <div className={`text-xs ${
+          changeType === 'positive' ? 'text-green-400' : 
+          changeType === 'negative' ? 'text-red-400' : 'text-gray-400'
+        }`}>
+          {change}
+        </div>
+      )}
+    </div>
+  );
+
+  if (loading) return <div className="p-4 text-gray-400">Chargement des statistiques...</div>;
+  if (error) return <div className="p-4 text-red-400">{error}</div>;
+  if (!stats) return <div className="p-4 text-gray-400">Aucune donnée disponible</div>;
+
+  return (
+    <div className="space-y-6">
+      {/* Header avec filtres */}
+      <div className="flex justify-between items-start">
+        <div>
+          <h2 className="text-xl font-bold text-white">Statistiques & Logs</h2>
+          <p className="text-gray-400">Métriques système et activité en temps réel</p>
+        </div>
+        <div className="flex gap-2">
+          <select 
+            value={selectedPeriod} 
+            onChange={(e) => setSelectedPeriod(e.target.value)}
+            className="px-3 py-2 bg-white/10 border border-white/20 rounded text-white text-sm"
+          >
+            <option value="7d">7 jours</option>
+            <option value="30d">30 jours</option>
+            <option value="90d">90 jours</option>
+            <option value="1y">1 an</option>
+          </select>
+          <button 
+            onClick={fetchStats}
+            className="px-3 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded text-sm flex items-center gap-1"
+          >
+            <FaSync className="text-xs" />
+            Actualiser
+          </button>
+        </div>
+      </div>
+
+      {/* Navigation Onglets */}
+      <div className="flex border-b border-white/10">
+        <button
+          onClick={() => setActiveTab('overview')}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'overview' 
+              ? 'border-primary-400 text-primary-400' 
+              : 'border-transparent text-gray-400 hover:text-white'
+          }`}
+        >
+          Vue d'ensemble
+        </button>
+        <button
+          onClick={() => setActiveTab('logs')}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'logs' 
+              ? 'border-primary-400 text-primary-400' 
+              : 'border-transparent text-gray-400 hover:text-white'
+          }`}
+        >
+          Logs Système
+        </button>
+      </div>
+
+      {activeTab === 'overview' ? (
+        <div className="space-y-6">
+          {/* KPIs Principaux */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <StatCard
+              title="Utilisateurs Total"
+              value={stats.users.total.toLocaleString()}
+              icon={<FaUsers />}
+              change={`+${stats.users.new_this_week} cette semaine`}
+              changeType="positive"
+            />
+            <StatCard
+              title="Abonnements Actifs"
+              value={stats.subscriptions.active}
+              icon={<FaShoppingCart />}
+              change={`${Math.round((stats.subscriptions.active / stats.users.total) * 100)}% conversion`}
+              changeType="positive"
+            />
+            <StatCard
+              title="CA Mensuel"
+              value={`${stats.subscriptions.revenue_monthly.toLocaleString()}€`}
+              icon={<FaEuroSign />}
+              change="+12% vs dernier mois"
+              changeType="positive"
+            />
+            <StatCard
+              title="Erreurs Aujourd'hui"
+              value={stats.activity.errors_today}
+              icon={<FaExclamationTriangle />}
+              change={stats.activity.errors_today < 5 ? "Niveau normal" : "Attention"}
+              changeType={stats.activity.errors_today < 5 ? "positive" : "negative"}
+            />
+          </div>
+
+          {/* Métriques Détaillées */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Utilisateurs */}
+            <div className="bg-white/5 rounded-lg p-6 border border-white/10">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <FaUsers className="text-primary-400" />
+                Utilisateurs
+              </h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Total inscrit</span>
+                  <span className="text-white font-medium">{stats.users.total.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Actifs 30j</span>
+                  <span className="text-green-400 font-medium">{stats.users.active_30d}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Actifs 7j</span>
+                  <span className="text-green-400 font-medium">{stats.users.active_7d}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Nouveaux aujourd'hui</span>
+                  <span className="text-blue-400 font-medium">{stats.users.new_today}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Abonnements */}
+            <div className="bg-white/5 rounded-lg p-6 border border-white/10">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <FaShoppingCart className="text-primary-400" />
+                Abonnements
+              </h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Total</span>
+                  <span className="text-white font-medium">{stats.subscriptions.total}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Actifs</span>
+                  <span className="text-green-400 font-medium">{stats.subscriptions.active}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Essais</span>
+                  <span className="text-yellow-400 font-medium">{stats.subscriptions.trial}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Annulés</span>
+                  <span className="text-red-400 font-medium">{stats.subscriptions.cancelled}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Système */}
+            <div className="bg-white/5 rounded-lg p-6 border border-white/10">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <FaDatabase className="text-primary-400" />
+                Système
+              </h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Uptime</span>
+                  <span className="text-green-400 font-medium">{stats.system.uptime}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">DB Size</span>
+                  <span className="text-white font-medium">{stats.system.database_size}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Connexions</span>
+                  <span className="text-blue-400 font-medium">{stats.system.active_connections}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Dernier backup</span>
+                  <span className="text-gray-300 font-medium text-xs">Hier 02:00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Activité Temps Réel */}
+          <div className="bg-white/5 rounded-lg p-6 border border-white/10">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <FaChartLine className="text-primary-400" />
+              Activité Temps Réel
+            </h3>
+            <div className="grid grid-cols-3 gap-6 text-center">
+              <div>
+                <div className="text-2xl font-bold text-green-400">{stats.activity.logins_today}</div>
+                <div className="text-sm text-gray-400">Connexions aujourd'hui</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-blue-400">{stats.activity.api_calls_today.toLocaleString()}</div>
+                <div className="text-sm text-gray-400">Appels API aujourd'hui</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-yellow-400">{stats.subscriptions.revenue_total.toLocaleString()}€</div>
+                <div className="text-sm text-gray-400">CA Total</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {/* Section Logs */}
+          <div className="bg-white/5 rounded-lg border border-white/10">
+            <div className="p-4 border-b border-white/10">
+              <h3 className="text-lg font-semibold text-white">Logs Système Récents</h3>
+              <p className="text-gray-400 text-sm">Derniers événements et erreurs</p>
+            </div>
+            <div className="max-h-96 overflow-y-auto">
+              {logs.map(log => (
+                <div key={log.id} className="p-4 border-b border-white/5 hover:bg-white/5 transition-colors">
+                  <div className="flex items-start gap-3">
+                    <span className={`inline-block w-2 h-2 rounded-full mt-2 ${
+                      log.level === 'error' ? 'bg-red-400' :
+                      log.level === 'warning' ? 'bg-yellow-400' : 'bg-green-400'
+                    }`}></span>
+                    <div className="flex-1">
+                      <div className="flex justify-between items-start mb-1">
+                        <span className="text-white font-medium">{log.message}</span>
+                        <span className="text-gray-400 text-xs">{log.timestamp}</span>
+                      </div>
+                      {log.details && (
+                        <p className="text-gray-400 text-sm">{log.details}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

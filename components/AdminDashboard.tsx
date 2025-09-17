@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { FaUsers, FaSuitcase, FaCogs, FaChartBar, FaListAlt, FaServer, FaEllipsisH } from 'react-icons/fa';
 import UsersTable from './admin/UsersTable';
-import OffersTable from './admin/OffersTable';
+import ProductsCatalog from './admin/ProductsCatalog';
 import ScrapingSitesManager from './admin/ScrapingSitesManager';
 import PlansManager from './admin/PlansManager';
-import AdminStats from './admin/AdminStats';
+import AdminStatsAdvanced from './admin/AdminStatsAdvanced';
 import AdminSettings from './admin/AdminSettings';
 
 const menuItems = [
   { key: 'users', label: 'Utilisateurs', icon: <FaUsers aria-hidden="true" /> },
-  { key: 'offers', label: 'Offres', icon: <FaSuitcase aria-hidden="true" /> },
+  { key: 'products', label: 'Catalogue Produits', icon: <FaSuitcase aria-hidden="true" /> },
   { key: 'scraping', label: 'Scraping', icon: <FaServer aria-hidden="true" /> },
   { key: 'plans', label: 'Abonnements', icon: <FaListAlt aria-hidden="true" /> },
   { key: 'stats', label: 'Statistiques & Logs', icon: <FaChartBar aria-hidden="true" /> },
@@ -52,10 +52,9 @@ export function AdminDashboard() {
             <UsersTable />
           </section>
         )}
-        {activeTab === 'offers' && (
-          <section id="admin-section-offers">
-            <h3 className="text-lg font-semibold mb-4">Gestion des offres</h3>
-            <OffersTable />
+        {activeTab === 'products' && (
+          <section id="admin-section-products">
+            <ProductsCatalog />
           </section>
         )}
         {activeTab === 'scraping' && (
@@ -72,8 +71,7 @@ export function AdminDashboard() {
         )}
         {activeTab === 'stats' && (
           <section id="admin-section-stats">
-            <h3 className="text-lg font-semibold mb-4">Statistiques & Logs</h3>
-            <AdminStats />
+            <AdminStatsAdvanced />
           </section>
         )}
         {activeTab === 'settings' && (

@@ -14,7 +14,7 @@ export default function UsersTable() {
     async function fetchUsers() {
       setLoading(true);
       setError(null);
-      const { data, error } = await supabase.from('admin_complete_dashboard').select('user_id, email, full_name, is_admin, registered_at');
+      const { data, error } = await supabase.from('admin_complete_dashboard').select('user_id, email, full_name, is_admin, user_type, registered_at, last_sign_in_at, email_confirmed_at');
       if (error) {
         setError('Erreur lors du chargement des utilisateurs');
         setUsers([]);
@@ -76,7 +76,7 @@ export default function UsersTable() {
       <div className="flex items-center gap-2 mb-4">
         <input
           type="text"
-          placeholder="Recherche email, nom, id..."
+          placeholder="Recherche par email, nom, prénom, ID..."
           value={search}
           onChange={e => setSearch(e.target.value)}
           className="px-3 py-2 rounded bg-white/10 text-white placeholder:text-gray-400 border border-white/10 focus:outline-none focus:ring focus:border-primary-400"
@@ -85,11 +85,14 @@ export default function UsersTable() {
       </div>
       <table className="min-w-full bg-white/5 rounded-lg shadow text-sm">
         <thead>
-          <tr>
+          <tr className="bg-white/5">
             <th className="px-4 py-2 text-left">ID</th>
+            <th className="px-4 py-2 text-left">Nom Utilisateur</th>
             <th className="px-4 py-2 text-left">Email</th>
+            <th className="px-4 py-2 text-left">Nom/Prénom</th>
             <th className="px-4 py-2 text-left">Rôle</th>
             <th className="px-4 py-2 text-left">Statut</th>
+            <th className="px-4 py-2 text-left">Connexion</th>
             <th className="px-4 py-2 text-left">Créé le</th>
             <th className="px-4 py-2 text-left">Actions</th>
           </tr>
@@ -97,11 +100,21 @@ export default function UsersTable() {
         <tbody>
           {filtered.map(user => (
             <tr key={user.user_id} className="border-t border-white/10">
-              <td className="px-4 py-2">{user.user_id}</td>
+              <td className="px-4 py-2 font-mono text-xs">{user.user_id?.substring(0, 8) || '-'}...</td>
+              <td className="px-4 py-2">{user.email?.split('@')[0] || <span className="text-gray-500 italic">-</span>}</td>
               <td className="px-4 py-2">{user.email || <span className="text-gray-500 italic">-</span>}</td>
-              <td className="px-4 py-2">{user.is_admin ? 'Admin' : 'Utilisateur'}</td>
-              <td className="px-4 py-2"><span className="text-green-400">Actif</span></td>
-              <td className="px-4 py-2">{user.registered_at ? new Date(user.registered_at).toLocaleString() : ''}</td>
+              <td className="px-4 py-2">{user.full_name || <span className="text-gray-500 italic">-</span>}</td>
+              <td className="px-4 py-2">{user.is_admin ? <span className="text-yellow-400 font-semibold">Admin</span> : <span className="text-blue-400">Utilisateur</span>}</td>
+              <td className="px-4 py-2">{user.email_confirmed_at ? <span className="text-green-400">Actif</span> : <span className="text-orange-400">En attente</span>}</td>
+              <td className="px-4 py-2">{
+                user.last_sign_in_at ? (
+                  <div className="flex flex-col">
+                    <span className="text-green-400 text-xs">Dernière connexion</span>
+                    <span className="text-gray-300 text-xs">{new Date(user.last_sign_in_at).toLocaleDateString()}</span>
+                  </div>
+                ) : <span className="text-gray-400">Jamais connecté</span>
+              }</td>
+              <td className="px-4 py-2">{user.registered_at ? new Date(user.registered_at).toLocaleDateString() : '-'}</td>
               <td className="px-4 py-2 flex gap-2">
                 <button className="text-xs text-yellow-400 hover:underline disabled:opacity-50" disabled={user.is_admin} onClick={() => handlePromote(user.user_id)}>Promouvoir admin</button>
                 <button className="text-xs text-orange-400 hover:underline disabled:opacity-50" disabled={false} onClick={() => handleSuspend(user.user_id)}>Suspendre</button>
