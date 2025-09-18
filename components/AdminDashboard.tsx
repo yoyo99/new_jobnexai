@@ -5,6 +5,10 @@ import ProductsCatalog from './admin/ProductsCatalog';
 import PlansManager from './admin/PlansManager';
 import AdminStatsAdvanced from './admin/AdminStatsAdvanced';
 import AdminSettings from './admin/AdminSettings';
+import CommunicationsManager from './admin/CommunicationsManager';
+import SecurityManager from './admin/SecurityManager';
+import AnalyticsManager from './admin/AnalyticsManager';
+import IntegrationsManager from './admin/IntegrationsManager';
 
 const menuItems = [
   { key: 'users', label: 'Utilisateurs', icon: <FaUsers aria-hidden="true" /> },
@@ -25,8 +29,16 @@ export function AdminDashboard() {
   return (
     <div className="admin-dashboard flex flex-col lg:flex-row min-h-screen">
       {/* Sidebar */}
-      <aside className="w-full lg:w-64 bg-gray-900 border-r border-white/10 p-4" aria-label="Menu administration">
-        <h2 className="text-xl font-bold text-primary-400 mb-6">Admin</h2>
+      <aside className="admin-sidebar bg-gradient-to-b from-gray-800 to-gray-900 text-white w-64 lg:w-72 flex-shrink-0 border-r border-gray-600/50">
+        <div className="p-6">
+          <h2 className="text-xl font-bold text-center text-primary-400 mb-4">Admin</h2>
+          <button 
+            onClick={() => window.location.href = '/dashboard'}
+            className="w-full px-3 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2 mb-4"
+          >
+            🏠 Retour Dashboard
+          </button>
+        </div>
         <nav className="flex flex-col gap-2" role="tablist">
           {menuItems.map(item => (
             <button
@@ -72,62 +84,22 @@ export function AdminDashboard() {
         )}
         {activeTab === 'communications' && (
           <section id="admin-section-communications">
-            <h3 className="text-lg font-semibold mb-4">Communications</h3>
-            <div className="space-y-4">
-              <div className="bg-white/5 rounded-lg p-6 border border-white/10">
-                <h4 className="text-white font-medium mb-2">📧 Gestion des emails</h4>
-                <p className="text-gray-400 text-sm">Templates, notifications, campagnes email</p>
-              </div>
-              <div className="bg-white/5 rounded-lg p-6 border border-white/10">  
-                <h4 className="text-white font-medium mb-2">🔔 Notifications</h4>
-                <p className="text-gray-400 text-sm">Push notifications, SMS, alertes système</p>
-              </div>
-            </div>
+            <CommunicationsManager />
           </section>
         )}
         {activeTab === 'security' && (
           <section id="admin-section-security">
-            <h3 className="text-lg font-semibold mb-4">Sécurité</h3>
-            <div className="space-y-4">
-              <div className="bg-white/5 rounded-lg p-6 border border-white/10">
-                <h4 className="text-white font-medium mb-2">🔐 Logs de connexion</h4>
-                <p className="text-gray-400 text-sm">Tentatives de connexion, authentification</p>
-              </div>
-              <div className="bg-white/5 rounded-lg p-6 border border-white/10">
-                <h4 className="text-white font-medium mb-2">👥 Gestion des permissions</h4>
-                <p className="text-gray-400 text-sm">Rôles, accès, restrictions</p>
-              </div>
-            </div>
+            <SecurityManager />
           </section>
         )}
         {activeTab === 'analytics' && (
           <section id="admin-section-analytics">
-            <h3 className="text-lg font-semibold mb-4">Analytics</h3>
-            <div className="space-y-4">
-              <div className="bg-white/5 rounded-lg p-6 border border-white/10">
-                <h4 className="text-white font-medium mb-2">📊 Rapports business</h4>
-                <p className="text-gray-400 text-sm">CA, conversions, métriques avancées</p>
-              </div>
-              <div className="bg-white/5 rounded-lg p-6 border border-white/10">
-                <h4 className="text-white font-medium mb-2">📈 Export de données</h4>
-                <p className="text-gray-400 text-sm">CSV, Excel, API exports</p>
-              </div>
-            </div>
+            <AnalyticsManager />
           </section>
         )}
         {activeTab === 'integrations' && (
           <section id="admin-section-integrations">
-            <h3 className="text-lg font-semibold mb-4">API & Intégrations</h3>
-            <div className="space-y-4">
-              <div className="bg-white/5 rounded-lg p-6 border border-white/10">
-                <h4 className="text-white font-medium mb-2">🔌 Webhooks</h4>
-                <p className="text-gray-400 text-sm">Configuration des webhooks Stripe, autres services</p>
-              </div>
-              <div className="bg-white/5 rounded-lg p-6 border border-white/10">
-                <h4 className="text-white font-medium mb-2">🔑 API Keys</h4>
-                <p className="text-gray-400 text-sm">Gestion des clés API, tokens d'accès</p>
-              </div>
-            </div>
+            <IntegrationsManager />
           </section>
         )}
         {activeTab === 'settings' && (

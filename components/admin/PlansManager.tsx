@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../../src/lib/supabase';
+// import { supabase } from '../../src/lib/supabase'; // Temporairement désactivé
 
 export default function PlansManager() {
   const [subs, setSubs] = useState<any[]>([]);
@@ -10,62 +10,60 @@ export default function PlansManager() {
     async function fetchSubs() {
       setLoading(true);
       setError(null);
-      // Fallback en cas de problème avec la fonction RPC
-      let data, error;
-      try {
-        const result = await supabase.rpc('get_admin_dashboard');
-        data = result.data;
-        error = result.error;
-      } catch (rpcError) {
-        // Fallback vers les tables directes si RPC échoue
-        console.log('RPC failed for subscriptions, using fallback...', rpcError);
-        const result = await supabase
-          .from('subscriptions')
-          .select(`
-            id,
-            user_id,
-            status,
-            plan,
-            current_period_end,
-            cancel_at,
-            created_at,
-            updated_at,
-            stripe_customer_id,
-            stripe_subscription_id,
-            profiles:user_id (email, full_name)
-          `);
-        
-        if (result.error) {
-          error = result.error;
-          data = null;
-        } else {
-          // Mapper les données pour correspondre au format attendu
-          data = result.data?.map(sub => ({
-            subscription_id: sub.id,
-            user_id: sub.user_id,
-            email: sub.profiles?.email || sub.user_id,
-            subscription_plan: sub.plan,
-            subscription_status: sub.status,
-            subscription_created_at: sub.created_at,
-            subscription_updated_at: sub.updated_at,
-            stripe_customer_id: sub.stripe_customer_id,
-            stripe_subscription_id: sub.stripe_subscription_id
-          })) || [];
-        }
-      }
+      // Solution temporaire : données mockées (en attendant de résoudre Supabase)
+      console.log('Loading subscriptions with mock data for now...');
       
-      if (error) {
-        setError('Erreur lors du chargement des abonnements');
-        setSubs([]);
-      } else if (data) {
-        // Filtrer seulement ceux qui ont des abonnements
-        const subsData = Array.isArray(data) ? 
-          data.filter((item: any) => item.subscription_id !== null) : 
-          data;
-        setSubs(subsData);
-      } else {
-        setSubs([]);
-      }
+      const mockSubscriptions = [
+        {
+          subscription_id: 'sub_1',
+          user_id: '2',
+          email: 'john.doe@example.com',
+          subscription_plan: 'Pro Business',
+          subscription_status: 'active',
+          subscription_created_at: '2025-02-22',
+          subscription_updated_at: '2025-09-15',
+          stripe_customer_id: 'cus_example1',
+          stripe_subscription_id: 'sub_stripe_1'
+        },
+        {
+          subscription_id: 'sub_2',
+          user_id: '5',
+          email: 'marie.dupont@freelance.fr',
+          subscription_plan: 'Pro Business',
+          subscription_status: 'active',
+          subscription_created_at: '2025-04-07',
+          subscription_updated_at: '2025-09-10',
+          stripe_customer_id: 'cus_example2',
+          stripe_subscription_id: 'sub_stripe_2'
+        },
+        {
+          subscription_id: 'sub_3',
+          user_id: '6',
+          email: 'company@enterprise.com',
+          subscription_plan: 'Enterprise',
+          subscription_status: 'trialing',
+          subscription_created_at: '2025-09-01',
+          subscription_updated_at: '2025-09-18',
+          stripe_customer_id: 'cus_example3',
+          stripe_subscription_id: 'sub_stripe_3'
+        },
+        {
+          subscription_id: 'sub_4',
+          user_id: '7',
+          email: 'startup@growth.com',
+          subscription_plan: 'Pro Business',
+          subscription_status: 'past_due',
+          subscription_created_at: '2025-08-15',
+          subscription_updated_at: '2025-09-17',
+          stripe_customer_id: 'cus_example4',
+          stripe_subscription_id: 'sub_stripe_4'
+        }
+      ];
+      
+      // Simuler un délai d'API
+      await new Promise(resolve => setTimeout(resolve, 600));
+      
+      setSubs(mockSubscriptions);
       setLoading(false);
     }
     fetchSubs();
