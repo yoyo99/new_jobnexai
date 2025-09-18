@@ -14,7 +14,44 @@ export default function UsersTable() {
     async function fetchUsers() {
       setLoading(true);
       setError(null);
-      const { data, error } = await supabase.rpc('get_admin_dashboard');
+      // Fallback en cas de problème avec la fonction RPC
+      let data, error;
+      try {
+        const result = await supabase.rpc('get_admin_dashboard');
+        data = result.data;
+        error = result.error;
+      } catch (rpcError) {
+        // Fallback vers les tables directes si RPC échoue
+        console.log('RPC failed, using fallback...', rpcError);
+        const result = await supabase
+          .from('profiles')
+          .select(`
+            id,
+            email,
+            full_name,
+            is_admin,
+            user_type,
+            created_at,
+            updated_at
+          `);
+        
+        if (result.error) {
+          error = result.error;
+          data = null;
+        } else {
+          // Mapper les données pour correspondre au format attendu
+          data = result.data?.map(profile => ({
+            user_id: profile.id,
+            email: profile.email,
+            full_name: profile.full_name,
+            is_admin: profile.is_admin,
+            user_type: profile.user_type,
+            registered_at: profile.created_at,
+            last_sign_in_at: null, // pas accessible depuis profiles
+            email_confirmed_at: profile.created_at // approximation
+          })) || [];
+        }
+      }
       if (error) {
         setError('Erreur lors du chargement des utilisateurs');
         setUsers([]);

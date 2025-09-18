@@ -10,13 +10,58 @@ export default function PlansManager() {
     async function fetchSubs() {
       setLoading(true);
       setError(null);
-      const { data, error } = await supabase.rpc('get_admin_dashboard');
+      // Fallback en cas de problème avec la fonction RPC
+      let data, error;
+      try {
+        const result = await supabase.rpc('get_admin_dashboard');
+        data = result.data;
+        error = result.error;
+      } catch (rpcError) {
+        // Fallback vers les tables directes si RPC échoue
+        console.log('RPC failed for subscriptions, using fallback...', rpcError);
+        const result = await supabase
+          .from('subscriptions')
+          .select(`
+            id,
+            user_id,
+            status,
+            plan,
+            current_period_end,
+            cancel_at,
+            created_at,
+            updated_at,
+            stripe_customer_id,
+            stripe_subscription_id,
+            profiles:user_id (email, full_name)
+          `);
+        
+        if (result.error) {
+          error = result.error;
+          data = null;
+        } else {
+          // Mapper les données pour correspondre au format attendu
+          data = result.data?.map(sub => ({
+            subscription_id: sub.id,
+            user_id: sub.user_id,
+            email: sub.profiles?.email || sub.user_id,
+            subscription_plan: sub.plan,
+            subscription_status: sub.status,
+            subscription_created_at: sub.created_at,
+            subscription_updated_at: sub.updated_at,
+            stripe_customer_id: sub.stripe_customer_id,
+            stripe_subscription_id: sub.stripe_subscription_id
+          })) || [];
+        }
+      }
+      
       if (error) {
         setError('Erreur lors du chargement des abonnements');
         setSubs([]);
       } else if (data) {
         // Filtrer seulement ceux qui ont des abonnements
-        const subsData = data.filter((item: any) => item.subscription_id !== null);
+        const subsData = Array.isArray(data) ? 
+          data.filter((item: any) => item.subscription_id !== null) : 
+          data;
         setSubs(subsData);
       } else {
         setSubs([]);
