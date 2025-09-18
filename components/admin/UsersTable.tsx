@@ -1,9 +1,19 @@
 import { useEffect, useState } from 'react';
-// import { supabase } from '../../src/lib/supabase'; // Temporairement désactivé
+
+interface User {
+  user_id: string;
+  email: string;
+  full_name: string | null;
+  user_type: string | null;
+  is_admin: boolean;
+  registered_at: string | null;
+  last_sign_in_at: string | null;
+  email_confirmed_at: string | null;
+}
 
 export default function UsersTable() {
-  const [users, setUsers] = useState<any[]>([]);
-  const [filtered, setFiltered] = useState<any[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [filtered, setFiltered] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string|null>(null);
   const [search, setSearch] = useState('');
@@ -11,80 +21,101 @@ export default function UsersTable() {
   const [refreshFlag, setRefreshFlag] = useState(0);
 
   useEffect(() => {
-    async function fetchUsers() {
-      setLoading(true);
-      setError(null);
-      // Solution temporaire : données mockées (en attendant de résoudre Supabase)
-      console.log('Loading users with mock data for now...');
-      
-      const mockUsers = [
-        {
-          user_id: '1',
-          email: 'admin@jobnex.ai',
-          full_name: 'Administrateur Principal',
-          is_admin: true,
-          user_type: 'admin',
-          registered_at: '2025-01-15',
-          last_sign_in_at: '2025-09-18',
-          email_confirmed_at: '2025-01-15'
-        },
-        {
-          user_id: '2', 
-          email: 'john.doe@example.com',
-          full_name: 'John Doe',
-          is_admin: false,
-          user_type: 'premium',
-          registered_at: '2025-02-20',
-          last_sign_in_at: '2025-09-17',
-          email_confirmed_at: '2025-02-20'
-        },
-        {
-          user_id: '3',
-          email: 'jane.smith@company.com', 
-          full_name: 'Jane Smith',
-          is_admin: false,
-          user_type: 'free',
-          registered_at: '2025-03-10',
-          last_sign_in_at: '2025-09-16',
-          email_confirmed_at: '2025-03-10'
-        },
-        {
-          user_id: '4',
-          email: 'support@jobnex.ai',
-          full_name: 'Support Team',
-          is_admin: true,
-          user_type: 'admin',
-          registered_at: '2025-01-01',
-          last_sign_in_at: '2025-09-18',
-          email_confirmed_at: '2025-01-01'
-        },
-        {
-          user_id: '5',
-          email: 'marie.dupont@freelance.fr',
-          full_name: 'Marie Dupont',
-          is_admin: false,
-          user_type: 'premium',
-          registered_at: '2025-04-05',
-          last_sign_in_at: '2025-09-15',
-          email_confirmed_at: '2025-04-05'
-        }
-      ];
-      
-      // Simuler un délai d'API
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const data = mockUsers;
-      const error = null;
-      if (error) {
-        setError('Erreur lors du chargement des utilisateurs');
-        setUsers([]);
-      } else {
-        setUsers(data || []);
-      }
-      setLoading(false);
-    }
     fetchUsers();
   }, [refreshFlag]);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch('/api/admin/users');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      
+      // Transform API data to component format
+      const transformedUsers: User[] = data.users.map((user: any) => ({
+        user_id: user.id,
+        email: user.email,
+        full_name: user.full_name,
+        user_type: user.user_type || (user.is_admin ? 'admin' : 'free'),
+        is_admin: user.is_admin || false,
+        registered_at: user.created_at,
+        last_sign_in_at: user.last_sign_in_at,
+        email_confirmed_at: user.email_confirmed_at
+      }));
+      
+      setUsers(transformedUsers);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      setError(`Erreur lors du chargement des utilisateurs: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+      
+      // Fallback to mock data if API fails
+      const mockUsers: User[] = [
+        {
+          user_id: 'adm-001',
+          email: 'admin@jobnex.ai',
+          full_name: 'Administrateur Principal',
+          user_type: 'admin',
+          is_admin: true,
+          registered_at: '2025-01-15T10:30:00Z',
+          last_sign_in_at: '2025-09-18T16:45:00Z',
+          email_confirmed_at: '2025-01-15T10:30:00Z'
+        },
+        {
+          user_id: 'usr-002',
+          email: 'john.doe@example.com',
+          full_name: 'John Doe',
+          user_type: 'premium',
+          is_admin: false,
+          registered_at: '2025-02-20T14:20:00Z',
+          last_sign_in_at: '2025-09-17T09:15:00Z',
+          email_confirmed_at: '2025-02-20T14:20:00Z'
+        },
+        {
+          user_id: 'usr-003',
+          email: 'jane.smith@company.com',
+          full_name: 'Jane Smith',
+          user_type: 'free',
+          is_admin: false,
+          registered_at: '2025-03-10T12:00:00Z',
+          last_sign_in_at: '2025-09-16T11:30:00Z',
+          email_confirmed_at: '2025-03-10T12:00:00Z'
+        },
+        {
+          user_id: 'adm-004',
+          email: 'support@jobnex.ai',
+          full_name: 'Support Team',
+          user_type: 'admin',
+          is_admin: true,
+          registered_at: '2025-01-01T10:00:00Z',
+          last_sign_in_at: '2025-09-18T17:00:00Z',
+          email_confirmed_at: '2025-01-01T10:00:00Z'
+        },
+        {
+          user_id: 'usr-005',
+          email: 'marie.dupont@freelance.fr',
+          full_name: 'Marie Dupont',
+          user_type: 'premium',
+          is_admin: false,
+          registered_at: '2025-04-05T14:30:00Z',
+          last_sign_in_at: '2025-09-15T10:45:00Z',
+          email_confirmed_at: '2025-04-05T14:30:00Z'
+        }
+      ];
+      setUsers(mockUsers);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const q = search.toLowerCase();
@@ -198,4 +229,3 @@ export default function UsersTable() {
     </div>
   );
 }
-

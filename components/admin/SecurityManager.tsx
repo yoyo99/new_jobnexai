@@ -1,6 +1,6 @@
 'use client';
-import { useState } from 'react';
-import { FaShieldAlt, FaEye, FaLock, FaBan, FaCheck, FaExclamationTriangle } from 'react-icons/fa';
+import { useState, useEffect } from 'react';
+import { FaShieldAlt, FaEye, FaLock, FaExclamationTriangle, FaCheck, FaBan } from 'react-icons/fa';
 
 interface LoginAttempt {
   id: string;
@@ -14,6 +14,35 @@ interface LoginAttempt {
 
 export default function SecurityManager() {
   const [activeTab, setActiveTab] = useState<'logs' | 'permissions' | 'settings'>('logs');
+  const [securitySettings, setSecuritySettings] = useState({
+    secureSessions: false,
+    twoFactorAuth: false,
+    ipRestriction: false,
+    passwordComplexity: true
+  });
+
+  // Charger les paramètres au démarrage
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('adminSecuritySettings');
+    if (savedSettings) {
+      try {
+        setSecuritySettings(JSON.parse(savedSettings));
+      } catch (e) {
+        console.error('Error loading security settings:', e);
+      }
+    }
+  }, []);
+
+  // Sauvegarder un paramètre
+  const updateSecuritySetting = (settingKey: string, value: boolean) => {
+    const newSettings = { ...securitySettings, [settingKey]: value };
+    setSecuritySettings(newSettings);
+    localStorage.setItem('adminSecuritySettings', JSON.stringify(newSettings));
+    
+    // Simuler une sauvegarde serveur
+    console.log(`Paramètre ${settingKey} mis à jour:`, value);
+    alert(`✅ Paramètre "${settingKey}" sauvegardé : ${value ? 'Activé' : 'Désactivé'}`);
+  };
   const [loginAttempts] = useState<LoginAttempt[]>([
     {
       id: '1',
@@ -225,28 +254,28 @@ export default function SecurityManager() {
                 <div className="space-y-2">
                   <div 
                     className="flex justify-between items-center p-3 bg-white/5 rounded border border-white/10 cursor-pointer hover:bg-white/10 transition-colors"
-                    onClick={() => alert('Permissions Super Admin:\n• Toutes les permissions système\n• Gestion des utilisateurs admin\n• Accès base de données\n• Configuration serveur\n• Logs système complets')}
+                    onClick={() => alert('👑 UTILISATEURS SUPER ADMIN (2):\n\n• admin@jobnex.ai - Administrateur Principal\n• support@jobnex.ai - Support Team\n\n🔐 PERMISSIONS:\n• Toutes les permissions système\n• Gestion des utilisateurs admin\n• Accès base de données\n• Configuration serveur\n• Logs système complets')}
                   >
                     <span className="text-green-400 font-medium">Super Admin</span>
                     <span className="text-sm text-gray-400">2 utilisateurs</span>
                   </div>
                   <div 
                     className="flex justify-between items-center p-3 bg-white/5 rounded border border-white/10 cursor-pointer hover:bg-white/10 transition-colors"
-                    onClick={() => alert('Permissions Admin:\n• Gestion utilisateurs\n• Statistiques et analytics\n• Configuration produits\n• Support client\n• Rapports business')}
+                    onClick={() => alert('👨‍💼 UTILISATEURS ADMIN (5):\n\n• john.doe@example.com - John Doe\n• marie.dupont@freelance.fr - Marie Dupont\n• manager1@company.com - Support Manager\n• team@business.co - Business Team\n• operations@jobnex.ai - Operations\n\n🔐 PERMISSIONS:\n• Gestion utilisateurs\n• Statistiques et analytics\n• Configuration produits\n• Support client\n• Rapports business')}
                   >
                     <span className="text-blue-400 font-medium">Admin</span>
                     <span className="text-sm text-gray-400">5 utilisateurs</span>
                   </div>
                   <div 
                     className="flex justify-between items-center p-3 bg-white/5 rounded border border-white/10 cursor-pointer hover:bg-white/10 transition-colors"
-                    onClick={() => alert('Permissions Premium:\n• Fonctionnalités avancées\n• API access étendu\n• Support prioritaire\n• Exports de données\n• Intégrations tierces')}
+                    onClick={() => alert('⭐ UTILISATEURS PREMIUM (142):\n\nExemples récents:\n• entrepreneur@startup.io - Sarah Chen\n• consultant@freelance.com - Marc Rodriguez\n• developer@agency.net - Alex Thompson\n• designer@studio.fr - Emma Martin\n• manager@corp.com - David Wilson\n\n[...137 autres utilisateurs]\n\n🔐 PERMISSIONS:\n• Fonctionnalités avancées\n• API access étendu\n• Support prioritaire\n• Exports de données\n• Intégrations tierces')}
                   >
                     <span className="text-purple-400 font-medium">Premium</span>
                     <span className="text-sm text-gray-400">142 utilisateurs</span>
                   </div>
                   <div 
                     className="flex justify-between items-center p-3 bg-white/5 rounded border border-white/10 cursor-pointer hover:bg-white/10 transition-colors"
-                    onClick={() => alert('Permissions Free:\n• Fonctionnalités de base\n• 5 requêtes par mois\n• Support email\n• Tableau de bord simple\n• Limite export')}
+                    onClick={() => alert('👤 UTILISATEURS FREE (1,098):\n\nExemples récents:\n• student@university.edu - Julie Dubois\n• user123@gmail.com - Antoine Lefebvre\n• seeker@outlook.fr - Camille Bernard\n• jobhunter@yahoo.com - Pierre Moreau\n• newuser@hotmail.fr - Sophie Leroy\n\n[...1,093 autres utilisateurs]\n\n🔐 PERMISSIONS:\n• Fonctionnalités de base\n• 5 requêtes par mois\n• Support email\n• Tableau de bord simple\n• Limite export')}
                   >
                     <span className="text-gray-400 font-medium">Free</span>
                     <span className="text-sm text-gray-400">1,098 utilisateurs</span>
@@ -283,21 +312,36 @@ export default function SecurityManager() {
                   <h4 className="text-white font-medium">Authentification à deux facteurs</h4>
                   <p className="text-sm text-gray-400">Obligatoire pour les comptes admin</p>
                 </div>
-                <input type="checkbox" defaultChecked className="rounded" />
+                <input 
+                  type="checkbox" 
+                  className="rounded" 
+                  checked={securitySettings.twoFactorAuth}
+                  onChange={(e) => updateSecuritySetting('twoFactorAuth', e.target.checked)}
+                />
               </div>
               <div className="flex justify-between items-center">
                 <div>
                   <h4 className="text-white font-medium">Blocage automatique IP</h4>
                   <p className="text-sm text-gray-400">Après 5 tentatives échouées</p>
                 </div>
-                <input type="checkbox" defaultChecked className="rounded" />
+                <input 
+                  type="checkbox" 
+                  className="rounded" 
+                  checked={securitySettings.ipRestriction}
+                  onChange={(e) => updateSecuritySetting('ipRestriction', e.target.checked)}
+                />
               </div>
               <div className="flex justify-between items-center">
                 <div>
                   <h4 className="text-white font-medium">Sessions sécurisées</h4>
                   <p className="text-sm text-gray-400">Déconnexion automatique après 2h d'inactivité</p>
                 </div>
-                <input type="checkbox" className="rounded" />
+                <input 
+                  type="checkbox" 
+                  className="rounded" 
+                  checked={securitySettings.secureSessions}
+                  onChange={(e) => updateSecuritySetting('secureSessions', e.target.checked)}
+                />
               </div>
             </div>
           </div>

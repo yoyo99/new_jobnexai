@@ -51,7 +51,10 @@ export default function CommunicationsManager() {
   const [showCreateForm, setShowCreateForm] = useState(false);
 
   const handleEdit = (templateId: string) => {
-    alert(`Éditer template: ${templateId}`);
+    const template = templates.find(t => t.id === templateId);
+    if (template) {
+      alert(`✏️ ÉDITION TEMPLATE\n\nNom: ${template.name}\nType: ${template.type}\nSujet: ${template.subject}\nStatut: ${template.status}\n\n📝 Fonctionnalité d'édition complète à implémenter`);
+    }
   };
 
   const handleDelete = (templateId: string) => {
@@ -194,7 +197,12 @@ export default function CommunicationsManager() {
                       <FaEdit />
                     </button>
                     <button
-                      onClick={() => alert(`Prévisualiser: ${template.name}`)}
+                      onClick={() => {
+                        const template_obj = templates.find(t => t.id === template.id);
+                        if (template_obj) {
+                          alert(`👁️ APERÇU TEMPLATE\n\nNom: ${template_obj.name}\nType: ${template_obj.type}\nSujet: ${template_obj.subject}\n\n📧 CONTENU EMAIL:\nBonjour [Nom],\n\nCeci est un exemple de contenu pour le template "${template_obj.name}".\n\nCordialement,\nL'équipe JobNexAI\n\n---\n✅ Aperçu fonctionnel ! Interface complète à développer`);
+                        }
+                      }}
                       className="p-2 text-green-400 hover:text-green-300 hover:bg-green-600/10 rounded transition-colors"
                       title="Prévisualiser"
                     >
