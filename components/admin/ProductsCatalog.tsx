@@ -200,10 +200,18 @@ export default function ProductsCatalog() {
             <input placeholder="Prix (€)" type="number" className="px-3 py-2 bg-white/10 border border-white/20 rounded text-white" />
             <textarea placeholder="Description" className="col-span-2 px-3 py-2 bg-white/10 border border-white/20 rounded text-white h-20"></textarea>
             <div className="col-span-2 flex gap-2">
-              <button className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded">Créer</button>
+              <button 
+                onClick={() => {
+                  alert('Produit créé avec succès ! (fonctionnalité démo)');
+                  setShowCreateForm(false);
+                }}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
+              >
+                Créer
+              </button>
               <button 
                 onClick={() => setShowCreateForm(false)}
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded"
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors"
               >
                 Annuler
               </button>

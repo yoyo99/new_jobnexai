@@ -178,7 +178,11 @@ export default function SecurityManager() {
             </div>
             <div className="max-h-96 overflow-y-auto">
               {loginAttempts.map(attempt => (
-                <div key={attempt.id} className="p-4 border-b border-white/5 hover:bg-white/5 transition-colors">
+                <div 
+                  key={attempt.id} 
+                  className="p-4 border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer"
+                  onClick={() => alert(`Détails de connexion:\n\nEmail: ${attempt.email}\nIP: ${attempt.ip_address}\nLocalisation: ${attempt.location}\nNavigateur: ${attempt.user_agent}\nStatut: ${attempt.status}\nHeure: ${attempt.timestamp}`)}
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       {getStatusIcon(attempt.status)}
@@ -219,19 +223,31 @@ export default function SecurityManager() {
               <div>
                 <h4 className="text-white font-medium mb-3">Rôles Définis</h4>
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center p-3 bg-white/5 rounded border border-white/10">
+                  <div 
+                    className="flex justify-between items-center p-3 bg-white/5 rounded border border-white/10 cursor-pointer hover:bg-white/10 transition-colors"
+                    onClick={() => alert('Permissions Super Admin:\n• Toutes les permissions système\n• Gestion des utilisateurs admin\n• Accès base de données\n• Configuration serveur\n• Logs système complets')}
+                  >
                     <span className="text-green-400 font-medium">Super Admin</span>
                     <span className="text-sm text-gray-400">2 utilisateurs</span>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-white/5 rounded border border-white/10">
+                  <div 
+                    className="flex justify-between items-center p-3 bg-white/5 rounded border border-white/10 cursor-pointer hover:bg-white/10 transition-colors"
+                    onClick={() => alert('Permissions Admin:\n• Gestion utilisateurs\n• Statistiques et analytics\n• Configuration produits\n• Support client\n• Rapports business')}
+                  >
                     <span className="text-blue-400 font-medium">Admin</span>
                     <span className="text-sm text-gray-400">5 utilisateurs</span>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-white/5 rounded border border-white/10">
+                  <div 
+                    className="flex justify-between items-center p-3 bg-white/5 rounded border border-white/10 cursor-pointer hover:bg-white/10 transition-colors"
+                    onClick={() => alert('Permissions Premium:\n• Fonctionnalités avancées\n• API access étendu\n• Support prioritaire\n• Exports de données\n• Intégrations tierces')}
+                  >
                     <span className="text-purple-400 font-medium">Premium</span>
                     <span className="text-sm text-gray-400">142 utilisateurs</span>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-white/5 rounded border border-white/10">
+                  <div 
+                    className="flex justify-between items-center p-3 bg-white/5 rounded border border-white/10 cursor-pointer hover:bg-white/10 transition-colors"
+                    onClick={() => alert('Permissions Free:\n• Fonctionnalités de base\n• 5 requêtes par mois\n• Support email\n• Tableau de bord simple\n• Limite export')}
+                  >
                     <span className="text-gray-400 font-medium">Free</span>
                     <span className="text-sm text-gray-400">1,098 utilisateurs</span>
                   </div>

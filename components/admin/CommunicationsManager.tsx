@@ -123,6 +123,9 @@ export default function CommunicationsManager() {
 
       {activeTab === 'emails' ? (
         <div className="space-y-4">
+          {/* Debug info */}
+          {showCreateForm && <div className="text-green-400 text-sm mb-2">✅ Formulaire activé</div>}
+          
           {/* Formulaire création */}
           {showCreateForm && (
             <div className="bg-white/5 rounded-lg p-6 border border-white/10">
@@ -138,7 +141,15 @@ export default function CommunicationsManager() {
                 <input placeholder="Sujet de l'email" className="col-span-2 px-3 py-2 bg-white/10 border border-white/20 rounded text-white" />
                 <textarea placeholder="Contenu du template..." className="col-span-2 px-3 py-2 bg-white/10 border border-white/20 rounded text-white h-32"></textarea>
                 <div className="col-span-2 flex gap-2">
-                  <button className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded">Créer</button>
+                  <button 
+                    onClick={() => {
+                      alert('Template email créé ! (fonctionnalité démo)');
+                      setShowCreateForm(false);
+                    }}
+                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
+                  >
+                    Créer
+                  </button>
                   <button 
                     onClick={() => setShowCreateForm(false)}
                     className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded"
