@@ -53,7 +53,21 @@ export default function CommunicationsManager() {
   const handleEdit = (templateId: string) => {
     const template = templates.find(t => t.id === templateId);
     if (template) {
-      alert(`✏️ ÉDITION TEMPLATE\n\nNom: ${template.name}\nType: ${template.type}\nSujet: ${template.subject}\nStatut: ${template.status}\n\n📝 Fonctionnalité d'édition complète à implémenter`);
+      const newName = prompt(`✏️ MODIFIER NOM TEMPLATE\n\nNom actuel: ${template.name}`, template.name);
+      if (newName && newName !== template.name) {
+        setTemplates(prev => prev.map(t => 
+          t.id === templateId ? {...t, name: newName} : t
+        ));
+        alert(`✅ Template modifié !\n\nAncien nom: ${template.name}\nNouveau nom: ${newName}`);
+      }
+      
+      const newSubject = prompt(`✏️ MODIFIER SUJET EMAIL\n\nSujet actuel: ${template.subject}`, template.subject);
+      if (newSubject && newSubject !== template.subject) {
+        setTemplates(prev => prev.map(t => 
+          t.id === templateId ? {...t, subject: newSubject} : t
+        ));
+        alert(`✅ Sujet modifié !\n\nAncien sujet: ${template.subject}\nNouveau sujet: ${newSubject}`);
+      }
     }
   };
 

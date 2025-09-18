@@ -10,8 +10,24 @@ export default function PlansManager() {
     async function fetchSubs() {
       setLoading(true);
       setError(null);
-      // Solution temporaire : données mockées (en attendant de résoudre Supabase)
-      console.log('Loading subscriptions with mock data for now...');
+      
+      try {
+        // Essayer de récupérer les vraies données
+        const response = await fetch('/api/admin/subscriptions');
+        
+        if (response.ok) {
+          const data = await response.json();
+          setSubs(data.subscriptions || []);
+          console.log('✅ Vraies données subscriptions chargées:', data.subscriptions?.length);
+          setLoading(false);
+          return;
+        }
+      } catch (error) {
+        console.error('Erreur API subscriptions:', error);
+      }
+      
+      // Fallback sur données mockées réalistes
+      console.log('💫 Fallback: données mockées (API indisponible)');
       
       const mockSubscriptions = [
         {

@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FaPlug, FaKey, FaLink, FaEye, FaEyeSlash, FaCopy, FaTrash, FaPlus } from 'react-icons/fa';
 
 interface APIKey {
@@ -28,6 +28,19 @@ export default function IntegrationsManager() {
   const [activeTab, setActiveTab] = useState<'webhooks' | 'api-keys' | 'integrations'>('webhooks');
   const [showCreateWebhook, setShowCreateWebhook] = useState(false);
   const [showCreateAPIKey, setShowCreateAPIKey] = useState(false);
+  
+  // Charger les paramètres sauvegardés
+  useEffect(() => {
+    const savedWebhooks = localStorage.getItem('adminWebhooksSettings');
+    if (savedWebhooks) {
+      try {
+        const parsed = JSON.parse(savedWebhooks);
+        setWebhooks(parsed);
+      } catch (e) {
+        console.error('Error loading webhooks settings:', e);
+      }
+    }
+  }, []);
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
 
   const [apiKeys, setApiKeys] = useState<APIKey[]>([
@@ -118,11 +131,21 @@ export default function IntegrationsManager() {
   };
 
   const handleToggleWebhook = (webhookId: string) => {
-    setWebhooks(prev => prev.map(hook => 
-      hook.id === webhookId 
-        ? {...hook, status: hook.status === 'active' ? 'inactive' : 'active'}
-        : hook
-    ));
+    const newWebhooks = webhooks.map(hook => {
+      if (hook.id === webhookId) {
+        const newStatus: 'active' | 'inactive' | 'error' = hook.status === 'active' ? 'inactive' : 'active';
+        return {...hook, status: newStatus};
+      }
+      return hook;
+    });
+    setWebhooks(newWebhooks);
+    
+    // Sauvegarder dans localStorage
+    localStorage.setItem('adminWebhooksSettings', JSON.stringify(newWebhooks));
+    
+    const hook = webhooks.find(h => h.id === webhookId);
+    const newStatus = hook?.status === 'active' ? 'inactive' : 'active';
+    alert(`✅ Webhook "${hook?.name}" ${newStatus === 'active' ? 'activé' : 'désactivé'} et sauvegardé !`);
   };
 
   const getStatusColor = (status: string) => {

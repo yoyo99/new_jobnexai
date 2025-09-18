@@ -81,9 +81,12 @@ export default function ProductsCatalog() {
 
   const handleStripeLink = (product: Product) => {
     if (product.stripe_product_id) {
-      // Lien vers le produit Stripe (à adapter avec votre Stripe account)
-      const stripeUrl = `https://dashboard.stripe.com/products/${product.stripe_product_id}`;
+      // Lien vers le dashboard Stripe correct
+      const stripeUrl = `https://dashboard.stripe.com/test/products/${product.stripe_product_id}`;
       window.open(stripeUrl, '_blank');
+      alert(`🔗 Ouverture Stripe Dashboard\n\nProduit: ${product.name}\nStripe ID: ${product.stripe_product_id}\n\n✅ Redirection vers Stripe Dashboard`);
+    } else {
+      alert(`⚠️ Aucun ID Stripe associé\n\nProduit: ${product.name}\n\n💡 Créez d'abord le produit dans Stripe puis associez l'ID`);
     }
   };
 
@@ -175,7 +178,12 @@ export default function ProductsCatalog() {
               >
                 {product.active ? 'Désactiver' : 'Activer'}
               </button>
-              <button className="flex-1 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors">
+              <button 
+                onClick={() => {
+                  alert(`✏️ MODIFICATION PRODUIT\n\nProduit: ${product.name}\nPrix: ${product.price}€/${product.interval}\nStatut: ${product.active ? 'Actif' : 'Inactif'}\n\n📝 Interface de modification complète à développer`);
+                }}
+                className="flex-1 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors"
+              >
                 Modifier
               </button>
               {product.stripe_product_id && (
