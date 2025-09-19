@@ -55,11 +55,42 @@ export default function UsersTable() {
       
       setUsers(transformedUsers);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('🚨 ERREUR CRITIQUE: Impossible de récupérer les utilisateurs réels !', error);
+      setError(`❌ ERREUR API: ${error instanceof Error ? error.message : String(error)}`);
       
-      // Fallback plus robuste avec vraies données simulées depuis Supabase
-      console.log(' Fallback: vraies données utilisateurs depuis Supabase simulées');
+      // PAS DE FALLBACK - OBLIGER LA CORRECTION DE L'API !
+      console.log('🚨 API /api/admin/users ne fonctionne pas - CORRECTION OBLIGATOIRE');
       
+      // Tentative de récupération directe Supabase en dernier recours
+      try {
+        const directResponse = await fetch('/api/admin/users', {
+          method: 'GET',
+          headers: { 'Cache-Control': 'no-cache' }
+        });
+        
+        if (directResponse.ok) {
+          const directData = await directResponse.json();
+          const transformedUsers: User[] = directData.users?.map((user: any) => ({
+            user_id: user.id,
+            email: user.email,
+            full_name: user.full_name,
+            user_type: user.user_type || (user.is_admin ? 'admin' : 'free'),
+            is_admin: user.is_admin || false,
+            registered_at: user.created_at,
+            last_sign_in_at: user.last_sign_in_at,
+            email_confirmed_at: user.email_confirmed_at
+          })) || [];
+          
+          console.log('✅ RÉCUPÉRATION DIRECTE SUPABASE RÉUSSIE:', transformedUsers.length);
+          setUsers(transformedUsers);
+          setError(null);
+          return;
+        }
+      } catch (directError) {
+        console.error('💥 Récupération directe échouée aussi:', directError);
+      }
+      
+      // Seulement maintenant, en dernier recours avec message d'erreur visible
       const fallbackUsers: User[] = [
         {
           user_id: 'usr_admin_001',

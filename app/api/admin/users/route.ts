@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
-import { getAdminUsers } from '@/lib/admin-service';
+import { getAdminUsers } from '@/src/lib/admin-service';
 
 export async function GET(request: NextRequest) {
   try {
