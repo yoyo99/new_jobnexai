@@ -66,15 +66,15 @@ export default function AdminStatsAdvanced() {
     try {
       // 🔥 DEBUG COMPLET CONNEXION SUPABASE
       console.log('🚀 CONNEXION DIRECTE SUPABASE STATISTIQUES...');
-      console.log('📊 Variables env:', {
-        url: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Définie' : 'MANQUANTE',
-        key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Définie' : 'MANQUANTE'
+      console.log('📊 Variables env VITE:', {
+        url: import.meta.env.VITE_SUPABASE_URL ? 'Définie' : 'MANQUANTE',
+        key: import.meta.env.VITE_SUPABASE_ANON_KEY ? 'Définie' : 'MANQUANTE'
       });
 
       const { createClient } = await import('@supabase/supabase-js');
       const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        import.meta.env.VITE_SUPABASE_URL!,
+        import.meta.env.VITE_SUPABASE_ANON_KEY!
       );
 
       // Test connexion simple d'abord
