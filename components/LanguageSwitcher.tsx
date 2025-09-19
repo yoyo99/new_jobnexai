@@ -44,7 +44,19 @@ export function LanguageSwitcher() {
                     ? 'bg-gray-50 text-primary-600'
                     : 'text-gray-900 hover:bg-gray-50'
                 }`}
-                onClick={() => i18n.changeLanguage(lang.code)}
+                onClick={async () => {
+                  try {
+                    console.log(`Changement de langue header vers: ${lang.code}`);
+                    await i18n.changeLanguage(lang.code);
+                    localStorage.setItem('i18nextLng', lang.code);
+                    console.log(`Langue changée avec succès vers: ${lang.code}`);
+                    
+                    // Forcer un refresh de l'affichage
+                    window.dispatchEvent(new Event('languageChanged'));
+                  } catch (error) {
+                    console.error('Erreur lors du changement de langue:', error);
+                  }
+                }}
               >
                 <span className="text-base">{lang.flag}</span>
                 {lang.name}

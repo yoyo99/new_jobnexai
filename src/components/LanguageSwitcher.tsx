@@ -88,9 +88,18 @@ export function LanguageSwitcher() {
                       ? 'text-gray-900 bg-gray-100'
                       : 'text-gray-900 hover:bg-gray-50'
                   }`}
-                  onClick={() => {
-                    i18n.changeLanguage(lang.code);
-                    localStorage.setItem('i18nextLng', lang.code);
+                  onClick={async () => {
+                    try {
+                      console.log(`Changement de langue vers: ${lang.code}`);
+                      await i18n.changeLanguage(lang.code);
+                      localStorage.setItem('i18nextLng', lang.code);
+                      console.log(`Langue changée avec succès vers: ${lang.code}`);
+                      
+                      // Forcer un re-render en déclenchant un événement
+                      window.dispatchEvent(new Event('languageChanged'));
+                    } catch (error) {
+                      console.error('Erreur lors du changement de langue:', error);
+                    }
                   }}
                   
                   aria-selected={i18n.language === lang.code}
