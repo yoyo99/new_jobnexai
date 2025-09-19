@@ -475,7 +475,15 @@ export default function IntegrationsManager() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="px-2 py-1 bg-gray-600/20 text-gray-400 text-xs rounded">Non configuré</span>
-                  <button className="text-green-400 hover:text-green-300 text-sm">Connecter</button>
+                  <button 
+                    onClick={() => {
+                      window.open('https://analytics.google.com/analytics/web/', '_blank');
+                      alert('🚀 Connexion Google Analytics:\n\n1. Créer propriété GA4\n2. Obtenir Measurement ID (G-XXXXXXXXXX)\n3. Installer gtag dans le code\n4. Configurer événements custom\n\n📊 Métriques JobNexAI:\n• Pages vues, utilisateurs uniques\n• Conversions abonnements\n• Parcours utilisateur CV Builder');
+                    }}
+                    className="text-green-400 hover:text-green-300 text-sm cursor-pointer"
+                  >
+                    Connecter
+                  </button>
                 </div>
               </div>
 
@@ -616,7 +624,15 @@ export default function IntegrationsManager() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="px-2 py-1 bg-gray-600/20 text-gray-400 text-xs rounded">Non configuré</span>
-                  <button className="text-green-400 hover:text-green-300 text-sm">Connecter</button>
+                  <button 
+                    onClick={() => {
+                      window.open('https://zapier.com/developer/public-invite/JobNexAI', '_blank');
+                      alert('🔗 Connexion Zapier JobNexAI:\n\n🚀 Automations disponibles:\n• Nouvel utilisateur → Slack notification\n• Nouveau CV créé → Export Google Drive\n• Abonnement souscrit → Envoi email CRM\n• Candidature envoyée → Suivi Notion\n\n⚙️ Configuration:\n1. Créer compte Zapier\n2. Rechercher "JobNexAI" dans apps\n3. Connecter avec API Key\n4. Configurer triggers/actions');
+                    }}
+                    className="text-green-400 hover:text-green-300 text-sm cursor-pointer"
+                  >
+                    Connecter
+                  </button>
                 </div>
               </div>
             </div>
