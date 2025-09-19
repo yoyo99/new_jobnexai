@@ -14,6 +14,7 @@ interface LoginAttempt {
 
 export default function SecurityManager() {
   const [activeTab, setActiveTab] = useState<'logs' | 'permissions' | 'settings'>('logs');
+  const [selectedAttempt, setSelectedAttempt] = useState<LoginAttempt | null>(null);
   const [securitySettings, setSecuritySettings] = useState({
     secureSessions: false,
     twoFactorAuth: false,

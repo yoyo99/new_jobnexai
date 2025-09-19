@@ -223,30 +223,57 @@ export default function ProductsCatalog() {
             <textarea name="description" placeholder="Description" className="col-span-2 px-3 py-2 bg-white/10 border border-white/20 rounded text-white h-20" required></textarea>
             <div className="col-span-2 flex gap-2">
               <button 
-                onClick={() => {
-                  // Créer vraiment le produit
-                  const form = document.querySelector('#create-product-form') as HTMLFormElement;
-                  const formData = new FormData(form);
-                  
-                  const newProduct: Product = {
-                    id: Date.now().toString(),
-                    name: formData.get('name') as string || 'Nouveau Produit',
-                    description: formData.get('description') as string || 'Description du produit',
-                    price: parseFloat(formData.get('price') as string) || 0,
-                    currency: 'EUR',
-                    interval: 'month',
-                    features: ['Nouvelle fonctionnalité'],
-                    active: true,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                  };
-                  
-                  setProducts(prev => [...prev, newProduct]);
-                  alert(`✅ Produit "${newProduct.name}" créé avec succès !\n\nPrix: ${newProduct.price}€/mois\nStatut: Actif\n\n🎯 Produit ajouté au catalogue !`);
-                  setShowCreateForm(false);
-                  
-                  // Reset form
-                  form.reset();
+                onClick={async () => {
+                  try {
+                    // Récupérer les données du formulaire
+                    const form = document.querySelector('#create-product-form') as HTMLFormElement;
+                    const formData = new FormData(form);
+                    
+                    const productData = {
+                      name: formData.get('name') as string || 'Nouveau Produit',
+                      description: formData.get('description') as string || 'Description du produit',
+                      price: parseFloat(formData.get('price') as string) || 0
+                    };
+
+                    // Créer vraiment le produit via l'API
+                    const response = await fetch('/api/admin/products/create', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(productData)
+                    });
+
+                    if (response.ok) {
+                      const result = await response.json();
+                      
+                      // Ajouter le produit à la liste locale
+                      const newProduct: Product = {
+                        id: result.product.id,
+                        name: result.product.name,
+                        description: result.product.description,
+                        price: result.product.price,
+                        currency: 'EUR',
+                        interval: 'month',
+                        features: ['Nouvelle fonctionnalité'],
+                        active: true,
+                        stripe_product_id: result.stripe_product.id,
+                        created_at: result.product.created_at,
+                        updated_at: result.product.updated_at
+                      };
+                      
+                      setProducts(prev => [...prev, newProduct]);
+                      alert(`✅ Produit "${newProduct.name}" créé avec succès !\n\n🎯 Créé dans Supabase ET Stripe\n💳 Stripe ID: ${result.stripe_product.id}\n💰 Prix: ${newProduct.price}€/mois`);
+                      
+                      // Reset form
+                      form.reset();
+                      setShowCreateForm(false);
+                    } else {
+                      const error = await response.json();
+                      alert(`❌ Erreur lors de la création:\n${error.error}`);
+                    }
+                  } catch (error) {
+                    console.error('Erreur création produit:', error);
+                    alert('❌ Erreur de connexion lors de la création du produit');
+                  }
                 }}
                 className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
               >

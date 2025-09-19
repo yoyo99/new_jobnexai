@@ -71,9 +71,11 @@ export default function CommunicationsManager() {
   
   // Sauvegarder les paramètres de notification
   const updateNotificationSetting = (key: keyof typeof notificationSettings, value: boolean) => {
+    console.log(`🔧 Updating notification: ${key} = ${value}`);
     const newSettings = { ...notificationSettings, [key]: value };
     setNotificationSettings(newSettings);
     localStorage.setItem('adminNotificationSettings', JSON.stringify(newSettings));
+    console.log('💾 Saved to localStorage:', newSettings);
     alert(`✅ Notification "${key}" ${value ? 'activée' : 'désactivée'} et sauvegardée !`);
   };
 
