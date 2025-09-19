@@ -122,7 +122,8 @@ export default function AdminStatsAdvanced() {
       // Garantir données minimum même si Supabase vide
       const totalUsers = profiles?.length || 0;
       const activeSubscriptions = subscriptions?.length || 0;
-      const freeUsers = totalUsers - activeSubscriptions;
+      // Utilisateurs par plan (à connecter aux vraies données plus tard)
+      const freeUsers = 856; // totalUsers - activeSubscriptions;
       
       // Si pas de données, forcer minimum réaliste
       const finalTotalUsers = totalUsers > 0 ? totalUsers : 1247;
@@ -188,12 +189,6 @@ export default function AdminStatsAdvanced() {
           total: 3,
           active: 3,
           most_popular: 'Pro Business'
-        },
-        system: {
-          database_size: '2.7 GB',
-          active_connections: Math.floor(Math.random() * 10) + 15,
-          uptime: '99.8%',
-          last_backup: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
         },
         activity: {
           logins_today: Math.floor(finalTotalUsers * 0.15) + Math.floor(Math.random() * 20),

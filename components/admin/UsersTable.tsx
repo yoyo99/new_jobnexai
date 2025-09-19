@@ -38,7 +38,7 @@ export default function UsersTable() {
 
       console.log('🚀 CONNEXION DIRECTE SUPABASE UTILISATEURS...');
 
-      // Récupération DIRECTE table profiles
+      // Récupération DIRECTE table profiles avec statut connexion
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select(`
@@ -49,7 +49,8 @@ export default function UsersTable() {
           is_admin,
           created_at,
           updated_at,
-          last_sign_in_at
+          last_sign_in_at,
+          email_confirmed_at
         `)
         .order('created_at', { ascending: false })
         .limit(50);

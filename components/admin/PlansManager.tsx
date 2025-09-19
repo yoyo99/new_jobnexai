@@ -21,21 +21,19 @@ export default function PlansManager() {
 
         console.log('🚀 CONNEXION DIRECTE SUPABASE ABONNEMENTS...');
 
-        // Récupération DIRECTE table user_subscriptions avec profiles
+        // Récupération DIRECTE table user_subscriptions (sans relation profiles)
         const { data: subscriptions, error: subsError } = await supabase
           .from('user_subscriptions')
           .select(`
             subscription_id,
             user_id,
             subscription_plan,
-            subscription_status,
-            created_at,
-            updated_at,
-            stripe_customer_id,
-            stripe_subscription_id,
-            profiles!inner(email, full_name)
+            status,
+            current_period_start,
+            current_period_end,
+            created_at
           `)
-          .eq('subscription_status', 'active')
+          .eq('status', 'active')
           .order('created_at', { ascending: false });
 
         if (subsError) {
