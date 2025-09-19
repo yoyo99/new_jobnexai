@@ -12,18 +12,60 @@ export default function PlansManager() {
       setError(null);
       
       try {
-        // Essayer de récupérer les vraies données
-        const response = await fetch('/api/admin/subscriptions');
-        
-        if (response.ok) {
-          const data = await response.json();
-          setSubs(data.subscriptions || []);
-          console.log('✅ Vraies données subscriptions chargées:', data.subscriptions?.length);
-          setLoading(false);
-          return;
+        // 🔥 CONNEXION DIRECTE SUPABASE - Plus d'APIs défaillantes !
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        );
+
+        console.log('🚀 CONNEXION DIRECTE SUPABASE ABONNEMENTS...');
+
+        // Récupération DIRECTE table user_subscriptions avec profiles
+        const { data: subscriptions, error: subsError } = await supabase
+          .from('user_subscriptions')
+          .select(`
+            subscription_id,
+            user_id,
+            subscription_plan,
+            subscription_status,
+            created_at,
+            updated_at,
+            stripe_customer_id,
+            stripe_subscription_id,
+            profiles!inner(email, full_name)
+          `)
+          .eq('subscription_status', 'active')
+          .order('created_at', { ascending: false });
+
+        if (subsError) {
+          throw new Error(`Supabase subscriptions error: ${subsError.message}`);
         }
+
+        // Transformation en format attendu
+        const realSubscriptions = (subscriptions || []).map((sub: any) => ({
+          subscription_id: sub.subscription_id,
+          user_id: sub.user_id,
+          email: sub.profiles?.email || 'email@inconnu.com',
+          full_name: sub.profiles?.full_name || 'Nom inconnu',
+          subscription_plan: sub.subscription_plan,
+          subscription_status: sub.subscription_status,
+          subscription_created_at: sub.created_at,
+          subscription_updated_at: sub.updated_at,
+          stripe_customer_id: sub.stripe_customer_id,
+          stripe_subscription_id: sub.stripe_subscription_id
+        }));
+
+        console.log(`✅ VRAIES DONNÉES SUPABASE ABONNEMENTS: ${realSubscriptions.length} actifs`);
+        console.log('💳 Premiers abonnés:', realSubscriptions.slice(0, 3).map(s => s.email));
+        
+        setSubs(realSubscriptions);
+        setLoading(false);
+        return;
+
       } catch (error) {
-        console.error('Erreur API subscriptions:', error);
+        console.error('💥 ERREUR CONNEXION DIRECTE SUPABASE ABONNEMENTS:', error);
+        setError(`❌ ERREUR SUPABASE: ${error instanceof Error ? error.message : String(error)}`);
       }
       
       // Fallback sur données mockées réalistes

@@ -478,7 +478,7 @@ export default function IntegrationsManager() {
                   <button 
                     onClick={() => {
                       window.open('https://analytics.google.com/analytics/web/', '_blank');
-                      alert('🚀 Connexion Google Analytics:\n\n1. Créer propriété GA4\n2. Obtenir Measurement ID (G-XXXXXXXXXX)\n3. Installer gtag dans le code\n4. Configurer événements custom\n\n📊 Métriques JobNexAI:\n• Pages vues, utilisateurs uniques\n• Conversions abonnements\n• Parcours utilisateur CV Builder');
+                      alert('📊 Setup Google Analytics JobNexAI:\n\n🔧 CONFIGURATION:\n1. Créer compte GA4 analytics.google.com\n2. Nouvelle propriété "JobNexAI"\n3. Copier Measurement ID (G-XXXXXXXXXX)\n4. Ajouter dans .env.local:\n   NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX\n\n💻 CODE INTEGRATION:\n• Installer: npm install gtag\n• Ajouter gtag dans _document.tsx\n• Event tracking: gtag("event", "cv_created")\n\n📈 MÉTRIQUES BUSINESS:\n• Conversions free → paid\n• Funnel CV Builder\n• Pages populaires\n• Taux abandon panier\n• ROI campagnes marketing\n\n🎯 Events custom recommandés:\n- signup, cv_created, subscription_start, job_application_sent');
                     }}
                     className="text-green-400 hover:text-green-300 text-sm cursor-pointer"
                   >
@@ -626,8 +626,9 @@ export default function IntegrationsManager() {
                   <span className="px-2 py-1 bg-gray-600/20 text-gray-400 text-xs rounded">Non configuré</span>
                   <button 
                     onClick={() => {
-                      window.open('https://zapier.com/developer/public-invite/JobNexAI', '_blank');
-                      alert('🔗 Connexion Zapier JobNexAI:\n\n🚀 Automations disponibles:\n• Nouvel utilisateur → Slack notification\n• Nouveau CV créé → Export Google Drive\n• Abonnement souscrit → Envoi email CRM\n• Candidature envoyée → Suivi Notion\n\n⚙️ Configuration:\n1. Créer compte Zapier\n2. Rechercher "JobNexAI" dans apps\n3. Connecter avec API Key\n4. Configurer triggers/actions');
+                      // Lien VALIDE Zapier + guide complet
+                      window.open('https://zapier.com/apps/webhook/integrations', '_blank');
+                      alert('🔗 Configuration Zapier JobNexAI:\n\n📌 ÉTAPES SETUP:\n1. Créer compte Zapier.com\n2. Nouvelle automation → Webhooks\n3. URL webhook: https://api.jobnexai.com/webhooks/zapier\n4. API Key: Générer dans Paramètres > API\n\n🚀 AUTOMATIONS POPULAIRES:\n• Nouveau user → Slack notification\n• CV créé → Export Google Drive\n• Abonnement → CRM notification\n• Candidature → Suivi Airtable\n• Erreur système → Alerte Discord\n\n⚡ Triggers disponibles:\n- user.created\n- cv.generated\n- subscription.activated\n- application.sent');
                     }}
                     className="text-green-400 hover:text-green-300 text-sm cursor-pointer"
                   >
