@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Variables Environnement</title>
+</head>
+<body>
+    <h1>🔍 DEBUG VARIABLES ENVIRONNEMENT</h1>
+    <div id="debug"></div>
+    
+    <script>
+        const debug = document.getElementById('debug');
+        
+        const vars = {
+            'VITE_SUPABASE_URL': import.meta.env?.VITE_SUPABASE_URL || 'UNDEFINED',
+            'NEXT_PUBLIC_SUPABASE_URL': process.env?.NEXT_PUBLIC_SUPABASE_URL || 'UNDEFINED',
+            'Mode': import.meta.env?.MODE || 'UNDEFINED',
+            'All VITE vars': Object.keys(import.meta.env || {}).filter(k => k.startsWith('VITE_')),
+            'All process.env vars': Object.keys(process.env || {}).filter(k => k.startsWith('NEXT_PUBLIC_'))
+        };
+        
+        debug.innerHTML = '<pre>' + JSON.stringify(vars, null, 2) + '</pre>';
+        
+        console.log('🔍 DEBUG VARIABLES:', vars);
+    </script>
+</body>
+</html>
