@@ -1,6 +1,6 @@
 'use client';
-import { useState } from 'react';
-import { FaEnvelope, FaBell, FaEdit, FaEye, FaPlus, FaTrash } from 'react-icons/fa';
+import { useState, useEffect } from 'react';
+import { FaEnvelope, FaTrash, FaEdit, FaEye, FaBell, FaPlus } from 'react-icons/fa';
 
 interface EmailTemplate {
   id: string;
@@ -49,6 +49,33 @@ export default function CommunicationsManager() {
   ]);
 
   const [showCreateForm, setShowCreateForm] = useState(false);
+  
+  // États pour les notifications push
+  const [notificationSettings, setNotificationSettings] = useState({
+    newSubscriptions: true,
+    failedPayments: true,
+    marketingPromotions: false
+  });
+  
+  // Charger les paramètres sauvegardés
+  useEffect(() => {
+    const saved = localStorage.getItem('adminNotificationSettings');
+    if (saved) {
+      try {
+        setNotificationSettings(JSON.parse(saved));
+      } catch (e) {
+        console.error('Error loading notification settings:', e);
+      }
+    }
+  }, []);
+  
+  // Sauvegarder les paramètres de notification
+  const updateNotificationSetting = (key: keyof typeof notificationSettings, value: boolean) => {
+    const newSettings = { ...notificationSettings, [key]: value };
+    setNotificationSettings(newSettings);
+    localStorage.setItem('adminNotificationSettings', JSON.stringify(newSettings));
+    alert(`✅ Notification "${key}" ${value ? 'activée' : 'désactivée'} et sauvegardée !`);
+  };
 
   const handleEdit = (templateId: string) => {
     const template = templates.find(t => t.id === templateId);
@@ -256,15 +283,30 @@ export default function CommunicationsManager() {
                 <h4 className="text-white font-medium mb-2">Notifications activées</h4>
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 text-gray-300">
-                    <input type="checkbox" defaultChecked className="rounded" />
+                    <input 
+                      type="checkbox" 
+                      className="rounded" 
+                      checked={notificationSettings.newSubscriptions}
+                      onChange={(e) => updateNotificationSetting('newSubscriptions', e.target.checked)}
+                    />
                     Nouveaux abonnements
                   </label>
                   <label className="flex items-center gap-2 text-gray-300">
-                    <input type="checkbox" defaultChecked className="rounded" />
+                    <input 
+                      type="checkbox" 
+                      className="rounded" 
+                      checked={notificationSettings.failedPayments}
+                      onChange={(e) => updateNotificationSetting('failedPayments', e.target.checked)}
+                    />
                     Paiements échoués
                   </label>
                   <label className="flex items-center gap-2 text-gray-300">
-                    <input type="checkbox" className="rounded" />
+                    <input 
+                      type="checkbox" 
+                      className="rounded" 
+                      checked={notificationSettings.marketingPromotions}
+                      onChange={(e) => updateNotificationSetting('marketingPromotions', e.target.checked)}
+                    />
                     Marketing promotions
                   </label>
                 </div>

@@ -180,7 +180,21 @@ export default function ProductsCatalog() {
               </button>
               <button 
                 onClick={() => {
-                  alert(`✏️ MODIFICATION PRODUIT\n\nProduit: ${product.name}\nPrix: ${product.price}€/${product.interval}\nStatut: ${product.active ? 'Actif' : 'Inactif'}\n\n📝 Interface de modification complète à développer`);
+                  const newName = prompt(`✏️ MODIFIER NOM PRODUIT\n\nNom actuel: ${product.name}`, product.name);
+                  if (newName && newName !== product.name) {
+                    setProducts(prev => prev.map(p => 
+                      p.id === product.id ? {...p, name: newName} : p
+                    ));
+                    alert(`✅ Produit modifié !\n\nAncien nom: ${product.name}\nNouveau nom: ${newName}`);
+                  }
+                  
+                  const newPrice = prompt(`💰 MODIFIER PRIX\n\nPrix actuel: ${product.price}€`, product.price.toString());
+                  if (newPrice && parseFloat(newPrice) !== product.price) {
+                    setProducts(prev => prev.map(p => 
+                      p.id === product.id ? {...p, price: parseFloat(newPrice)} : p
+                    ));
+                    alert(`✅ Prix modifié !\n\nAncien prix: ${product.price}€\nNouveau prix: ${newPrice}€`);
+                  }
                 }}
                 className="flex-1 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors"
               >
@@ -203,15 +217,36 @@ export default function ProductsCatalog() {
       {showCreateForm && (
         <div className="bg-white/5 rounded-lg p-6 border border-white/10">
           <h3 className="text-lg font-semibold text-white mb-4">Créer un nouveau produit</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <input placeholder="Nom du produit" className="px-3 py-2 bg-white/10 border border-white/20 rounded text-white" />
-            <input placeholder="Prix (€)" type="number" className="px-3 py-2 bg-white/10 border border-white/20 rounded text-white" />
-            <textarea placeholder="Description" className="col-span-2 px-3 py-2 bg-white/10 border border-white/20 rounded text-white h-20"></textarea>
+          <form id="create-product-form" className="grid grid-cols-2 gap-4">
+            <input name="name" placeholder="Nom du produit" className="px-3 py-2 bg-white/10 border border-white/20 rounded text-white" required />
+            <input name="price" placeholder="Prix (€)" type="number" step="0.01" className="px-3 py-2 bg-white/10 border border-white/20 rounded text-white" required />
+            <textarea name="description" placeholder="Description" className="col-span-2 px-3 py-2 bg-white/10 border border-white/20 rounded text-white h-20" required></textarea>
             <div className="col-span-2 flex gap-2">
               <button 
                 onClick={() => {
-                  alert('Produit créé avec succès ! (fonctionnalité démo)');
+                  // Créer vraiment le produit
+                  const form = document.querySelector('#create-product-form') as HTMLFormElement;
+                  const formData = new FormData(form);
+                  
+                  const newProduct: Product = {
+                    id: Date.now().toString(),
+                    name: formData.get('name') as string || 'Nouveau Produit',
+                    description: formData.get('description') as string || 'Description du produit',
+                    price: parseFloat(formData.get('price') as string) || 0,
+                    currency: 'EUR',
+                    interval: 'month',
+                    features: ['Nouvelle fonctionnalité'],
+                    active: true,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                  };
+                  
+                  setProducts(prev => [...prev, newProduct]);
+                  alert(`✅ Produit "${newProduct.name}" créé avec succès !\n\nPrix: ${newProduct.price}€/mois\nStatut: Actif\n\n🎯 Produit ajouté au catalogue !`);
                   setShowCreateForm(false);
+                  
+                  // Reset form
+                  form.reset();
                 }}
                 className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
               >
@@ -224,7 +259,7 @@ export default function ProductsCatalog() {
                 Annuler
               </button>
             </div>
-          </div>
+          </form>
         </div>
       )}
 
