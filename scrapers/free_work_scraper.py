@@ -57,10 +57,10 @@ class FreeWorkScraper:
         self.source_key = "free-work"
         self.source_id = None  # Will be fetched from database
         
-        # Supabase connection
+        # Supabase connection with SERVICE ROLE for scraping
         self.supabase: Client = create_client(
             os.getenv("VITE_SUPABASE_URL", ""),
-            os.getenv("VITE_SUPABASE_ANON_KEY", "")
+            os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")  # Use service role for bypassing RLS
         )
         
         # Headers to avoid blocking
