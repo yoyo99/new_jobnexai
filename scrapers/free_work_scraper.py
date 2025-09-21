@@ -455,9 +455,18 @@ class FreeWorkScraper:
                 
                 logger.info(f"Page {page} completed: {len(job_urls)} URLs processed")
             
-            # Save all jobs to Supabase
+            # Remove duplicates by URL before saving
             if all_jobs:
-                await self.save_to_supabase(all_jobs)
+                # Deduplicate by URL
+                unique_jobs = []
+                seen_urls = set()
+                for job in all_jobs:
+                    if job.url not in seen_urls:
+                        unique_jobs.append(job)
+                        seen_urls.add(job.url)
+                
+                logger.info(f"Saving {len(unique_jobs)} unique jobs to Supabase (removed {len(all_jobs) - len(unique_jobs)} duplicates)")
+                await self.save_to_supabase(unique_jobs)
                 logger.info(f"Scraping completed: {len(all_jobs)} jobs total")
             else:
                 logger.warning("No jobs were successfully scraped")

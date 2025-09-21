@@ -272,10 +272,10 @@ AS $$
 DECLARE
     user_role TEXT;
 BEGIN
-    -- Check if user is admin
-    SELECT auth.jwt() ->> 'role' INTO user_role;
+    -- Check if user is admin or service role (for development)
+    SELECT COALESCE(auth.jwt() ->> 'role', auth.role()) INTO user_role;
     
-    IF user_role IS NULL OR user_role != 'admin' THEN
+    IF user_role IS NULL OR (user_role != 'admin' AND user_role != 'service_role') THEN
         RAISE EXCEPTION 'Access denied: Admin privileges required';
     END IF;
     
