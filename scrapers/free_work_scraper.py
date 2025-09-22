@@ -12,18 +12,34 @@ Date: 2025-09-21
 
 import asyncio
 import aiohttp
-import re
-from datetime import datetime, timezone
-from typing import List, Dict, Optional
-from dataclasses import dataclass
-from bs4 import BeautifulSoup
-import logging
-from supabase import create_client, Client
 import os
+import asyncio
+import aiohttp
+import logging
+import re
+from typing import List, Optional
+from dataclasses import dataclass, asdict
+from datetime import datetime
+from bs4 import BeautifulSoup
 from dotenv import load_dotenv
+import sys
+import traceback
 
 # Load environment variables
 load_dotenv()
+
+try:
+    from supabase import create_client, Client
+except ImportError:
+    logging.error("Please install supabase: pip install supabase")
+    sys.exit(1)
+
+# Validation environment variables
+required_env_vars = ["VITE_SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"]
+missing_vars = [var for var in required_env_vars if not os.getenv(var)]
+if missing_vars:
+    logging.error(f"Missing environment variables: {missing_vars}")
+    sys.exit(1)
 
 # Configure logging
 logging.basicConfig(
