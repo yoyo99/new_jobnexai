@@ -1,9 +1,10 @@
 import { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { useAuth } from '../stores/auth'
+import { useAuth } from './stores/auth'
 import { DashboardStats } from './DashboardStats'
 import { UpgradePrompt } from './UpgradePrompt'
+import { PoleEmploiLetterGenerator } from './components/pole-emploi/PoleEmploiLetterGenerator'
 
 export function Dashboard() {
   const { t } = useTranslation()
@@ -36,6 +37,16 @@ export function Dashboard() {
       <UpgradePrompt />
 
       <DashboardStats />
+
+      {user ? (
+        <div className="mt-12">
+          <PoleEmploiLetterGenerator />
+        </div>
+      ) : (
+        <p className="mt-12 text-gray-400">
+          Connectez-vous pour accéder au générateur de courrier Pôle Emploi.
+        </p>
+      )}
     </div>
   )
 }
