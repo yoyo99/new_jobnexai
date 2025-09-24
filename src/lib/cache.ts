@@ -46,7 +46,7 @@ class Cache {
     try {
       const item = this.cache.get(key)
       if (!item) return null
-      
+
       const now = Date.now()
       const isExpired = now > item.expires
       
