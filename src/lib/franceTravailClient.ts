@@ -66,7 +66,7 @@ class FranceTravailClient {
 
     // Si refresh en cours, attendre
     if (this.isRefreshing) {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         const checkToken = () => {
           if (this.token) {
             resolve(this.token.access_token)
@@ -99,10 +99,10 @@ class FranceTravailClient {
       }
 
       this.token = await response.json()
-      this.tokenExpiry = Date.now() + (this.token.expires_in * 1000)
+      this.tokenExpiry = Date.now() + (this.token!.expires_in * 1000)
 
       console.log('[France Travail] Token renouvelé')
-      return this.token.access_token
+      return this.token!.access_token
     } catch (error) {
       console.error('[France Travail] Erreur renouvellement token:', error)
       throw error

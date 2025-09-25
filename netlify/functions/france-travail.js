@@ -1,20 +1,19 @@
-import type { Handler } from '@netlify/functions'
-import { fetchAndNormalizeFranceTravailJobs, getMockFranceTravailJobs } from '../../src/lib/franceTravailNormalizer'
-import { saveFranceTravailOffers } from '../../src/lib/franceTravailRepository'
+const { fetchAndNormalizeFranceTravailJobs, getMockFranceTravailJobs } = require('../../src/lib/franceTravailNormalizer')
+const { saveFranceTravailOffers } = require('../../src/lib/franceTravailRepository')
 
-const handler: Handler = async (event) => {
+const handler = async (event) => {
   try {
     const params = event.queryStringParameters || {}
 
     const motsCles = params.motsCles || undefined
     const location = params.location || undefined
     const contractType = Array.isArray(params.contractType)
-      ? (params.contractType as string[])
+      ? params.contractType
       : params.contractType
         ? [params.contractType]
         : undefined
     const experience = Array.isArray(params.experience)
-      ? (params.experience as string[])
+      ? params.experience
       : params.experience
         ? [params.experience]
         : undefined
@@ -100,4 +99,4 @@ const handler: Handler = async (event) => {
   }
 }
 
-export { handler }
+exports.handler = handler
