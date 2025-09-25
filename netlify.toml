@@ -2,7 +2,6 @@
 [build]
   command = "echo VITE_SUPABASE_URL: $VITE_SUPABASE_URL && npm install --no-audit --no-fund --loglevel=error && export NODE_OPTIONS=\"--max-old-space-size=4096\" && npm run build:netlify"
   publish = "dist"
-  functions = "netlify/functions"
 
 [build.environment]
   NODE_VERSION = "20.11.1"
@@ -23,15 +22,12 @@
 [[plugins]]
   package = "@netlify/plugin-functions-install-core"
 
-# Configuration moderne des fonctions Netlify
-[build.functions]
+# Configuration des fonctions Netlify
+[functions]
+  directory = "netlify/functions"
   node_bundler = "esbuild"
   external_node_modules = ["langchain", "@rollup/rollup-android-arm-eabi"]
   included_files = ["src/lib/ai_logic/**", "functions/rome-search/rome_appellations.csv", "data/unix_arborescence_competences_v459_utf8.csv"]
-
-# Répertoire des fonctions (syntaxe legacy mais nécessaire)
-[functions]
-  directory = "netlify/functions"
 
 
 # Configuration du cache - DÉSACTIVÉ TEMPORAIREMENT POUR DEBUG
