@@ -71,7 +71,7 @@ export function useFranceTravailJobs(initialFilters: FranceTravailJobFilters = {
     setState((prev) => ({ ...prev, loading: true, error: null }))
 
     try {
-      const response = await fetch(`/api/france-travail?${queryString}`)
+      const response = await fetch(`/.netlify/functions/france-travail?${queryString}`)
 
       if (!response.ok) {
         const errorData = await response.json()
