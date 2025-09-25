@@ -23,13 +23,15 @@
 [[plugins]]
   package = "@netlify/plugin-functions-install-core"
 
-# Configuration de base des fonctions
-[functions]
-  directory = "netlify/functions"
+# Configuration moderne des fonctions Netlify
+[build.functions]
   node_bundler = "esbuild"
   external_node_modules = ["langchain", "@rollup/rollup-android-arm-eabi"]
   included_files = ["src/lib/ai_logic/**", "functions/rome-search/rome_appellations.csv", "data/unix_arborescence_competences_v459_utf8.csv"]
-  # node_bundler et external_node_modules sont maintenant sous [build.functions]
+
+# Répertoire des fonctions (syntaxe legacy mais nécessaire)
+[functions]
+  directory = "netlify/functions"
 
 
 # Configuration du cache - DÉSACTIVÉ TEMPORAIREMENT POUR DEBUG
