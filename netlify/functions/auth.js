@@ -1,38 +1,73 @@
-// Version de test temporaire pour diagnostiquer le problème Supabase
+const { createClient } = require('@supabase/supabase-js');
+
+// Créer un client Supabase avec les variables d'environnement
+const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://klwugophjvzctlautsqz.supabase.co';
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('Variables Supabase manquantes:', { supabaseUrl: !!supabaseUrl, supabaseKey: !!supabaseKey });
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
 exports.handler = async (event) => {
+  // Récupérer le token d'authentification de l'en-tête Authorization
+  const token = event.headers.authorization?.split(' ')[1];
+  
+  if (!token) {
+    return {
+      statusCode: 401,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      },
+      body: JSON.stringify({ error: 'Token d\'authentification manquant' })
+    };
+  }
+
   try {
-    // Variables d'environnement disponibles (avec fallback hardcodé)
-    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://klwugophjvzctlautsqz.supabase.co';
-    const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
-    
+    // Vérifier le token avec Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+
+    if (error || !user) {
+      return {
+        statusCode: 401,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        },
+        body: JSON.stringify({ error: 'Token invalide ou session expirée' })
+      };
+    }
+
+    // Retourner les informations de l'utilisateur
     return {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*'
       },
-      body: JSON.stringify({
-        success: false,
-        error: 'Fonction auth en mode diagnostic',
-        debug: {
-          hasUrl: !!supabaseUrl,
-          hasKey: !!supabaseKey,
-          urlLength: supabaseUrl ? supabaseUrl.length : 0,
-          keyLength: supabaseKey ? supabaseKey.length : 0,
-          nodeEnv: process.env.NODE_ENV,
-          netlify: !!process.env.NETLIFY
-        },
-        message: 'Utilisez /debug-env pour plus de détails'
+      body: JSON.stringify({ 
+        success: true,
+        user: { 
+          id: user.id, 
+          email: user.email,
+          // Autres propriétés utilisateur si nécessaire
+        }
       })
-    }
+    };
+    
   } catch (error) {
+    console.error('Erreur lors de la vérification du token:', error);
+    
     return {
       statusCode: 500,
-      body: JSON.stringify({
-        error: 'Erreur fonction auth',
-        message: error.message
-      })
-    }
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      },
+      body: JSON.stringify({ error: 'Erreur lors de la vérification de l\'authentification' })
+    };
   }
 }
 
