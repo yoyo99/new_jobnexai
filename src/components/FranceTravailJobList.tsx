@@ -12,10 +12,10 @@ export function FranceTravailJobList({ className }: Props) {
   const [salaryMin, setSalaryMin] = useState<number | undefined>(undefined)
   
   const filters: FranceTravailJobFilters = {
-    motsCles: searchTerm || undefined,
-    location: location || undefined,
-    isRemote: remoteOnly,
-    salaryMin,
+    ...(searchTerm && { motsCles: searchTerm }),
+    ...(location && { location }),
+    ...(remoteOnly !== undefined && { isRemote: remoteOnly }),
+    ...(salaryMin && { salaryMin }),
     mock: true, // En mode mock pour l'instant
     limit: 20
   }
@@ -161,8 +161,8 @@ export function FranceTravailJobList({ className }: Props) {
                         <span>📝 {job.contractType.join(', ')}</span>
                       )}
                       
-                      {job.salary && (
-                        <span>💰 {job.salary}€</span>
+                      {job.salaryRange && (
+                        <span>💰 {job.salaryRange}€</span>
                       )}
                       
                       {job.isRemote && (
