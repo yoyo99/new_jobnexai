@@ -67,7 +67,7 @@ exports.handler = async (event) => {
         ? [params.experience]
         : undefined
     const salaryMin = params.salaryMin ? Number(params.salaryMin) : undefined
-    const isRemote = params.isRemote === 'true'
+    const isRemote = params.isRemote === 'true' ? true : params.isRemote === 'false' ? false : undefined
     const limit = params.limit ? Number(params.limit) : 50
     const offset = params.offset ? Number(params.offset) : 0
     const useMock = params.mock === 'true'
