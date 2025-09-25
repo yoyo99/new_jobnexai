@@ -1,8 +1,8 @@
 // Version de test temporaire pour diagnostiquer le problème Supabase
 exports.handler = async (event) => {
   try {
-    // Variables d'environnement disponibles
-    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+    // Variables d'environnement disponibles (avec fallback hardcodé)
+    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://klwugophjvzctlautsqz.supabase.co';
     const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
     
     return {

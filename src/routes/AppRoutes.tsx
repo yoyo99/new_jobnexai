@@ -45,6 +45,7 @@ const JobPostings = React.lazy(() => import('../components/recruiter/JobPostings
 const CreateJobPosting = React.lazy(() => import('../components/recruiter/CreateJobPosting'));
 const CoverLetterGenerator = React.lazy(() => import('../components/applications/CoverLetterGenerator').then(module => ({ default: module.CoverLetterGenerator })));
 const UserCoverLetters = React.lazy(() => import('../components/applications/UserCoverLetters'));
+const FranceTravailPage = React.lazy(() => import('../pages/FranceTravailPage'));
 
 export const AppRoutes = () => {
   return (
@@ -70,6 +71,7 @@ export const AppRoutes = () => {
         
         {/* Routes nécessitant un abonnement */}
         <Route path="jobs" element={<ProtectedRoute requiresSubscription><LazyComponentWrapper><JobSearch /></LazyComponentWrapper></ProtectedRoute>} />
+        <Route path="france-travail" element={<ProtectedRoute requiresSubscription><LazyComponentWrapper><FranceTravailPage /></LazyComponentWrapper></ProtectedRoute>} />
         <Route path="suivi" element={<ProtectedRoute requiresSubscription><LazyComponentWrapper><JobApplications /></LazyComponentWrapper></ProtectedRoute>} />
         <Route path="market-analysis" element={<ProtectedRoute requiresSubscription><LazyComponentWrapper><MarketAnalysis /></LazyComponentWrapper></ProtectedRoute>} />
         <Route path="cv-builder" element={<ProtectedRoute requiresSubscription><LazyComponentWrapper><CVBuilder /></LazyComponentWrapper></ProtectedRoute>} />
