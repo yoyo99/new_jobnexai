@@ -73,6 +73,7 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
       navItems = [
         { nameKey: 'navigation.dashboard', href: '/app/dashboard', icon: HomeIcon },
         { nameKey: 'navigation.jobSearch', href: '/app/jobs', icon: FolderIcon },
+        { nameKey: 'navigation.franceTravail', href: '/app/france-travail', icon: MagnifyingGlassIcon, fallback: 'France Travail' },
         { nameKey: 'navigation.applications', href: '/app/suivi', icon: ClipboardDocumentListIcon },
         { nameKey: 'navigation.cvBuilder', href: '/app/cv-builder', icon: DocumentTextIcon },
         ...commonItems,
