@@ -3,6 +3,7 @@ import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid'
 import { motion } from 'framer-motion'
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { getJobs, getJobSuggestions, type Job, type JobSuggestion, supabase } from '../lib/supabase'
+import { scrapingApi } from '../services/scrapingApi'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { useAuth } from '../stores/auth'
@@ -31,6 +32,9 @@ function JobSearch() {
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [shareJob, setShareJob] = useState<Job | null>(null)
+  const [scrapingLoading, setScrapingLoading] = useState(false)
+  const [scrapingJobs, setScrapingJobs] = useState<Job[]>([])
+  const [showScrapingResults, setShowScrapingResults] = useState(false)
 
   const jobTypes = useMemo(() => [
     { value: '', label: 'Tous les types' },
@@ -111,6 +115,67 @@ function JobSearch() {
     }
   }, [user])
 
+  const handleLiveScraping = useCallback(async () => {
+    if (!search.trim()) {
+      alert('Veuillez saisir une recherche')
+      return
+    }
+
+    setScrapingLoading(true)
+    setShowScrapingResults(true)
+    
+    try {
+      // Test d'abord avec Indeed seulement
+      const response = await scrapingApi.triggerScraping('indeed', {
+        query: search,
+        location: location || 'France',
+        max_results: 10,
+        user_email: user?.email || undefined
+      })
+
+      if (response.status === 'started' || response.status === 'cached') {
+        // Conversion des jobs N8N vers le format Job de Supabase
+        const convertedJobs: Job[] = response.jobs?.map((job: any) => ({
+          id: `n8n-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          source_id: `n8n-${job.source || 'indeed'}`,
+          title: job.title || 'Titre non disponible',
+          company: job.company || 'Entreprise non spécifiée',
+          location: job.location || location || 'Non spécifié',
+          description: job.description || '',
+          url: job.url || '#',
+          salary_min: null,
+          salary_max: null,
+          currency: 'EUR',
+          job_type: 'FULL_TIME',
+          posted_at: job.scraped_at || new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          remote_type: 'onsite' as 'onsite',
+          experience_level: 'mid' as 'mid'
+        })) || []
+
+        setScrapingJobs(convertedJobs)
+        
+        // Mélanger avec les jobs existants
+        setJobs(prevJobs => {
+          const combined = [...convertedJobs, ...prevJobs]
+          // Déduplication basique par titre + entreprise
+          const unique = combined.filter((job, index, arr) => 
+            arr.findIndex(j => j.title === job.title && j.company === job.company) === index
+          )
+          return unique
+        })
+
+        console.log(`✅ ${convertedJobs.length} jobs scrapés ajoutés`)
+      }
+    } catch (error) {
+      console.error('Erreur lors du scraping:', error)
+      alert('Erreur lors du scraping en temps réel')
+    } finally {
+      setScrapingLoading(false)
+    }
+  }, [search, location, user, scrapingApi])
+
   useEffect(() => {
     loadJobs()
     if (user) {
@@ -188,6 +253,10 @@ function JobSearch() {
           <span className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full">{job.experience_level}</span>
           {job.remote_type && <span className="bg-green-500/20 text-green-300 px-2 py-1 rounded-full">{job.remote_type}</span>}
           {job.salary_min && <span className="bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded-full">{`${job.salary_min}${job.salary_max ? ` - ${job.salary_max}` : ''} ${job.currency || ''}`}</span>}
+          {job.source_id?.startsWith('n8n-') && <span className="bg-orange-500/20 text-orange-300 px-2 py-1 rounded-full flex items-center gap-1">
+            <SparklesIcon className="h-3 w-3" />
+            Temps réel
+          </span>}
         </div>
         {matchScore !== undefined && (
           <div className="mt-2 text-sm text-green-400">
@@ -243,6 +312,24 @@ function JobSearch() {
               </button>
               <button type="submit" className="btn-primary flex-shrink-0">
                 Rechercher
+              </button>
+              <button 
+                type="button" 
+                onClick={handleLiveScraping}
+                disabled={scrapingLoading}
+                className="btn-secondary flex-shrink-0 bg-orange-600 hover:bg-orange-700 text-white"
+              >
+                {scrapingLoading ? (
+                  <>
+                    <SparklesIcon className="h-4 w-4 mr-1 animate-spin" />
+                    Scraping...
+                  </>
+                ) : (
+                  <>
+                    <SparklesIcon className="h-4 w-4 mr-1" />
+                    Temps réel
+                  </>
+                )}
               </button>
               <button type="button" onClick={resetFilters} className="btn-secondary flex-shrink-0">
                 Réinitialiser

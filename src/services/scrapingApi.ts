@@ -7,7 +7,7 @@ export interface ScrapingRequest {
   query: string;
   location?: string;
   max_results?: number;
-  user_email?: string;
+  user_email?: string | undefined;
 }
 
 export interface ScrapingResponse {
