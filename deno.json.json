@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+	"lib": ["deno.ns", "dom"]
+  },
+  "tasks": {
+	"normalize:dry": "DRY_RUN=true REMOVE_WWW=true ENFORCE_HTTPS=true deno run --allow-env --allow-net scripts/normalize-jobs-urls.ts",
+	"normalize:run": "REMOVE_WWW=true ENFORCE_HTTPS=true deno run --allow-env --allow-net scripts/normalize-jobs-urls.ts"
+  }
+}

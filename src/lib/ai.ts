@@ -5,7 +5,7 @@ import { useAuth } from '../stores/auth';
 /**
  * Effectue une analyse sémantique d'un texte donné.
  * Cette fonction prend en entrée un texte et retourne une liste de suggestions
- * pour améliorer le texte.
+ * pour améliorer le texte. (version 27092025)
  *
  * @param {_text: string} _text - Le texte à analyser.
  * @returns {string[]} - Une liste de suggestions pour améliorer le texte.
