@@ -46,6 +46,7 @@ const CreateJobPosting = React.lazy(() => import('../components/recruiter/Create
 const CoverLetterGenerator = React.lazy(() => import('../components/applications/CoverLetterGenerator').then(module => ({ default: module.CoverLetterGenerator })));
 const UserCoverLetters = React.lazy(() => import('../components/applications/UserCoverLetters'));
 const FranceTravailPage = React.lazy(() => import('../pages/FranceTravailPage'));
+const ScrapingTestPage = React.lazy(() => import('../pages/ScrapingTestPage'));
 
 export const AppRoutes = () => {
   return (
@@ -89,6 +90,9 @@ export const AppRoutes = () => {
         <Route path="recruiter/candidates" element={<ProtectedRoute requiresSubscription><LazyComponentWrapper><CandidateSearch /></LazyComponentWrapper></ProtectedRoute>} />
         <Route path="recruiter/job-postings" element={<ProtectedRoute requiresSubscription><LazyComponentWrapper><JobPostings /></LazyComponentWrapper></ProtectedRoute>} />
         <Route path="recruiter/create-job" element={<ProtectedRoute requiresSubscription><LazyComponentWrapper><CreateJobPosting /></LazyComponentWrapper></ProtectedRoute>} />
+
+        {/* Route de test pour l'infrastructure N8N */}
+        <Route path="scraping-test" element={<ProtectedRoute adminOnly><LazyComponentWrapper><ScrapingTestPage /></LazyComponentWrapper></ProtectedRoute>} />
 
         {/* L'ancienne route /user-type est maintenant gérée par la logique de redirection interne */}
         <Route path="user-type" element={<Navigate to="/app/dashboard" replace />} />
