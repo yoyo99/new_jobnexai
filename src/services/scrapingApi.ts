@@ -1,7 +1,7 @@
 // src/services/scrapingApi.ts
 // Service pour connecter JobNexAI au VPS de scraping N8N
 
-const SCRAPING_API_BASE_URL = 'http://38.242.238.205:8000';
+const SCRAPING_API_BASE_URL = '/api/scraping';
 
 export interface ScrapingRequest {
   query: string;
@@ -130,6 +130,7 @@ class ScrapingApiService {
    * Ouvre une connexion WebSocket pour suivre un job en temps réel
    */
   connectToJob(jobId: string, onMessage: (data: any) => void, onError?: (error: Event) => void): WebSocket {
+    // Note: WebSocket proxy doesn't work with Netlify, so fallback to polling
     const wsUrl = `ws://38.242.238.205:8000/ws/${jobId}`;
     const ws = new WebSocket(wsUrl);
 
