@@ -1,0 +1,115 @@
+version: '3.8'
+
+services:
+  # N8N Workflow Automation
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: jobnexai-n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_DATABASE=n8n
+      - DB_POSTGRESDB_USER=n8n_user
+      - DB_POSTGRESDB_PASSWORD=JobNexAI_N8N_2025!
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=lionel
+      - N8N_BASIC_AUTH_PASSWORD=JobNexAI_Admin_2025!
+      - GENERIC_TIMEZONE=Europe/Paris
+      - N8N_LOG_LEVEL=info
+      - N8N_METRICS=true
+      - N8N_ENCRYPTION_KEY=JobNexAI_Encryption_Key_2025_Ultra_Secure!
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n-workflows:/import:ro
+      - ./logs:/var/log/n8n
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    networks:
+      - jobnexai-network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: jobnexai-postgres
+    environment:
+      - POSTGRES_DB=n8n
+      - POSTGRES_USER=n8n_user
+      - POSTGRES_PASSWORD=JobNexAI_N8N_2025!
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --locale=fr_FR.UTF-8
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - jobnexai-network
+
+  # Redis Cache & Queue
+  redis:
+    image: redis:7-alpine
+    container_name: jobnexai-redis
+    command: redis-server --appendonly yes --requirepass JobNexAI_Redis_2025!
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - jobnexai-network
+
+  # FastAPI Scraping API
+  scraping-api:
+    build: 
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: jobnexai-api
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://:JobNexAI_Redis_2025!@redis:6379/0
+      - DATABASE_URL=postgresql://n8n_user:JobNexAI_N8N_2025!@postgres:5432/n8n
+      - N8N_WEBHOOK_BASE=http://n8n:5678/webhook
+      - ENVIRONMENT=production
+    depends_on:
+      - redis
+      - postgres
+      - n8n
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - jobnexai-network
+
+  # Nginx Reverse Proxy (optionnel pour production)
+  nginx:
+    image: nginx:alpine
+    container_name: jobnexai-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - n8n
+      - scraping-api
+    restart: unless-stopped
+    networks:
+      - jobnexai-network
+
+volumes:
+  n8n_data:
+    driver: local
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  jobnexai-network:
+    driver: bridge
