@@ -1,5 +1,5 @@
-# Proxy pour l'API de scraping VPS
-/api/scraping/* http://38.242.238.205:8000/:splat 200
+# Proxy pour l'API de scraping VPS (force la réécriture avec headers)
+/api/scraping/* http://38.242.238.205:8000/:splat 200!
 
 # Redirect par défaut
 /* /index.html 200

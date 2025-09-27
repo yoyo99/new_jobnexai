@@ -47,6 +47,7 @@ const CoverLetterGenerator = React.lazy(() => import('../components/applications
 const UserCoverLetters = React.lazy(() => import('../components/applications/UserCoverLetters'));
 const FranceTravailPage = React.lazy(() => import('../pages/FranceTravailPage'));
 const ScrapingTestPage = React.lazy(() => import('../pages/ScrapingTestPage'));
+const TestVpsPage = React.lazy(() => import('../pages/TestVpsPage'));
 
 export const AppRoutes = () => {
   return (
@@ -93,6 +94,7 @@ export const AppRoutes = () => {
 
         {/* Route de test pour l'infrastructure N8N */}
         <Route path="scraping-test" element={<ProtectedRoute adminOnly><LazyComponentWrapper><ScrapingTestPage /></LazyComponentWrapper></ProtectedRoute>} />
+        <Route path="test-vps" element={<ProtectedRoute adminOnly><LazyComponentWrapper><TestVpsPage /></LazyComponentWrapper></ProtectedRoute>} />
 
         {/* L'ancienne route /user-type est maintenant gérée par la logique de redirection interne */}
         <Route path="user-type" element={<Navigate to="/app/dashboard" replace />} />
