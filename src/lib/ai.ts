@@ -133,7 +133,7 @@ export function addAnswer(conversationId: string, answer: string): string[] {
     }
     const lastExchange = conversation.history[conversation.history.length - 1];
     if (!lastExchange || !lastExchange.question) return [];
-    const jobDescription = conversation.jobDescription;
+    // const jobDescription = conversation.jobDescription;
     const { feedbacks, note, weakPoints } = analyzeAnswer(answer, lastExchange.question,);
     lastExchange.answer = answer;// On ajoute la réponse
     lastExchange.feedbacks = feedbacks;
@@ -241,7 +241,7 @@ export async function generateCoverLetter(
 ): Promise<string> {
   try {
     const { user } = useAuth.getState();
-    const provider = user?.ai_provider || 'mistral'; // Mistral par défaut
+    const provider = (user as any)?.ai_provider || 'mistral'; // Mistral par défaut
 
     if (provider === 'openai') {
       return await generateCoverLetterWithOpenAI(cv, jobDescription, language, tone);
@@ -249,7 +249,7 @@ export async function generateCoverLetter(
       return await generateCoverLetterWithMistral(cv, jobDescription, language, tone);
     }
   } catch (error) {
-    console.error(`Erreur lors de la génération de la lettre de motivation avec ${useAuth.getState().user?.ai_provider || 'mistral'}:`, error);
+    console.error(`Erreur lors de la génération de la lettre de motivation avec ${(useAuth.getState().user as any)?.ai_provider || 'mistral'}:`, error);
     throw error;
   }
 }
@@ -340,7 +340,7 @@ export async function translateTextsBatch(texts: string[], targetLanguage: strin
 }
 
 export async function generateBulkApplicationMessages(
-  cv: any,
+  _cv: any,
   jobDescriptions: { id: string; description: string }[]
 ): Promise<{ jobId: string; message: string | null }[]> {
   // Stub impl. renvoyant un objet vide pour chaque description
@@ -350,7 +350,7 @@ export async function generateBulkApplicationMessages(
 let openai: OpenAI | null = null;
 let mistral: Mistral | null = null;
 
-function getMistralClient(): Mistral {
+export function getMistralClient(): Mistral {
   if (!mistral) {
     const apiKey = import.meta.env.VITE_MISTRAL_API_KEY;
     if (!apiKey) {
@@ -361,7 +361,7 @@ function getMistralClient(): Mistral {
   return mistral;
 }
 
-function getOpenAIClient(): OpenAI {
+export function getOpenAIClient(): OpenAI {
   if (!openai) {
     const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
     if (!apiKey) {
