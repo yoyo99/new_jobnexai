@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../stores/auth'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import { useTranslation } from 'react-i18next';
 import {
   ArrowTrendingUpIcon,
   ArrowUpIcon,
@@ -134,11 +135,17 @@ export function DashboardStats() {
       }
 
       // Récupérer les statistiques des candidatures (pour stats & top lists)
-      const { data: applicationsData, error: applicationsError } = await supabase
+      interface SupabaseApplication {
+        id: string;
+        job: {
+          company: string;
+        };
+        created_at: string;
+      }
+      const { data: applicationsData, error } = await supabase
         .from('job_applications')
-        .select('id, created_at, status, job_id, user_id, jobs!fk_job ( title, company, location )') // Ajout de job_title, id pour recentActivity
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false }); // Commander par date de création pour faciliter la prise des plus récentes
+        .select('*, job:jobs(*)')  // Charge les données liées
+        .returns<SupabaseApplication[]>();
 
       console.log('[DashboardStats] Fetched applicationsData:', JSON.stringify(applicationsData, null, 2));
 
@@ -169,7 +176,7 @@ export function DashboardStats() {
 
       // Calculer les meilleures entreprises et lieux à partir de applicationsInTimeframe
       const companyCounts = (applicationsInTimeframe || []).reduce((acc, app) => {
-        const companyName = app.job_applications_job_id_fkey?.company;
+        const companyName = app.job?.company || 'Inconnu';
         if (companyName) {
           acc[companyName] = (acc[companyName] || 0) + 1;
         }

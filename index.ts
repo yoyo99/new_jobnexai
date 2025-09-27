@@ -11,8 +11,8 @@ const FULL_TIME_JOB_TYPE = 'FULL_TIME';
 
 // Retrieve Supabase URL and service role key from environment variables
 
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const supabaseUrl = process.env('SUPABASE_URL')!;
+const supabaseServiceKey = process.env('SUPABASE_SERVICE_ROLE_KEY')!;
 
 // Create a Supabase client
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -56,7 +56,7 @@ const validateToken = async (req: Request): Promise<string> => {
   try {
     const payload = await verify(
       token,
-      Deno.env.get('JWT_SECRET')!,
+      process.env('JWT_SECRET')!,
       'HS256'
     );
     return payload.userId;

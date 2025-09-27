@@ -12,7 +12,6 @@ import { useAuth } from '../stores/auth';
  **/
 
 export function semanticAnalysis(_text: string): string[] {
-  // Dans cette première version, nous retournons des suggestions en dur..
   return ["Améliorer la structure de la phrase.", "Ajouter des mots clés pertinents pour le poste.", "Mettre en avant vos expériences les plus significatives."];
 }
 
@@ -230,18 +229,21 @@ async function generateCoverLetterWithOpenAI(
     throw error;
   }
 }
-
+let bestQuestion: QuestionType = questions[0] || {
+  question: "Default question",
+  keywords: [],
+  type: "default",
+  level: "medium",
+  difficulty: "medium"
+};
 
 
 export async function generateCoverLetter(
   cv: any,
   jobDescription: string,
-  language: string = 'fr',
-  tone: 'professional' | 'conversational' | 'enthusiastic' = 'professional'
-): Promise<string> {
-  try {
-    const { user } = useAuth.getState();
-    const provider = user?.ai_provider || 'mistral'; // Mistral par défaut
+  user: { ai_provider?: string } // ← Ajoutez ce paramètre
+) {
+  const provider = user?.ai_provider || 'mistral';
 
     if (provider === 'openai') {
       return await generateCoverLetterWithOpenAI(cv, jobDescription, language, tone);
@@ -253,7 +255,14 @@ export async function generateCoverLetter(
     throw error;
   }
 }
-
+export async function generateCoverLetter(
+  cv: any,
+  jobDescription: string,
+  language: string = 'fr',
+  tone: 'professional' | 'conversational' | 'enthusiastic' = 'professional',
+  user: { ai_provider?: string } // ← NOUVEAU PARAMÈTRE
+): Promise<string> {
+  const provider = user?.ai_provider || 'mistral';
 export async function optimizeText(
   text: string,
   language: string = 'fr'
