@@ -2,13 +2,13 @@
 // Edge Function Deno: met à jour le profil authentifié avec quelques champs autorisés.
 // Exécuter localement: deno run --allow-net --allow-env supabase/functions/update-profile/index.ts
 
-import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.39.3";
 
 type Json = Record<string, unknown>;
 
 // ————————————————————————————————————————
-// Utils
+// Helper Functions
 // ————————————————————————————————————————
 function jsonResponse(body: Json, status = 200, extraHeaders: HeadersInit = {}) {
   return new Response(JSON.stringify(body), {
