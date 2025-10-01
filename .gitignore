@@ -73,3 +73,7 @@ src/components/.DS_Store
 *.sublime-workspace
 *.sublime-project
 Archives src/
+
+# Applications (ne pas commiter les .app)
+applications/*.app
+*.app/

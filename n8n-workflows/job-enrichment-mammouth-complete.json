@@ -1,0 +1,278 @@
+{
+  "name": "JobNexAI - Job Enrichment avec Mammouth.ai",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 2
+            }
+          ]
+        }
+      },
+      "id": "cron-trigger-jobs",
+      "name": "Cron - Toutes les 2h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://fr.indeed.com/jobs?q=react&l=paris",
+        "responseFormat": "string",
+        "options": {
+          "headers": {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+          }
+        }
+      },
+      "id": "http-scraping-indeed",
+      "name": "HTTP Request - Scraping Indeed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Parser HTML Indeed → JSON\nconst cheerio = require('cheerio');\n\nconst html = $input.item.json;\nconst $ = cheerio.load(html);\n\nconst jobs = [];\n\n$('a.tapItem').each((i, el) => {\n  const title = $(el).find('h2.jobTitle').text().trim();\n  const company = $(el).find('.companyName').text().trim();\n  const location = $(el).find('.companyLocation').text().trim();\n  const description = $(el).find('.job-snippet').text().trim();\n  const url = 'https://fr.indeed.com' + $(el).attr('href');\n\n  if (title && company) {\n    jobs.push({\n      title,\n      company,\n      location,\n      raw_description: description,\n      url,\n      source: 'Indeed',\n      scraped_at: new Date().toISOString()\n    });\n  }\n});\n\nconsole.log('✅ [Parser] Jobs extraits:', jobs.length);\n\nreturn jobs.map(j => ({ json: j }));"
+      },
+      "id": "function-parser-html",
+      "name": "Function - Parser HTML → JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.mammouth.ai/v1/chat/completions",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"mistral-7b-instruct\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Tu es un expert en analyse d'offres d'emploi et en recrutement tech.\\n\\n## Ton rôle :\\n- Analyser des offres d'emploi brutes\\n- Extraire et structurer les informations clés\\n- Enrichir les données avec ton expertise du marché\\n- Identifier les compétences techniques requises\\n- Estimer les fourchettes salariales selon le marché français\\n\\n## Tu dois TOUJOURS :\\n1. Respecter le format JSON demandé\\n2. Être précis et factuel\\n3. Ne pas inventer d'informations absentes\\n4. Utiliser \\\"non_specifie\\\" ou null si l'info n'est pas disponible\\n5. Extraire les compétences techniques explicites ET implicites\\n\\n## Format de réponse OBLIGATOIRE :\\n{\\n  \\\"title\\\": \\\"Titre exact du poste\\\",\\n  \\\"company\\\": \\\"Nom de l'entreprise\\\",\\n  \\\"location\\\": \\\"Ville, Région, Pays\\\",\\n  \\\"skills\\\": [\\\"skill1\\\", \\\"skill2\\\"],\\n  \\\"experience_level\\\": \\\"junior|mid|senior|lead|non_specifie\\\",\\n  \\\"salary_estimate\\\": \\\"40k-50k EUR\\\" ou null,\\n  \\\"remote_type\\\": \\\"remote|hybrid|onsite|non_specifie\\\",\\n  \\\"contract_type\\\": \\\"CDI|CDD|freelance|stage|non_specifie\\\",\\n  \\\"technologies\\\": [\\\"tech1\\\", \\\"tech2\\\"],\\n  \\\"description_enriched\\\": \\\"Description améliorée\\\",\\n  \\\"benefits\\\": [\\\"benefit1\\\", \\\"benefit2\\\"],\\n  \\\"quality_score\\\": 0-10\\n}\\n\\nRéponds UNIQUEMENT en JSON valide.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Analyse cette offre d'emploi :\\n\\nTitre : {{ $json.title }}\\nEntreprise : {{ $json.company }}\\nLocalisation : {{ $json.location }}\\nDescription : {{ $json.raw_description }}\\nURL : {{ $json.url }}\\n\\nEnrichis ces données et retourne un JSON structuré complet.\"\n    }\n  ],\n  \"temperature\": 0.3,\n  \"max_tokens\": 1000\n}",
+        "options": {
+          "headers": {
+            "Authorization": "Bearer {{ $credentials.mammouth_api_key }}",
+            "Content-Type": "application/json"
+          }
+        }
+      },
+      "id": "http-mammouth-enrichment",
+      "name": "Mammouth.ai - Job Enrichment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1000, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "mammouth_api_credentials",
+          "name": "Mammouth.ai API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "extract-ai-response",
+              "name": "ai_response",
+              "value": "={{ $json.choices[0].message.content }}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "set-extract-response",
+      "name": "Set - Extraire réponse IA",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "/**\n * JSON VALIDATOR & CLEANER\n * Adapté du workflow Telegram-TikTok pour JobNexAI\n */\n\nconst requiredFields = [\n  'title',\n  'company',\n  'location',\n  'skills',\n  'experience_level',\n  'remote_type'\n];\n\nconst defaultJobStructure = {\n  title: $('Function - Parser HTML → JSON').item.json.title,\n  company: $('Function - Parser HTML → JSON').item.json.company,\n  location: $('Function - Parser HTML → JSON').item.json.location,\n  skills: [],\n  experience_level: 'non_specifie',\n  salary_estimate: null,\n  remote_type: 'non_specifie',\n  contract_type: 'non_specifie',\n  technologies: [],\n  description_enriched: $('Function - Parser HTML → JSON').item.json.raw_description,\n  benefits: [],\n  quality_score: 5,\n  error: true,\n  error_message: 'Enrichissement IA échoué - données minimales conservées'\n};\n\nfunction validateAndCleanJSON(aiResponse, requiredFields, defaultStructure) {\n  try {\n    let parsedResponse;\n    let cleanResponse;\n\n    if (typeof aiResponse === 'object' && aiResponse !== null) {\n      parsedResponse = aiResponse;\n      cleanResponse = JSON.stringify(aiResponse, null, 2);\n    } \n    else if (typeof aiResponse === 'string') {\n      cleanResponse = aiResponse\n        .replace(/^```json\\s*/i, '')\n        .replace(/^```\\s*/i, '')\n        .replace(/\\s*```$/i, '')\n        .replace(/\\\\n/g, '')\n        .replace(/\\\\\"/g, '\"')\n        .replace(/\\\\'/g, \"'\")\n        .trim();\n\n      parsedResponse = JSON.parse(cleanResponse);\n    } \n    else {\n      throw new Error(`Type de réponse inattendu: ${typeof aiResponse}`);\n    }\n\n    const missingFields = requiredFields.filter(field => {\n      return !parsedResponse.hasOwnProperty(field) || \n             parsedResponse[field] === null || \n             parsedResponse[field] === undefined;\n    });\n\n    if (missingFields.length > 0) {\n      console.warn('⚠️ [Validation] Champs manquants:', missingFields.join(', '));\n      throw new Error(`Champs manquants: ${missingFields.join(', ')}`);\n    }\n\n    if (!Array.isArray(parsedResponse.skills)) {\n      throw new Error('Le champ \"skills\" doit être un tableau');\n    }\n\n    console.log('✅ [Validation] JSON validé avec succès');\n\n    return {\n      json: {\n        ...parsedResponse,\n        url: $('Function - Parser HTML → JSON').item.json.url,\n        source: $('Function - Parser HTML → JSON').item.json.source,\n        scraped_at: $('Function - Parser HTML → JSON').item.json.scraped_at,\n        validated: true,\n        enriched: true,\n        validation_timestamp: new Date().toISOString()\n      }\n    };\n\n  } catch (error) {\n    console.error('❌ [Validation] Erreur:', error.message);\n    console.error('Réponse brute:', aiResponse);\n\n    return {\n      json: {\n        ...defaultStructure,\n        url: $('Function - Parser HTML → JSON').item.json.url,\n        source: $('Function - Parser HTML → JSON').item.json.source,\n        scraped_at: $('Function - Parser HTML → JSON').item.json.scraped_at,\n        validation_error: error.message,\n        validation_timestamp: new Date().toISOString()\n      }\n    };\n  }\n}\n\nconst aiResponse = $input.item.json.ai_response;\nconst result = validateAndCleanJSON(aiResponse, requiredFields, defaultJobStructure);\n\nreturn result;"
+      },
+      "id": "function-json-validator",
+      "name": "Function - JSON Validator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1500, 300]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "jobs",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "title": "={{ $json.title }}",
+            "company": "={{ $json.company }}",
+            "location": "={{ $json.location }}",
+            "description": "={{ $json.description_enriched }}",
+            "url": "={{ $json.url }}",
+            "job_type": "={{ $json.contract_type || 'non_specifie' }}",
+            "posted_at": "={{ $json.scraped_at || new Date().toISOString() }}",
+            "skills": "={{ JSON.stringify($json.skills) }}",
+            "experience_level": "={{ $json.experience_level }}",
+            "salary_estimate": "={{ $json.salary_estimate }}",
+            "remote_type": "={{ $json.remote_type }}",
+            "contract_type": "={{ $json.contract_type }}",
+            "technologies": "={{ JSON.stringify($json.technologies) }}",
+            "benefits": "={{ JSON.stringify($json.benefits) }}",
+            "quality_score": "={{ $json.quality_score }}",
+            "enriched": "={{ $json.enriched }}",
+            "enrichment_timestamp": "={{ $json.enriched ? new Date().toISOString() : null }}",
+            "scraped_at": "={{ $json.scraped_at }}",
+            "scraping_source": "={{ $json.source }}",
+            "created_at": "={{ new Date().toISOString() }}",
+            "updated_at": "={{ new Date().toISOString() }}"
+          }
+        }
+      },
+      "id": "supabase-insert-jobs",
+      "name": "Supabase - Insert Jobs",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1750, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase_jobnexai_credentials",
+          "name": "Supabase JobNexAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 🎬 WORKFLOW JOB ENRICHMENT\n\n**Fonctionnalités:**\n- Scraping Indeed toutes les 2h\n- Parsing HTML → JSON structuré\n- Enrichissement IA via Mammouth.ai\n- Validation JSON robuste avec fallback\n- Insertion automatique Supabase\n\n**Déclenchement:**\nCron automatique toutes les 2 heures\n\n**Métriques:**\n- Jobs scrapés/heure\n- Taux d'enrichissement réussi\n- Quality score moyen",
+        "height": 350,
+        "width": 400,
+        "color": 4
+      },
+      "id": "sticky-note-doc",
+      "name": "Documentation - Workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [140, 80]
+    },
+    {
+      "parameters": {
+        "content": "## ⚠️ GESTION D'ERREURS\n\n**Validation JSON:**\n- Nettoyage balises markdown\n- Vérification champs obligatoires\n- Fallback avec structure minimale\n- Logs détaillés pour debugging\n\n**En cas d'erreur:**\n- Job conservé avec données basiques\n- Flag 'enriched: false'\n- Error message stocké\n- Workflow continue",
+        "height": 300,
+        "width": 380,
+        "color": 6
+      },
+      "id": "sticky-note-errors",
+      "name": "Documentation - Erreurs",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1380, 80]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Cron - Toutes les 2h": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request - Scraping Indeed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request - Scraping Indeed": {
+      "main": [
+        [
+          {
+            "node": "Function - Parser HTML → JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Function - Parser HTML → JSON": {
+      "main": [
+        [
+          {
+            "node": "Mammouth.ai - Job Enrichment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mammouth.ai - Job Enrichment": {
+      "main": [
+        [
+          {
+            "node": "Set - Extraire réponse IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Extraire réponse IA": {
+      "main": [
+        [
+          {
+            "node": "Function - JSON Validator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Function - JSON Validator": {
+      "main": [
+        [
+          {
+            "node": "Supabase - Insert Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "versionId": "1.0.0",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "jobnexai-production"
+  },
+  "tags": [
+    {
+      "name": "JobNexAI",
+      "id": "jobnexai-tag"
+    },
+    {
+      "name": "Scraping",
+      "id": "scraping-tag"
+    },
+    {
+      "name": "Mammouth.ai",
+      "id": "mammouth-tag"
+    }
+  ]
+}
