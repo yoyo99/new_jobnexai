@@ -1,0 +1,135 @@
+{
+  "name": "JobNexAI - Malt Scraper + Mammouth.ai",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{"field": "hours", "hoursInterval": 3}]
+        }
+      },
+      "id": "cron-malt",
+      "name": "Cron - Toutes les 3h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://www.malt.fr/s?q=react&l=paris",
+        "options": {
+          "headers": {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+          }
+        }
+      },
+      "id": "http-scrape-malt",
+      "name": "HTTP - Scrape Malt",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const cheerio = require('cheerio');\nconst html = $input.item.json;\nconst $ = cheerio.load(html);\n\nconst jobs = [];\n\n$('.freelancer-card, .mission-card').each((i, el) => {\n  const $el = $(el);\n  const title = $el.find('.mission-title, h3').text().trim();\n  const company = $el.find('.company-name, .client-name').text().trim();\n  const location = $el.find('.location').text().trim() || 'Remote';\n  const description = $el.find('.mission-description, .description').text().trim();\n  const url = 'https://www.malt.fr' + $el.find('a').attr('href');\n  const rate = $el.find('.rate, .tjm').text().trim();\n\n  if (title && url) {\n    jobs.push({\n      title,\n      company: company || 'Client Malt',\n      location,\n      raw_description: description,\n      url,\n      rate,\n      source: 'Malt',\n      scraping_source: 'malt',\n      scraped_at: new Date().toISOString()\n    });\n  }\n});\n\nconsole.log('✅ [Malt] Jobs extraits:', jobs.length);\nreturn jobs.map(j => ({ json: j }));"
+      },
+      "id": "function-parse-malt",
+      "name": "Function - Parse Malt HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.mammouth.ai/v1/chat/completions",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"mistral-7b-instruct\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Tu es un expert en analyse de missions freelance. Enrichis les données avec ton expertise du marché freelance français. Format JSON obligatoire avec: skills, experience_level, salary_estimate, remote_type, contract_type, technologies, benefits, quality_score.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Analyse cette mission Malt:\\n\\nTitre: {{ $json.title }}\\nClient: {{ $json.company }}\\nLocalisation: {{ $json.location }}\\nTJM/Rate: {{ $json.rate }}\\nDescription: {{ $json.raw_description }}\\n\\nRetourne un JSON structuré.\"\n    }\n  ],\n  \"temperature\": 0.3,\n  \"max_tokens\": 1000\n}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "Authorization", "value": "Bearer sk-arDMzaX2bdhamr9RxjgERQ"},
+            {"name": "Content-Type", "value": "application/json"}
+          ]
+        }
+      },
+      "id": "http-mammouth",
+      "name": "Mammouth.ai - Enrichment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1000, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {"id": "ai", "name": "ai_response", "value": "={{ $json.choices[0].message.content }}", "type": "string"}
+          ]
+        }
+      },
+      "id": "set-extract",
+      "name": "Set - Extract AI",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const requiredFields = ['title', 'company', 'location', 'skills', 'experience_level', 'remote_type'];\nconst defaultJobStructure = {\n  title: $('Function - Parse Malt HTML').item.json.title,\n  company: $('Function - Parse Malt HTML').item.json.company,\n  location: $('Function - Parse Malt HTML').item.json.location,\n  skills: [],\n  experience_level: 'non_specifie',\n  salary_estimate: $('Function - Parse Malt HTML').item.json.rate,\n  remote_type: 'remote',\n  contract_type: 'freelance',\n  technologies: [],\n  description_enriched: $('Function - Parse Malt HTML').item.json.raw_description,\n  benefits: [],\n  quality_score: 5,\n  enriched: false\n};\n\nfunction validateAndCleanJSON(aiResponse, requiredFields, defaultStructure) {\n  try {\n    let parsedResponse;\n    if (typeof aiResponse === 'object') {\n      parsedResponse = aiResponse;\n    } else if (typeof aiResponse === 'string') {\n      const cleanResponse = aiResponse.replace(/^```json\\s*/i, '').replace(/^```\\s*/i, '').replace(/\\s*```$/i, '').trim();\n      parsedResponse = JSON.parse(cleanResponse);\n    }\n    const missingFields = requiredFields.filter(f => !parsedResponse.hasOwnProperty(f));\n    if (missingFields.length > 0) throw new Error(`Champs manquants: ${missingFields.join(', ')}`);\n    return {\n      json: {\n        ...parsedResponse,\n        ...($('Function - Parse Malt HTML').item.json),\n        enriched: true,\n        validation_timestamp: new Date().toISOString()\n      }\n    };\n  } catch (error) {\n    return {\n      json: {\n        ...defaultStructure,\n        ...($('Function - Parse Malt HTML').item.json),\n        enrichment_error: error.message\n      }\n    };\n  }\n}\n\nconst aiResponse = $input.item.json.ai_response;\nreturn validateAndCleanJSON(aiResponse, requiredFields, defaultJobStructure);"
+      },
+      "id": "function-validator",
+      "name": "Function - JSON Validator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1500, 300]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "schema": {"__rl": true, "value": "public", "mode": "list"},
+        "table": {"__rl": true, "value": "jobs", "mode": "list"},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "title": "={{ $json.title }}",
+            "company": "={{ $json.company }}",
+            "location": "={{ $json.location }}",
+            "description": "={{ $json.description_enriched }}",
+            "url": "={{ $json.url }}",
+            "job_type": "={{ $json.contract_type }}",
+            "posted_at": "={{ $json.scraped_at }}",
+            "skills": "={{ JSON.stringify($json.skills) }}",
+            "experience_level": "={{ $json.experience_level }}",
+            "salary_estimate": "={{ $json.salary_estimate }}",
+            "remote_type": "={{ $json.remote_type }}",
+            "contract_type": "={{ $json.contract_type }}",
+            "technologies": "={{ JSON.stringify($json.technologies) }}",
+            "benefits": "={{ JSON.stringify($json.benefits) }}",
+            "quality_score": "={{ $json.quality_score }}",
+            "enriched": "={{ $json.enriched }}",
+            "scraped_at": "={{ $json.scraped_at }}",
+            "scraping_source": "={{ $json.scraping_source }}",
+            "created_at": "={{ new Date().toISOString() }}"
+          }
+        }
+      },
+      "id": "supabase-insert",
+      "name": "Supabase - Insert Jobs",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1750, 300]
+    }
+  ],
+  "connections": {
+    "Cron - Toutes les 3h": {"main": [[{"node": "HTTP - Scrape Malt", "type": "main", "index": 0}]]},
+    "HTTP - Scrape Malt": {"main": [[{"node": "Function - Parse Malt HTML", "type": "main", "index": 0}]]},
+    "Function - Parse Malt HTML": {"main": [[{"node": "Mammouth.ai - Enrichment", "type": "main", "index": 0}]]},
+    "Mammouth.ai - Enrichment": {"main": [[{"node": "Set - Extract AI", "type": "main", "index": 0}]]},
+    "Set - Extract AI": {"main": [[{"node": "Function - JSON Validator", "type": "main", "index": 0}]]},
+    "Function - JSON Validator": {"main": [[{"node": "Supabase - Insert Jobs", "type": "main", "index": 0}]]}
+  },
+  "active": false,
+  "settings": {"executionOrder": "v1"}
+}
