@@ -1,19 +1,27 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Upload, FileText, Loader2, CheckCircle, XCircle, TrendingUp, AlertCircle } from 'lucide-react';
 import { N8NService, CVAnalysisResult } from '../services/n8n-service';
-import { useNetlifyAuth } from '../contexts/NetlifyAuthContext';
+import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 
 export default function CVAnalysisN8N() {
-  const { user } = useNetlifyAuth();
+  const [userEmail, setUserEmail] = useState<string>('');
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [jobUrl, setJobUrl] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<CVAnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Debug: vérifier user
-  console.log('[CVAnalysisN8N] User:', user);
+  // Récupérer l'utilisateur Supabase
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.email) {
+        setUserEmail(user.email);
+      }
+    };
+    getUser();
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -32,7 +40,7 @@ export default function CVAnalysisN8N() {
   };
 
   const handleAnalyze = async () => {
-    if (!cvFile || !jobUrl || !user?.email) {
+    if (!cvFile || !jobUrl || !userEmail) {
       toast.error('Veuillez remplir tous les champs');
       return;
     }
@@ -45,7 +53,7 @@ export default function CVAnalysisN8N() {
       const analysisResult = await N8NService.analyzeCVWithJob({
         cvFile,
         jobUrl,
-        userEmail: user.email
+        userEmail
       });
 
       setResult(analysisResult);
