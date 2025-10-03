@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Upload, FileText, Loader2, CheckCircle, XCircle, TrendingUp, AlertCircle } from 'lucide-react';
 import { N8NService, CVAnalysisResult } from '@/services/n8n-service';
-import { useAuth } from '@/contexts/AuthContext';
+import { useNetlifyAuth } from '../contexts/NetlifyAuthContext';
 import toast from 'react-hot-toast';
 
 export default function CVAnalysisN8N() {
-  const { user } = useAuth();
+  const { user } = useNetlifyAuth();
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [jobUrl, setJobUrl] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
