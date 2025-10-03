@@ -1,0 +1,320 @@
+groups:
+  # =====================================================
+  # VPS RESOURCES ALERTS
+  # =====================================================
+  - name: vps_resources
+    interval: 30s
+    rules:
+      # CPU Usage > 60% (moyenne 5 min)
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 60
+        for: 5m
+        labels:
+          severity: warning
+          service: vps
+        annotations:
+          summary: "CPU usage above 60% on {{ $labels.instance }}"
+          description: "CPU usage is {{ $value }}% (threshold: 60%)"
+          runbook_url: "https://docs.jobnexai.com/runbooks/high-cpu"
+
+      # CPU Usage > 80% (critique)
+      - alert: CriticalCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 2m
+        labels:
+          severity: critical
+          service: vps
+        annotations:
+          summary: "🚨 CRITICAL: CPU usage above 80% on {{ $labels.instance }}"
+          description: "CPU usage is {{ $value }}% (threshold: 80%)"
+          runbook_url: "https://docs.jobnexai.com/runbooks/critical-cpu"
+
+      # RAM Usage > 75%
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 75
+        for: 5m
+        labels:
+          severity: warning
+          service: vps
+        annotations:
+          summary: "Memory usage above 75% on {{ $labels.instance }}"
+          description: "Memory usage is {{ $value }}% (threshold: 75%)"
+          runbook_url: "https://docs.jobnexai.com/runbooks/high-memory"
+
+      # RAM Usage > 90% (critique)
+      - alert: CriticalMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
+        for: 2m
+        labels:
+          severity: critical
+          service: vps
+        annotations:
+          summary: "🚨 CRITICAL: Memory usage above 90% on {{ $labels.instance }}"
+          description: "Memory usage is {{ $value }}% (threshold: 90%)"
+          runbook_url: "https://docs.jobnexai.com/runbooks/critical-memory"
+
+      # Disk Usage > 80%
+      - alert: HighDiskUsage
+        expr: (1 - (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"})) * 100 > 80
+        for: 10m
+        labels:
+          severity: warning
+          service: vps
+        annotations:
+          summary: "Disk usage above 80% on {{ $labels.instance }}"
+          description: "Disk usage is {{ $value }}% (threshold: 80%)"
+          runbook_url: "https://docs.jobnexai.com/runbooks/high-disk"
+
+      # IO Wait > 5%
+      - alert: HighIOWait
+        expr: rate(node_cpu_seconds_total{mode="iowait"}[5m]) * 100 > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: vps
+        annotations:
+          summary: "High IO wait on {{ $labels.instance }}"
+          description: "IO wait is {{ $value }}% (threshold: 5%)"
+          runbook_url: "https://docs.jobnexai.com/runbooks/high-iowait"
+
+  # =====================================================
+  # DOCKER CONTAINERS ALERTS
+  # =====================================================
+  - name: docker_containers
+    interval: 30s
+    rules:
+      # Container Down
+      - alert: ContainerDown
+        expr: up{job=~"n8n|fastapi|redis|postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: docker
+        annotations:
+          summary: "🚨 Container {{ $labels.job }} is down"
+          description: "Container {{ $labels.job }} has been down for more than 1 minute"
+          runbook_url: "https://docs.jobnexai.com/runbooks/container-down"
+
+      # Container Restarting
+      - alert: ContainerRestarting
+        expr: rate(container_last_seen{name=~"n8n|fastapi|redis|postgres"}[5m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+          service: docker
+        annotations:
+          summary: "Container {{ $labels.name }} is restarting"
+          description: "Container {{ $labels.name }} has restarted {{ $value }} times in the last 5 minutes"
+
+      # Container High CPU
+      - alert: ContainerHighCPU
+        expr: sum(rate(container_cpu_usage_seconds_total{name=~"n8n|fastapi"}[5m])) by (name) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: docker
+        annotations:
+          summary: "Container {{ $labels.name }} high CPU usage"
+          description: "Container {{ $labels.name }} CPU usage is {{ $value }}%"
+
+      # Container High Memory
+      - alert: ContainerHighMemory
+        expr: (container_memory_usage_bytes{name=~"n8n|fastapi"} / container_spec_memory_limit_bytes{name=~"n8n|fastapi"}) * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+          service: docker
+        annotations:
+          summary: "Container {{ $labels.name }} high memory usage"
+          description: "Container {{ $labels.name }} memory usage is {{ $value }}%"
+
+  # =====================================================
+  # N8N ALERTS
+  # =====================================================
+  - name: n8n_workflows
+    interval: 1m
+    rules:
+      # N8N Down
+      - alert: N8NDown
+        expr: up{job="n8n"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: n8n
+        annotations:
+          summary: "🚨 N8N is down"
+          description: "N8N has been unreachable for more than 2 minutes"
+          runbook_url: "https://docs.jobnexai.com/runbooks/n8n-down"
+
+      # Workflow Execution Failures
+      - alert: HighWorkflowFailureRate
+        expr: rate(n8n_workflow_executions_failed_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: high
+          service: n8n
+        annotations:
+          summary: "High N8N workflow failure rate"
+          description: "Workflow failure rate is {{ $value }} executions/sec"
+          runbook_url: "https://docs.jobnexai.com/runbooks/workflow-failures"
+
+      # Slow Workflow Executions
+      - alert: SlowWorkflowExecutions
+        expr: histogram_quantile(0.95, rate(n8n_workflow_execution_duration_seconds_bucket[5m])) > 300
+        for: 10m
+        labels:
+          severity: warning
+          service: n8n
+        annotations:
+          summary: "Slow N8N workflow executions"
+          description: "95th percentile execution time is {{ $value }}s (threshold: 300s)"
+
+  # =====================================================
+  # REDIS ALERTS
+  # =====================================================
+  - name: redis_cache
+    interval: 30s
+    rules:
+      # Redis Down
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: redis
+        annotations:
+          summary: "🚨 Redis is down"
+          description: "Redis has been unreachable for more than 1 minute"
+          runbook_url: "https://docs.jobnexai.com/runbooks/redis-down"
+
+      # Redis High Memory
+      - alert: RedisHighMemory
+        expr: (redis_memory_used_bytes / redis_memory_max_bytes) * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "Redis high memory usage"
+          description: "Redis memory usage is {{ $value }}%"
+
+      # Redis Evicted Keys
+      - alert: RedisEvictingKeys
+        expr: rate(redis_evicted_keys_total[5m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "Redis is evicting keys"
+          description: "Redis is evicting {{ $value }} keys/sec due to memory pressure"
+
+  # =====================================================
+  # POSTGRES ALERTS
+  # =====================================================
+  - name: postgres_database
+    interval: 30s
+    rules:
+      # Postgres Down
+      - alert: PostgresDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: postgres
+        annotations:
+          summary: "🚨 PostgreSQL is down"
+          description: "PostgreSQL has been unreachable for more than 1 minute"
+          runbook_url: "https://docs.jobnexai.com/runbooks/postgres-down"
+
+      # Too Many Connections
+      - alert: PostgresTooManyConnections
+        expr: (pg_stat_database_numbackends / pg_settings_max_connections) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: postgres
+        annotations:
+          summary: "PostgreSQL too many connections"
+          description: "PostgreSQL connection usage is {{ $value }}%"
+
+      # Slow Queries
+      - alert: PostgresSlowQueries
+        expr: rate(pg_stat_activity_max_tx_duration[5m]) > 60
+        for: 5m
+        labels:
+          severity: warning
+          service: postgres
+        annotations:
+          summary: "PostgreSQL slow queries detected"
+          description: "Long-running queries detected (> 60s)"
+
+  # =====================================================
+  # HTTP/HTTPS ALERTS
+  # =====================================================
+  - name: http_endpoints
+    interval: 1m
+    rules:
+      # Endpoint Down
+      - alert: EndpointDown
+        expr: probe_success{job="blackbox-http"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: http
+        annotations:
+          summary: "🚨 Endpoint {{ $labels.instance }} is down"
+          description: "Endpoint {{ $labels.instance }} has been unreachable for more than 2 minutes"
+          runbook_url: "https://docs.jobnexai.com/runbooks/endpoint-down"
+
+      # High Response Time
+      - alert: HighResponseTime
+        expr: probe_duration_seconds{job="blackbox-http"} > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: http
+        annotations:
+          summary: "High response time on {{ $labels.instance }}"
+          description: "Response time is {{ $value }}s (threshold: 2s)"
+
+      # SSL Certificate Expiring
+      - alert: SSLCertificateExpiring
+        expr: (probe_ssl_earliest_cert_expiry - time()) / 86400 < 30
+        for: 1h
+        labels:
+          severity: warning
+          service: ssl
+        annotations:
+          summary: "SSL certificate expiring soon on {{ $labels.instance }}"
+          description: "SSL certificate expires in {{ $value }} days"
+          runbook_url: "https://docs.jobnexai.com/runbooks/ssl-expiring"
+
+  # =====================================================
+  # APPLICATION ERRORS
+  # =====================================================
+  - name: application_errors
+    interval: 1m
+    rules:
+      # High 5xx Error Rate
+      - alert: High5xxErrorRate
+        expr: rate(nginx_http_requests_total{status=~"5.."}[5m]) > 0.01
+        for: 5m
+        labels:
+          severity: high
+          service: nginx
+        annotations:
+          summary: "High 5xx error rate"
+          description: "5xx error rate is {{ $value }} requests/sec (threshold: 0.01)"
+          runbook_url: "https://docs.jobnexai.com/runbooks/high-5xx"
+
+      # High 4xx Error Rate
+      - alert: High4xxErrorRate
+        expr: rate(nginx_http_requests_total{status=~"4.."}[5m]) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+          service: nginx
+        annotations:
+          summary: "High 4xx error rate"
+          description: "4xx error rate is {{ $value }} requests/sec"

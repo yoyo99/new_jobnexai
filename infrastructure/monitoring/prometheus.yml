@@ -1,0 +1,111 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'jobnexai-production'
+    environment: 'production'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+# Load rules once and periodically evaluate them
+rule_files:
+  - "/etc/prometheus/rules/*.yml"
+
+# Scrape configurations
+scrape_configs:
+  # =====================================================
+  # PROMETHEUS SELF-MONITORING
+  # =====================================================
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # =====================================================
+  # NODE EXPORTER (VPS METRICS)
+  # =====================================================
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'ionos-vps-l'
+
+  # =====================================================
+  # CADVISOR (DOCKER CONTAINERS)
+  # =====================================================
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    metric_relabel_configs:
+      # Keep only important metrics
+      - source_labels: [__name__]
+        regex: 'container_(cpu|memory|network|fs).*'
+        action: keep
+
+  # =====================================================
+  # N8N METRICS
+  # =====================================================
+  - job_name: 'n8n'
+    static_configs:
+      - targets: ['n8n:5678']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # =====================================================
+  # FASTAPI METRICS
+  # =====================================================
+  - job_name: 'fastapi'
+    static_configs:
+      - targets: ['fastapi:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # =====================================================
+  # REDIS EXPORTER
+  # =====================================================
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    scrape_interval: 30s
+
+  # =====================================================
+  # POSTGRES EXPORTER
+  # =====================================================
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+    scrape_interval: 30s
+
+  # =====================================================
+  # NGINX METRICS
+  # =====================================================
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:9113']
+    scrape_interval: 30s
+
+  # =====================================================
+  # BLACKBOX EXPORTER (UPTIME MONITORING)
+  # =====================================================
+  - job_name: 'blackbox-http'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+          - https://n8n.jobnexai.com/healthz
+          - https://api.jobnexai.com/health
+          - https://monitoring.jobnexai.com
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
