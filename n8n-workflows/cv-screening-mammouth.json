@@ -1,0 +1,242 @@
+{
+  "name": "JobNexAI - CV Screening avec Mammouth.ai",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Analyse CV - JobNexAI",
+        "formDescription": "Uploadez votre CV et l'offre d'emploi pour obtenir un score de matching",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Votre CV (PDF)",
+              "fieldType": "file",
+              "acceptFileTypes": ".pdf",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "URL de l'offre d'emploi",
+              "fieldType": "text",
+              "placeholder": "https://...",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Votre email",
+              "fieldType": "email",
+              "placeholder": "votre@email.com",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "form-trigger",
+      "name": "Form Trigger - Upload CV",
+      "type": "n8n-nodes-base.formTrigger",
+      "position": [250, 300],
+      "webhookId": "cv-screening-form",
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "data",
+        "options": {}
+      },
+      "id": "extract-cv-pdf",
+      "name": "Extract - CV PDF",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [500, 300],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.job_url }}",
+        "options": {}
+      },
+      "id": "http-fetch-job",
+      "name": "HTTP - Fetch Job Description",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [500, 450],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Extraction texte de la page job\nconst cheerio = require('cheerio');\nconst html = $input.item.json.data;\nconst $ = cheerio.load(html);\n\n// Extraire titre, entreprise, description\nconst title = $('h1, .job-title, [class*=\"title\"]').first().text().trim();\nconst company = $('[class*=\"company\"], .company-name').first().text().trim();\nconst description = $('[class*=\"description\"], .job-description, article').first().text().trim();\n\nreturn {\n  json: {\n    job_title: title || 'Non trouvé',\n    job_company: company || 'Non trouvé',\n    job_description: description || $('body').text().substring(0, 5000),\n    job_url: $('Form Trigger - Upload CV').item.json.job_url\n  }\n};"
+      },
+      "id": "function-parse-job",
+      "name": "Function - Parse Job Page",
+      "type": "n8n-nodes-base.code",
+      "position": [750, 450],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cv-text",
+              "name": "cv_text",
+              "value": "={{ $('Extract - CV PDF').item.json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "job-data",
+              "name": "job_data",
+              "value": "={{ $json }}",
+              "type": "object"
+            },
+            {
+              "id": "user-email",
+              "name": "user_email",
+              "value": "={{ $('Form Trigger - Upload CV').item.json.email }}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "set-merge-data",
+      "name": "Set - Merge CV + Job",
+      "type": "n8n-nodes-base.set",
+      "position": [1000, 375],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "url": "https://api.mammouth.ai/v1/chat/completions",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"mistral-7b-instruct\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Tu es un expert RH spécialisé dans l'analyse de CV et le matching candidat-poste. Tu dois analyser un CV et une offre d'emploi, puis retourner un JSON structuré avec:\\n\\n1. matching_score (0-100): Score de correspondance global\\n2. strengths (array): Points forts du candidat (3-5 éléments)\\n3. weaknesses (array): Points faibles ou manques (2-4 éléments)\\n4. skills_match (object): { matched: [], missing: [] }\\n5. experience_match (object): { level: string, years: number, relevant: boolean }\\n6. recommendation (string): Recommandation finale (150 mots max)\\n7. key_insights (array): 3 insights clés pour le recruteur\\n8. interview_questions (array): 3 questions pertinentes à poser\\n\\nSois précis, factuel et constructif. Base-toi uniquement sur les informations fournies.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Analyse ce CV et cette offre d'emploi:\\n\\n=== CV DU CANDIDAT ===\\n{{ $json.cv_text }}\\n\\n=== OFFRE D'EMPLOI ===\\nTitre: {{ $json.job_data.job_title }}\\nEntreprise: {{ $json.job_data.job_company }}\\nDescription:\\n{{ $json.job_data.job_description }}\\n\\nRetourne un JSON structuré avec l'analyse complète.\"\n    }\n  ],\n  \"temperature\": 0.3,\n  \"max_tokens\": 2000,\n  \"response_format\": { \"type\": \"json_object\" }\n}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer sk-arDMzaX2bdhamr9RxjgERQ"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        }
+      },
+      "id": "mammouth-analysis",
+      "name": "Mammouth.ai - CV Analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1250, 375],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ai-response",
+              "name": "ai_analysis",
+              "value": "={{ $json.choices[0].message.content }}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "set-extract-ai",
+      "name": "Set - Extract AI Response",
+      "type": "n8n-nodes-base.set",
+      "position": [1500, 375],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Validation et nettoyage JSON\nconst defaultAnalysis = {\n  matching_score: 0,\n  strengths: ['Analyse en cours...'],\n  weaknesses: ['Analyse en cours...'],\n  skills_match: { matched: [], missing: [] },\n  experience_match: { level: 'unknown', years: 0, relevant: false },\n  recommendation: 'Analyse non disponible',\n  key_insights: [],\n  interview_questions: []\n};\n\ntry {\n  let aiResponse = $input.item.json.ai_analysis;\n  \n  // Nettoyer markdown si présent\n  if (typeof aiResponse === 'string') {\n    aiResponse = aiResponse\n      .replace(/^```json\\s*/i, '')\n      .replace(/^```\\s*/i, '')\n      .replace(/\\s*```$/i, '')\n      .trim();\n    \n    aiResponse = JSON.parse(aiResponse);\n  }\n  \n  // Valider champs obligatoires\n  const requiredFields = ['matching_score', 'strengths', 'weaknesses', 'recommendation'];\n  const missingFields = requiredFields.filter(f => !aiResponse.hasOwnProperty(f));\n  \n  if (missingFields.length > 0) {\n    console.log('⚠️ Champs manquants:', missingFields.join(', '));\n    throw new Error('Champs manquants: ' + missingFields.join(', '));\n  }\n  \n  // Normaliser matching_score\n  if (aiResponse.matching_score > 100) aiResponse.matching_score = 100;\n  if (aiResponse.matching_score < 0) aiResponse.matching_score = 0;\n  \n  // Merge avec données originales\n  return {\n    json: {\n      ...aiResponse,\n      cv_text: $('Set - Merge CV + Job').item.json.cv_text.substring(0, 500) + '...',\n      job_title: $('Set - Merge CV + Job').item.json.job_data.job_title,\n      job_company: $('Set - Merge CV + Job').item.json.job_data.job_company,\n      job_url: $('Set - Merge CV + Job').item.json.job_data.job_url,\n      user_email: $('Set - Merge CV + Job').item.json.user_email,\n      analyzed_at: new Date().toISOString(),\n      validation_status: 'success'\n    }\n  };\n  \n} catch (error) {\n  console.log('❌ Erreur validation JSON:', error.message);\n  \n  return {\n    json: {\n      ...defaultAnalysis,\n      cv_text: $('Set - Merge CV + Job').item.json.cv_text.substring(0, 500) + '...',\n      job_title: $('Set - Merge CV + Job').item.json.job_data.job_title,\n      job_company: $('Set - Merge CV + Job').item.json.job_data.job_company,\n      job_url: $('Set - Merge CV + Job').item.json.job_data.job_url,\n      user_email: $('Set - Merge CV + Job').item.json.user_email,\n      analyzed_at: new Date().toISOString(),\n      validation_status: 'fallback',\n      validation_error: error.message\n    }\n  };\n}"
+      },
+      "id": "function-validator",
+      "name": "Function - JSON Validator",
+      "type": "n8n-nodes-base.code",
+      "position": [1750, 375],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "schema": {"__rl": true, "value": "public", "mode": "list"},
+        "table": {"__rl": true, "value": "cv_analyses", "mode": "list"},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_email": "={{ $json.user_email }}",
+            "job_title": "={{ $json.job_title }}",
+            "job_company": "={{ $json.job_company }}",
+            "job_url": "={{ $json.job_url }}",
+            "matching_score": "={{ $json.matching_score }}",
+            "strengths": "={{ JSON.stringify($json.strengths) }}",
+            "weaknesses": "={{ JSON.stringify($json.weaknesses) }}",
+            "skills_match": "={{ JSON.stringify($json.skills_match) }}",
+            "experience_match": "={{ JSON.stringify($json.experience_match) }}",
+            "recommendation": "={{ $json.recommendation }}",
+            "key_insights": "={{ JSON.stringify($json.key_insights) }}",
+            "interview_questions": "={{ JSON.stringify($json.interview_questions) }}",
+            "cv_excerpt": "={{ $json.cv_text }}",
+            "analyzed_at": "={{ $json.analyzed_at }}",
+            "validation_status": "={{ $json.validation_status }}"
+          }
+        }
+      },
+      "id": "supabase-insert",
+      "name": "Supabase - Save Analysis",
+      "type": "n8n-nodes-base.supabase",
+      "position": [2000, 375],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 🎯 CV SCREENING JOBNEXAI\n\n**Fonctionnalités:**\n- Upload CV (PDF)\n- Fetch offre d'emploi (URL)\n- Analyse IA avec Mammouth.ai\n- Matching score (0-100)\n- Forces/Faiblesses\n- Compétences matched/missing\n- Recommandation finale\n- Questions d'entretien\n- Sauvegarde Supabase\n\n**Utilisation:**\n1. Partager URL du form\n2. Candidat upload CV + URL job\n3. Analyse automatique\n4. Résultats dans Supabase\n5. Email notification (optionnel)\n\n**Prochaines étapes:**\n- Ajouter email notification\n- Interface frontend\n- Matching automatique jobs DB",
+        "height": 500,
+        "width": 400,
+        "color": 5
+      },
+      "id": "sticky-doc",
+      "name": "Documentation",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [140, 100],
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "Form Trigger - Upload CV": {
+      "main": [
+        [
+          {"node": "Extract - CV PDF", "type": "main", "index": 0},
+          {"node": "HTTP - Fetch Job Description", "type": "main", "index": 0}
+        ]
+      ]
+    },
+    "Extract - CV PDF": {
+      "main": [[{"node": "Set - Merge CV + Job", "type": "main", "index": 0}]]
+    },
+    "HTTP - Fetch Job Description": {
+      "main": [[{"node": "Function - Parse Job Page", "type": "main", "index": 0}]]
+    },
+    "Function - Parse Job Page": {
+      "main": [[{"node": "Set - Merge CV + Job", "type": "main", "index": 0}]]
+    },
+    "Set - Merge CV + Job": {
+      "main": [[{"node": "Mammouth.ai - CV Analysis", "type": "main", "index": 0}]]
+    },
+    "Mammouth.ai - CV Analysis": {
+      "main": [[{"node": "Set - Extract AI Response", "type": "main", "index": 0}]]
+    },
+    "Set - Extract AI Response": {
+      "main": [[{"node": "Function - JSON Validator", "type": "main", "index": 0}]]
+    },
+    "Function - JSON Validator": {
+      "main": [[{"node": "Supabase - Save Analysis", "type": "main", "index": 0}]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
