@@ -1,0 +1,185 @@
+version: '3.8'
+
+# Docker Compose pour tests locaux (sans SSL)
+# Usage: docker-compose -f docker-compose.local.yml --env-file .env.local up
+
+services:
+  # =====================================================
+  # N8N WORKFLOWS
+  # =====================================================
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n-local
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_USER}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD}
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5678/
+      - GENERIC_TIMEZONE=Europe/Paris
+      - N8N_METRICS=true
+      - N8N_LOG_LEVEL=debug
+      - EXECUTIONS_MODE=queue
+      - QUEUE_BULL_REDIS_HOST=redis
+      - QUEUE_BULL_REDIS_PORT=6379
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=n8n
+      - DB_POSTGRESDB_USER=${DB_USER}
+      - DB_POSTGRESDB_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - n8n-data-local:/home/node/.n8n
+      - ../n8n-workflows:/home/node/.n8n/workflows:ro
+    networks:
+      - jobnexai-local
+    depends_on:
+      - redis
+      - postgres
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5678/healthz"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  # =====================================================
+  # REDIS (CACHE + QUEUE)
+  # =====================================================
+  redis:
+    image: redis:7-alpine
+    container_name: redis-local
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data-local:/data
+    networks:
+      - jobnexai-local
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # =====================================================
+  # POSTGRESQL (N8N DATABASE)
+  # =====================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres-local
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=n8n
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - postgres-data-local:/var/lib/postgresql/data
+    networks:
+      - jobnexai-local
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # =====================================================
+  # PROMETHEUS (MONITORING)
+  # =====================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus-local
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=7d'
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alert-rules.yml:/etc/prometheus/rules/alerts.yml:ro
+      - prometheus-data-local:/prometheus
+    networks:
+      - jobnexai-local
+
+  # =====================================================
+  # GRAFANA (DASHBOARDS)
+  # =====================================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana-local
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+      - GF_INSTALL_PLUGINS=redis-datasource
+    volumes:
+      - grafana-data-local:/var/lib/grafana
+    networks:
+      - jobnexai-local
+    depends_on:
+      - prometheus
+
+  # =====================================================
+  # CADVISOR (DOCKER METRICS)
+  # =====================================================
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor-local
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    privileged: true
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    networks:
+      - jobnexai-local
+
+  # =====================================================
+  # NODE EXPORTER (SYSTEM METRICS)
+  # =====================================================
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter-local
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks:
+      - jobnexai-local
+
+volumes:
+  n8n-data-local:
+  redis-data-local:
+  postgres-data-local:
+  prometheus-data-local:
+  grafana-data-local:
+
+networks:
+  jobnexai-local:
+    driver: bridge

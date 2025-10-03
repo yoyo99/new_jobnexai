@@ -48,6 +48,8 @@ const UserCoverLetters = React.lazy(() => import('../components/applications/Use
 const FranceTravailPage = React.lazy(() => import('../pages/FranceTravailPage'));
 const ScrapingTestPage = React.lazy(() => import('../pages/ScrapingTestPage'));
 const TestVpsPage = React.lazy(() => import('../pages/TestVpsPage'));
+const CVAnalysisN8N = React.lazy(() => import('../components/CVAnalysisN8N'));
+const JobScrapingN8N = React.lazy(() => import('../components/JobScrapingN8N'));
 
 export const AppRoutes = () => {
   return (
@@ -91,6 +93,10 @@ export const AppRoutes = () => {
         <Route path="recruiter/candidates" element={<ProtectedRoute requiresSubscription><LazyComponentWrapper><CandidateSearch /></LazyComponentWrapper></ProtectedRoute>} />
         <Route path="recruiter/job-postings" element={<ProtectedRoute requiresSubscription><LazyComponentWrapper><JobPostings /></LazyComponentWrapper></ProtectedRoute>} />
         <Route path="recruiter/create-job" element={<ProtectedRoute requiresSubscription><LazyComponentWrapper><CreateJobPosting /></LazyComponentWrapper></ProtectedRoute>} />
+
+        {/* Routes N8N Integration */}
+        <Route path="cv-analysis-ai" element={<ProtectedRoute requiresSubscription><LazyComponentWrapper><CVAnalysisN8N /></LazyComponentWrapper></ProtectedRoute>} />
+        <Route path="job-scraping" element={<ProtectedRoute requiresSubscription><LazyComponentWrapper><JobScrapingN8N /></LazyComponentWrapper></ProtectedRoute>} />
 
         {/* Route de test pour l'infrastructure N8N */}
         <Route path="scraping-test" element={<ProtectedRoute adminOnly><LazyComponentWrapper><ScrapingTestPage /></LazyComponentWrapper></ProtectedRoute>} />

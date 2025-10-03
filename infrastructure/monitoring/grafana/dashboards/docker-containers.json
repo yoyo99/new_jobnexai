@@ -1,0 +1,190 @@
+{
+  "dashboard": {
+    "title": "JobNexAI - Docker Containers",
+    "tags": ["jobnexai", "docker", "containers"],
+    "timezone": "Europe/Paris",
+    "schemaVersion": 36,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Container Status",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 24, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "count(container_last_seen{name=~\"n8n|fastapi|redis|postgres|grafana|prometheus\"})",
+            "legendFormat": "Running Containers",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "yellow", "value": 5},
+                {"color": "green", "value": 6}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Container CPU Usage",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+        "targets": [
+          {
+            "expr": "sum(rate(container_cpu_usage_seconds_total{name=~\"n8n-local|redis-local|postgres-local\"}[5m])) by (name) * 100",
+            "legendFormat": "{{name}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "max": 400, "min": 0}
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Container Memory Usage",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+        "targets": [
+          {
+            "expr": "container_memory_usage_bytes{name=~\"n8n-local|redis-local|postgres-local\"}",
+            "legendFormat": "{{name}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "bytes"}
+        ]
+      },
+      {
+        "id": 4,
+        "title": "N8N Container Details",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+        "targets": [
+          {
+            "expr": "container_memory_usage_bytes{name=\"n8n-local\"}",
+            "format": "table",
+            "instant": true,
+            "refId": "A"
+          },
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{name=\"n8n-local\"}[5m]) * 100",
+            "format": "table",
+            "instant": true,
+            "refId": "B"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "merge",
+            "options": {}
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Container Network Traffic",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+        "targets": [
+          {
+            "expr": "rate(container_network_receive_bytes_total{name=~\"n8n-local|fastapi\"}[5m])",
+            "legendFormat": "{{name}} RX",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(container_network_transmit_bytes_total{name=~\"n8n-local|fastapi\"}[5m])",
+            "legendFormat": "{{name}} TX",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "Bps"}
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Container Restarts",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 8, "x": 0, "y": 20},
+        "targets": [
+          {
+            "expr": "sum(rate(container_last_seen{name=~\"n8n-local|redis-local|postgres-local\"}[5m]))",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 0.1},
+                {"color": "red", "value": 1}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 7,
+        "title": "Redis Memory",
+        "type": "gauge",
+        "gridPos": {"h": 4, "w": 8, "x": 8, "y": 20},
+        "targets": [
+          {
+            "expr": "(container_memory_usage_bytes{name=\"redis-local\"} / container_spec_memory_limit_bytes{name=\"redis-local\"}) * 100",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 70},
+                {"color": "red", "value": 90}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "PostgreSQL Connections",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 8, "x": 16, "y": 20},
+        "targets": [
+          {
+            "expr": "pg_stat_database_numbackends{datname=\"n8n\"}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 50},
+                {"color": "red", "value": 80}
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}
