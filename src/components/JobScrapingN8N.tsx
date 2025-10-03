@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search, Loader2, Globe, MapPin, Briefcase, ExternalLink, RefreshCw } from 'lucide-react';
-import { N8NService, ScrapedJob } from '@/services/n8n-service';
+import { N8NService, ScrapedJob } from '../services/n8n-service';
 import toast from 'react-hot-toast';
 
 const SOURCES = [

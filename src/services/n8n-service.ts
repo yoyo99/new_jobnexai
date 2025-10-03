@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { supabase } from '../lib/supabase';
 
 // Configuration N8N
 const N8N_BASE_URL = import.meta.env.VITE_N8N_URL || 'https://n8n.jobnexai.com';
@@ -200,7 +200,7 @@ export class N8NService {
       malt: `${N8N_BASE_URL}/webhook/malt-scraping`
     };
 
-    return webhooks[source] || webhooks.linkedin;
+    return webhooks[source] || `${N8N_BASE_URL}/webhook/linkedin-scraping`;
   }
 
   /**

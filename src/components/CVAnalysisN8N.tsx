@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Upload, FileText, Loader2, CheckCircle, XCircle, TrendingUp, AlertCircle } from 'lucide-react';
-import { N8NService, CVAnalysisResult } from '@/services/n8n-service';
+import { N8NService, CVAnalysisResult } from '../services/n8n-service';
 import { useNetlifyAuth } from '../contexts/NetlifyAuthContext';
 import toast from 'react-hot-toast';
 
@@ -11,6 +11,9 @@ export default function CVAnalysisN8N() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<CVAnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Debug: vérifier user
+  console.log('[CVAnalysisN8N] User:', user);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
