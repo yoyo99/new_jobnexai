@@ -1,0 +1,705 @@
+{
+  "name": "JobNexAI - CV Screening avec Mammouth.ai",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "cv-screening-form",
+        "formTitle": "Analyse CV + Offre d'emploi",
+        "formDescription": "Uploadez votre CV et l'URL de l'offre d'emploi pour obtenir une analyse détaillée",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Ajoutez votre CV",
+              "fieldType": "file",
+              "acceptFileTypes": ".pdf",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "url_de_l_offre_d_emploi",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "votre_email",
+              "fieldType": "email",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "88ce971d-aa8d-4d57-a413-88da935098e3",
+      "name": "Form Trigger - Upload CV",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        0
+      ],
+      "webhookId": "cv-screening-form"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "Ajoutez_votre_CV",
+        "options": {}
+      },
+      "id": "8e5ce7cf-766d-41a0-93c6-1c4cf41acdb6",
+      "name": "Extract - CV PDF",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Form Trigger - Upload CV').first().json.url_de_l_offre_d_emploi }}",
+        "options": {}
+      },
+      "id": "726181ad-44b8-4145-a16f-75421efea97c",
+      "name": "HTTP - Fetch Job Description",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        144,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "fields": {
+          "values": [
+            {
+              "name": "cv_text",
+              "stringValue": "={{ $item(0).json.cv_text || $item(0).json.text }}"
+            },
+            {
+              "name": "job_url",
+              "stringValue": "={{ $item(1).json.job_url }}"
+            },
+            {
+              "name": "user_email",
+              "stringValue": "={{ $item(0).json.votre_email }}"
+            },
+            {
+              "name": "job_data",
+              "stringValue": "={{ $item(1).json.job_text || $item(1).json.data }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a17534b9-7bfa-4356-9a15-727f8c0d42b3",
+      "name": "Set - Merge CV + Job",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [
+        816,
+        -432
+      ],
+      "executeOnce": false,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.all()[0].json;\n\nconst payload = {\n  model: \"gpt-4o\",\n  messages: [\n    {\n      role: \"system\",\n      content: `Tu es un expert RH spécialisé en analyse de CV.\n\nIMPORTANT : Retourne UNIQUEMENT un objet JSON valide avec cette structure EXACTE (sans backticks markdown) :\n\n{\n  \"candidate_name\": \"Prénom NOM du candidat extrait du CV\",\n  \"matching_score\": 85,\n  \"strengths\": [\"Force 1\", \"Force 2\", \"Force 3\"],\n  \"weaknesses\": [\"Faiblesse 1\", \"Faiblesse 2\"],\n  \"recommendation\": \"Recommandation détaillée\",\n  \"key_insights\": [\"Insight 1\", \"Insight 2\"],\n  \"interview_questions\": [\"Question 1\", \"Question 2\"]\n}\n\nNe retourne RIEN d'autre que ce JSON pur.`\n    },\n    {\n      role: \"user\",\n      content: `Analyse ce CV par rapport à l'offre d'emploi :\n\nCV DU CANDIDAT :\n${inputData.cv_text ? inputData.cv_text.substring(0, 4000) : 'CV non disponible'}\n\nOFFRE D'EMPLOI :\n${inputData.job_url}\n\nDescription de l'offre (HTML brut) :\n${typeof inputData.job_data === 'string' ? inputData.job_data.substring(0, 2000) : JSON.stringify(inputData.job_data).substring(0, 2000)}\n\nRetourne ton analyse au format JSON pur (sans markdown).`\n    }\n  ],\n  temperature: 0.3,\n  max_tokens: 1500\n};\n\nreturn [{\n  json: {\n    mammouthPayload: payload,\n    debugInfo: {\n      timestamp: new Date().toISOString(),\n      cv_length: inputData.cv_text?.length || 0,\n      job_url: inputData.job_url\n    }\n  }\n}];"
+      },
+      "id": "53551b35-78d2-42f1-aed0-fbf8c6a3b438",
+      "name": "Prepare Mammouth Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1088,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mammouth.ai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.mammouthPayload }}",
+        "options": {}
+      },
+      "id": "d3c39220-ae4b-4b30-8200-83a932153f2c",
+      "name": "Mammouth.ai - CV Analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1280,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "w5nt1Ntaxp9jNwHa",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fields": {
+          "values": [
+            {
+              "name": "Candidate_name",
+              "stringValue": "={{ $json.choices[0].message.content.match(/\"candidate_name\"\\s*:\\s*\"([^\"]+)\"/)?.[1] || \"Lionel AUBOIN\" }}"
+            },
+            {
+              "name": "ai_analysis",
+              "stringValue": "={{ $json.choices[0].message.content }}"
+            },
+            {
+              "name": "job_url",
+              "stringValue": "={{ $node[\"Merge CV + Job Data\"].json.job_url }}"
+            },
+            {
+              "name": "cv_text",
+              "stringValue": "={{ $node[\"Merge CV + Job Data\"].json.cv_text }}"
+            },
+            {
+              "name": "user_email",
+              "stringValue": "={{ $node[\"Merge CV + Job Data\"].json.user_email }}"
+            },
+            {
+              "name": "created_at",
+              "stringValue": "={{ new Date().toISOString() }}"
+            },
+            {
+              "name": "matching_score",
+              "stringValue": "={{ $json.choices[0].message.content.match(/\"matching_score\"\\s*:\\s*(\\d+)/)?.[1] || 0 }}"
+            },
+            {
+              "name": "analysis_type",
+              "stringValue": "cv_screening"
+            },
+            {
+              "name": "job_data",
+              "stringValue": "={{ $node[\"Merge CV + Job Data\"].json.job_data }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "50ec612a-f02b-4fa6-bd94-072dc9aa3a70",
+      "name": "Set - Extract AI Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [
+        1488,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const cvText = $input.item.json.cv_text || \"\";\nconst jobData = $input.item.json.job_data || \"\";\n\n// Vérification de longueur minimale\nif (cvText.length < 200 || jobData.length < 200) {\n  return {\n    json: {\n      validation_status: \"input_error\",\n      error_message: \"CV ou offre trop court(e) (< 200 caractères)\",\n      cv_text: cvText,\n      job_data: jobData\n    }\n  };\n}\n\nconst defaultAnalysis = {\n  matching_score: 0,\n  strengths: ['Analyse en cours...'],\n  weaknesses: ['Analyse en cours...'],\n  skills_match: { matched: [], missing: [] },\n  experience_match: { level: 'unknown', years: 0, relevant: false },\n  recommendation: 'Analyse non disponible',\n  key_insights: [],\n  interview_questions: []\n};\n\ntry {\n  let aiResponse = $input.item.json.ai_analysis;\n  \n  if (typeof aiResponse === 'string') {\n    aiResponse = aiResponse\n      .replace(/^```json\\s*/gi, '')\n      .replace(/^```\\s*/gi, '')\n      .replace(/\\s*```$/gi, '')\n      .replace(/```/g, '')\n      .trim();\n    \n    aiResponse = aiResponse.replace(/\\\\n/g, '').replace(/\\\\/g, '');\n    \n    aiResponse = JSON.parse(aiResponse);\n  }\n  \n  const requiredFields = ['matching_score', 'strengths', 'weaknesses'];\n  const missingFields = requiredFields.filter(f => !aiResponse.hasOwnProperty(f));\n  \n  if (missingFields.length > 0) {\n    console.log('⚠️ Champs manquants:', missingFields.join(', '));\n    throw new Error('Champs manquants: ' + missingFields.join(', '));\n  }\n  \n  if (aiResponse.matching_score === 'N/A' || aiResponse.matching_score === null) {\n    aiResponse.matching_score = 0;\n  }\n  if (aiResponse.matching_score > 100) aiResponse.matching_score = 100;\n  if (aiResponse.matching_score < 0) aiResponse.matching_score = 0;\n  \n  const jobUrl = $input.item.json.job_url || '';\n  const userEmail = $input.item.json.user_email || '';\n  \n  return {\n    json: {\n      ...aiResponse,\n      cv_text: cvText.substring(0, 1000),\n      job_url: jobUrl,\n      user_email: userEmail,\n      analyzed_at: new Date().toISOString(),\n      validation_status: 'success',\n      analysis_type: 'cv_screening'\n    }\n  };\n  \n} catch (error) {\n  console.log('❌ Erreur validation JSON:', error.message);\n  console.log('📄 Réponse brute:', $input.item.json.ai_analysis);\n  \n  const jobUrl = $input.item.json.job_url || '';\n  const userEmail = $input.item.json.user_email || '';\n  \n  return {\n    json: {\n      ...defaultAnalysis,\n      cv_text: cvText.substring(0, 1000),\n      job_url: jobUrl,\n      user_email: userEmail,\n      analyzed_at: new Date().toISOString(),\n      validation_status: 'fallback',\n      validation_error: error.message,\n      analysis_type: 'cv_screening'\n    }\n  };\n}"
+      },
+      "id": "4d416085-e000-4f86-8ab7-09ed5f2da8ee",
+      "name": "Function - JSON Validator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1696,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "cv_analysis",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "candidate_name",
+              "fieldValue": "={{ $json.candidate_name }}"
+            },
+            {
+              "fieldId": "user_email",
+              "fieldValue": "={{ $json.user_email }}"
+            },
+            {
+              "fieldId": "job_url",
+              "fieldValue": "={{ $json.job_url }}"
+            },
+            {
+              "fieldId": "matching_score",
+              "fieldValue": "={{ $json.matching_score }}"
+            },
+            {
+              "fieldId": "analysis_type",
+              "fieldValue": "cv_screening"
+            },
+            {
+              "fieldId": "analyzed_at",
+              "fieldValue": "={{ $json.analyzed_at }}"
+            },
+            {
+              "fieldId": "analysis_data",
+              "fieldValue": "={{ $json }}"
+            }
+          ]
+        }
+      },
+      "id": "4fa934d6-767f-4b31-b869-1fe258a2dd97",
+      "name": "Supabase - Save Analysis",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2752,
+        16
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZIv69bb818uqDjr9",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://klwugophjvzctlautsqz.supabase.co/functions/v1/send-notification-email",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtsd3Vnb3BoanZ6Y3RsYXV0c3F6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MDAwODQxMSwiZXhwIjoyMDY1NTg0NDExfQ.ZjapEpSPUE4PGzIkZ_MRfY77v2ML82MyFIKffEPfG8o"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "to",
+              "value": "={{ $json.user_email }}"
+            },
+            {
+              "name": "subject",
+              "value": "={{ `Analyse CV – ${$json.candidate_name || 'Candidat'}` }}"
+            },
+            {
+              "name": "text",
+              "value": "=={{ `Bonjour ${$json.candidate_name || 'Candidat'},\\nScore de correspondance : ${$json.matching_score}%.\\nRecommandation : ${$json.recommendation}` }}"
+            },
+            {
+              "name": "html",
+              "value": "={{ `<p>Bonjour ${$json.candidate_name || 'Candidat'},</p>\n<p><strong>Score de correspondance :</strong> ${$json.matching_score}%</p>\n<p><strong>Recommandation :</strong><br>${$json.recommendation}</p>\n<p><strong>Points forts :</strong><br>${($json.strengths || []).map(item => ` • ${item}`).join('<br>')}</p>\n<p><strong>Points faibles :</strong><br>${($json.weaknesses || []).map(item => ` • ${item}`).join('<br>')}</p>\n<p><strong>Offre :</strong> <a href='${$json.job_url}'>${$json.job_url}</a></p>\n<p><strong>Insights clés :</strong><br>${($json.key_insights || []).map(item => ` • ${item}`).join('<br>')}</p>\n<p><strong>Questions d'entretien suggérées :</strong><br>${($json.interview_questions || []).map(item => ` • ${item}`).join('<br>')}</p>\n<p>Cordialement,<br>L'équipe JobNexAI</p>` }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2368,
+        16
+      ],
+      "id": "45a22032-be5c-4d4b-8021-bba7d9aba1db",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const html = $input.item.json.data || \"\";\n\n// Supprime scripts, styles, puis toutes les balises HTML\nconst text = html\n  .replace(/<script[\\s\\S]*?<\\/script>/gi, ' ')\n  .replace(/<style[\\s\\S]*?<\\/style>/gi, ' ')\n  .replace(/<nav[\\s\\S]*?<\\/nav>/gi, ' ')\n  .replace(/<header[\\s\\S]*?<\\/header>/gi, ' ')\n  .replace(/<footer[\\s\\S]*?<\\/footer>/gi, ' ')\n  .replace(/<aside[\\s\\S]*?<\\/aside>/gi, ' ')\n  .replace(/<[^>]+>/g, ' ')\n  .replace(/\\s+/g, ' ')\n  .trim();\n\nreturn { json: { job_text: text } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        224
+      ],
+      "id": "49b18252-b727-499f-aa60-33c494e93357",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "954c3619-949f-4da0-b2e3-77f5a42152d8",
+              "leftValue": "={{ $json.validation_status }}",
+              "rightValue": "success",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "4be8d040-4283-499d-977e-1788681dbebf",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1888,
+        0
+      ],
+      "id": "ba9aa197-9897-46aa-9f30-49d57a2e2779",
+      "name": "If"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        704,
+        160
+      ],
+      "id": "6695a9a9-9d7d-43dc-be89-613e4f6e334d",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Récupère les données des deux items\nconst items = $input.all();\n\n// Item 0 : Données du CV\nconst cvData = items[0].json;\n\n// Item 1 : Données de l'offre\nconst jobData = items[1].json;\n\nconsole.log('=== DEBUG Merge CV + Job Data ===');\nconsole.log('cvData.votre_email:', cvData.votre_email);\nconsole.log('Type:', typeof cvData.votre_email);\n\n// Fusionne les données\nreturn {\n  json: {\n    cv_text: cvData.cv_text || cvData.text || '',\n    job_url: jobData.job_url || '',\n    job_data: jobData.job_text || jobData.data || '',\n    user_email: cvData.votre_email || ''\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        0
+      ],
+      "id": "58125c65-4a9f-409c-aa44-a33b46c79de9",
+      "name": "Merge CV + Job Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "console.log('=== DEBUG HTTP Request ===');\nconsole.log('user_email:', $input.item.json.user_email);\nconsole.log('Type:', typeof $input.item.json.user_email);\nconsole.log('Toutes les données:', JSON.stringify($input.item.json, null, 2));\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2192,
+        -80
+      ],
+      "id": "9aa6d5f3-ca70-4eca-871a-ac7c733355a2",
+      "name": "Debug - Check Email"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Récupère les données du formulaire\nconst formData = $node[\"Form Trigger - Upload CV\"].json;\n\n// Récupère les données du PDF\nconst pdfData = $input.item.json;\n\nconsole.log('=== DEBUG Add Email to CV Data ===');\nconsole.log('formData.votre_email:', formData.votre_email);\nconsole.log('pdfData.text:', pdfData.text ? 'OK' : 'VIDE');\n\n// Fusionne les données\nreturn {\n  json: {\n    text: pdfData.text || '',\n    cv_text: pdfData.text || '',\n    votre_email: formData.votre_email || '',\n    // Propage aussi les autres champs du PDF si nécessaire\n    numpages: pdfData.numpages,\n    numrender: pdfData.numrender,\n    info: pdfData.info,\n    version: pdfData.version\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        0
+      ],
+      "id": "6562a0e0-db84-4d68-8da5-6194998d3df5",
+      "name": "Add Email to CV Data"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "43f5f5d9-d9c3-4044-b787-683149ee4ac7",
+              "name": "candidate_name",
+              "value": "={{ $node[\"Function - JSON Validator\"].json.candidate_name }}",
+              "type": "string"
+            },
+            {
+              "id": "52a7c041-331a-41cb-98ce-390054ec6e6c",
+              "name": "user_email",
+              "value": "={{ $node[\"Function - JSON Validator\"].json.user_email }}",
+              "type": "string"
+            },
+            {
+              "id": "42a2c727-fcdd-4567-b07c-67f207aeaea9",
+              "name": "job_url",
+              "value": "={{ $node[\"Function - JSON Validator\"].json.job_url }}",
+              "type": "string"
+            },
+            {
+              "id": "58b53c92-821e-48ac-bccf-72016a8840ab",
+              "name": "matching_score",
+              "value": "={{ $node[\"Function - JSON Validator\"].json.matching_score }}",
+              "type": "string"
+            },
+            {
+              "id": "17f6d788-f06c-4435-986b-4dfdd39e113e",
+              "name": "strengths",
+              "value": "={{ $node[\"Function - JSON Validator\"].json.strengths }}",
+              "type": "string"
+            },
+            {
+              "id": "85701683-ff60-41f7-ab8e-4bd691794d63",
+              "name": "weaknesses",
+              "value": "={{ $node[\"Function - JSON Validator\"].json.weaknesses }}",
+              "type": "string"
+            },
+            {
+              "id": "ed8c363c-a5a5-4101-af30-e5dfa716b520",
+              "name": "recommendation",
+              "value": "={{ $node[\"Function - JSON Validator\"].json.recommendation }}",
+              "type": "string"
+            },
+            {
+              "id": "8a407aa4-3992-468b-83e6-6664b985f9e5",
+              "name": "key_insights",
+              "value": "={{ $node[\"Function - JSON Validator\"].json.key_insights }}",
+              "type": "string"
+            },
+            {
+              "id": "210004e4-76b1-4b56-8e67-568d0872caf3",
+              "name": "interview_questions",
+              "value": "={{ $node[\"Function - JSON Validator\"].json.interview_questions }}",
+              "type": "string"
+            },
+            {
+              "id": "7c20bdc0-519b-4fa6-b388-7efd6034a794",
+              "name": "email_sent",
+              "value": "={{ $json.data }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2576,
+        16
+      ],
+      "id": "d81e9001-cbe3-4edf-a8fb-83156edfe301",
+      "name": "Merge Email + Analysis Data"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Form Trigger - Upload CV": {
+      "main": [
+        [
+          {
+            "node": "Extract - CV PDF",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP - Fetch Job Description",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract - CV PDF": {
+      "main": [
+        [
+          {
+            "node": "Add Email to CV Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP - Fetch Job Description": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Merge CV + Job": {
+      "main": [
+        []
+      ]
+    },
+    "Prepare Mammouth Request": {
+      "main": [
+        [
+          {
+            "node": "Mammouth.ai - CV Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mammouth.ai - CV Analysis": {
+      "main": [
+        [
+          {
+            "node": "Set - Extract AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Extract AI Response": {
+      "main": [
+        [
+          {
+            "node": "Function - JSON Validator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Function - JSON Validator": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Merge Email + Analysis Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Debug - Check Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Merge CV + Job Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge CV + Job Data": {
+      "main": [
+        [
+          {
+            "node": "Prepare Mammouth Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Debug - Check Email": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Email to CV Data": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Email + Analysis Data": {
+      "main": [
+        [
+          {
+            "node": "Supabase - Save Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c33f1d69-c885-44a5-88aa-17ff27943eb6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7bd6309b4c2158d8180e8c4d0e8df0d008b2df982880b239f7b6f8d64ea90801"
+  },
+  "id": "LCL7XIXjY1z4rkEL",
+  "tags": [
+    {
+      "createdAt": "2025-10-08T13:40:21.811Z",
+      "updatedAt": "2025-10-08T13:40:21.811Z",
+      "id": "EaFFKvwpw1fSfj6P",
+      "name": "JobNexAI"
+    },
+    {
+      "createdAt": "2025-10-08T13:40:21.857Z",
+      "updatedAt": "2025-10-08T13:40:21.857Z",
+      "id": "LfZcx8hL4hf0iW0f",
+      "name": "CV Screening"
+    },
+    {
+      "createdAt": "2025-10-08T13:40:21.878Z",
+      "updatedAt": "2025-10-08T13:40:21.878Z",
+      "id": "jUIEFG1hOsgRC1u6",
+      "name": "Mammouth.ai"
+    }
+  ]
+}
