@@ -27,13 +27,13 @@
         },
         "options": {}
       },
-      "id": "88ce971d-aa8d-4d57-a413-88da935098e3",
+      "id": "7e5025f9-521b-42fd-a520-faa672b656dd",
       "name": "Form Trigger - Upload CV",
       "type": "n8n-nodes-base.formTrigger",
       "typeVersion": 2,
       "position": [
-        -128,
-        0
+        -944,
+        432
       ],
       "webhookId": "cv-screening-form"
     },
@@ -43,13 +43,13 @@
         "binaryPropertyName": "Ajoutez_votre_CV",
         "options": {}
       },
-      "id": "8e5ce7cf-766d-41a0-93c6-1c4cf41acdb6",
+      "id": "ce74b2df-8e5d-4a2b-8edf-bf06a1a4b098",
       "name": "Extract - CV PDF",
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1,
       "position": [
-        224,
-        0
+        -592,
+        432
       ]
     },
     {
@@ -57,14 +57,16 @@
         "url": "={{ $('Form Trigger - Upload CV').first().json.url_de_l_offre_d_emploi }}",
         "options": {}
       },
-      "id": "726181ad-44b8-4145-a16f-75421efea97c",
+      "id": "fe1401ca-f76d-4859-886e-c1d6933401dc",
       "name": "HTTP - Fetch Job Description",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        144,
-        192
-      ]
+        672,
+        16
+      ],
+      "notesInFlow": false,
+      "disabled": true
     },
     {
       "parameters": {
@@ -90,28 +92,28 @@
         },
         "options": {}
       },
-      "id": "a17534b9-7bfa-4356-9a15-727f8c0d42b3",
+      "id": "b2c90f64-4276-4d4a-a9be-5fa169a9ed9c",
       "name": "Set - Merge CV + Job",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.2,
       "position": [
-        816,
-        -432
+        0,
+        0
       ],
       "executeOnce": false,
       "disabled": true
     },
     {
       "parameters": {
-        "jsCode": "const inputData = $input.all()[0].json;\n\nconst payload = {\n  model: \"gpt-4o\",\n  messages: [\n    {\n      role: \"system\",\n      content: `Tu es un expert RH spécialisé en analyse de CV.\n\nIMPORTANT : Retourne UNIQUEMENT un objet JSON valide avec cette structure EXACTE (sans backticks markdown) :\n\n{\n  \"candidate_name\": \"Prénom NOM du candidat extrait du CV\",\n  \"matching_score\": 85,\n  \"strengths\": [\"Force 1\", \"Force 2\", \"Force 3\"],\n  \"weaknesses\": [\"Faiblesse 1\", \"Faiblesse 2\"],\n  \"recommendation\": \"Recommandation détaillée\",\n  \"key_insights\": [\"Insight 1\", \"Insight 2\"],\n  \"interview_questions\": [\"Question 1\", \"Question 2\"]\n}\n\nNe retourne RIEN d'autre que ce JSON pur.`\n    },\n    {\n      role: \"user\",\n      content: `Analyse ce CV par rapport à l'offre d'emploi :\n\nCV DU CANDIDAT :\n${inputData.cv_text ? inputData.cv_text.substring(0, 4000) : 'CV non disponible'}\n\nOFFRE D'EMPLOI :\n${inputData.job_url}\n\nDescription de l'offre (HTML brut) :\n${typeof inputData.job_data === 'string' ? inputData.job_data.substring(0, 2000) : JSON.stringify(inputData.job_data).substring(0, 2000)}\n\nRetourne ton analyse au format JSON pur (sans markdown).`\n    }\n  ],\n  temperature: 0.3,\n  max_tokens: 1500\n};\n\nreturn [{\n  json: {\n    mammouthPayload: payload,\n    debugInfo: {\n      timestamp: new Date().toISOString(),\n      cv_length: inputData.cv_text?.length || 0,\n      job_url: inputData.job_url\n    }\n  }\n}];"
+        "jsCode": "const inputData = $input.all()[0].json;\n\n// Récupère la langue de l'utilisateur (par défaut : français)\nconst userLanguage = inputData.user_language || 'fr';\nconst languageInstruction = userLanguage === 'en' \n  ? 'Respond in English.' \n  : 'Réponds en français.';\n\nconst payload = {\n  model: \"gpt-4o\",\n  messages: [\n    {\n      role: \"system\",\n      content: `Tu es un expert RH spécialisé en analyse de CV.\n\n${languageInstruction}\n\nIMPORTANT : Retourne UNIQUEMENT un objet JSON valide avec cette structure EXACTE (sans backticks markdown) :\n\n{\n  \"candidate_name\": \"${userLanguage === 'en' ? 'Candidate First and Last Name extracted from CV' : 'Prénom NOM du candidat extrait du CV'}\",\n  \"matching_score\": 85,\n  \"strengths\": [\"${userLanguage === 'en' ? 'Strength 1' : 'Force 1'}\", \"${userLanguage === 'en' ? 'Strength 2' : 'Force 2'}\", \"${userLanguage === 'en' ? 'Strength 3' : 'Force 3'}\"],\n  \"weaknesses\": [\"${userLanguage === 'en' ? 'Weakness 1' : 'Faiblesse 1'}\", \"${userLanguage === 'en' ? 'Weakness 2' : 'Faiblesse 2'}\"],\n  \"recommendation\": \"${userLanguage === 'en' ? 'Detailed recommendation' : 'Recommandation détaillée'}\",\n  \"key_insights\": [\"${userLanguage === 'en' ? 'Insight 1' : 'Insight 1'}\", \"${userLanguage === 'en' ? 'Insight 2' : 'Insight 2'}\"],\n  \"interview_questions\": [\"${userLanguage === 'en' ? 'Question 1' : 'Question 1'}\", \"${userLanguage === 'en' ? 'Question 2' : 'Question 2'}\"]\n}\n\nNe retourne RIEN d'autre que ce JSON pur.`\n    },\n    {\n      role: \"user\",\n      content: `${userLanguage === 'en' ? 'Analyze this CV against the job offer:' : 'Analyse ce CV par rapport à l\\'offre d\\'emploi :'}\n\n${userLanguage === 'en' ? 'CANDIDATE CV:' : 'CV DU CANDIDAT :'}\n${inputData.cv_text ? inputData.cv_text.substring(0, 4000) : (userLanguage === 'en' ? 'CV not available' : 'CV non disponible')}\n\n${userLanguage === 'en' ? 'JOB OFFER:' : 'OFFRE D\\'EMPLOI :'}\n${inputData.job_url}\n\n${userLanguage === 'en' ? 'Job description (raw HTML):' : 'Description de l\\'offre (HTML brut) :'}\n${typeof inputData.job_data === 'string' ? inputData.job_data.substring(0, 2000) : JSON.stringify(inputData.job_data).substring(0, 2000)}\n\n${userLanguage === 'en' ? 'Return your analysis in pure JSON format (without markdown).' : 'Retourne ton analyse au format JSON pur (sans markdown).'}`\n    }\n  ],\n  temperature: 0.3,\n  max_tokens: 1500\n};\n\nreturn [{\n  json: {\n    mammouthPayload: payload,\n    user_language: userLanguage,  // Propage la langue\n    debugInfo: {\n      timestamp: new Date().toISOString(),\n      cv_length: inputData.cv_text?.length || 0,\n      job_url: inputData.job_url,\n      language: userLanguage\n    }\n  }\n}];"
       },
-      "id": "53551b35-78d2-42f1-aed0-fbf8c6a3b438",
+      "id": "73e64912-e15e-4115-af0b-241e3712f65c",
       "name": "Prepare Mammouth Request",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1088,
-        0
+        336,
+        432
       ]
     },
     {
@@ -125,17 +127,17 @@
         "jsonBody": "={{ $json.mammouthPayload }}",
         "options": {}
       },
-      "id": "d3c39220-ae4b-4b30-8200-83a932153f2c",
+      "id": "669b29b5-3fb2-4299-aabb-e33fca355bdb",
       "name": "Mammouth.ai - CV Analysis",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        1280,
-        0
+        528,
+        432
       ],
       "credentials": {
         "httpHeaderAuth": {
-          "id": "w5nt1Ntaxp9jNwHa",
+          "id": "ARuUx7gCHPvcz6Qr",
           "name": "Header Auth account"
         }
       }
@@ -146,7 +148,7 @@
           "values": [
             {
               "name": "Candidate_name",
-              "stringValue": "={{ $json.choices[0].message.content.match(/\"candidate_name\"\\s*:\\s*\"([^\"]+)\"/)?.[1] || \"Lionel AUBOIN\" }}"
+              "stringValue": "={{ JSON.parse($json.choices[0].message.content).candidate_name }}"
             },
             {
               "name": "ai_analysis",
@@ -170,7 +172,7 @@
             },
             {
               "name": "matching_score",
-              "stringValue": "={{ $json.choices[0].message.content.match(/\"matching_score\"\\s*:\\s*(\\d+)/)?.[1] || 0 }}"
+              "stringValue": "={{ JSON.parse($json.choices[0].message.content).matching_score }}"
             },
             {
               "name": "analysis_type",
@@ -179,31 +181,52 @@
             {
               "name": "job_data",
               "stringValue": "={{ $node[\"Merge CV + Job Data\"].json.job_data }}"
+            },
+            {
+              "name": "strengths",
+              "stringValue": "={{ JSON.parse($json.choices[0].message.content).strengths }}"
+            },
+            {
+              "name": "weaknesses",
+              "stringValue": "={{ JSON.parse($json.choices[0].message.content).weaknesses }}"
+            },
+            {
+              "name": "recommendation",
+              "stringValue": "={{ JSON.parse($json.choices[0].message.content).recommendation }}"
+            },
+            {
+              "name": "key_insights",
+              "stringValue": "={{ JSON.parse($json.choices[0].message.content).key_insights }}"
+            },
+            {
+              "name": "interview_questions",
+              "stringValue": "={{ JSON.parse($json.choices[0].message.content).interview_questions }}"
             }
           ]
         },
         "options": {}
       },
-      "id": "50ec612a-f02b-4fa6-bd94-072dc9aa3a70",
+      "id": "f4018793-3480-43b2-b0e2-06657dc3c2db",
       "name": "Set - Extract AI Response",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.2,
       "position": [
-        1488,
-        0
-      ]
+        336,
+        16
+      ],
+      "disabled": true
     },
     {
       "parameters": {
-        "jsCode": "const cvText = $input.item.json.cv_text || \"\";\nconst jobData = $input.item.json.job_data || \"\";\n\n// Vérification de longueur minimale\nif (cvText.length < 200 || jobData.length < 200) {\n  return {\n    json: {\n      validation_status: \"input_error\",\n      error_message: \"CV ou offre trop court(e) (< 200 caractères)\",\n      cv_text: cvText,\n      job_data: jobData\n    }\n  };\n}\n\nconst defaultAnalysis = {\n  matching_score: 0,\n  strengths: ['Analyse en cours...'],\n  weaknesses: ['Analyse en cours...'],\n  skills_match: { matched: [], missing: [] },\n  experience_match: { level: 'unknown', years: 0, relevant: false },\n  recommendation: 'Analyse non disponible',\n  key_insights: [],\n  interview_questions: []\n};\n\ntry {\n  let aiResponse = $input.item.json.ai_analysis;\n  \n  if (typeof aiResponse === 'string') {\n    aiResponse = aiResponse\n      .replace(/^```json\\s*/gi, '')\n      .replace(/^```\\s*/gi, '')\n      .replace(/\\s*```$/gi, '')\n      .replace(/```/g, '')\n      .trim();\n    \n    aiResponse = aiResponse.replace(/\\\\n/g, '').replace(/\\\\/g, '');\n    \n    aiResponse = JSON.parse(aiResponse);\n  }\n  \n  const requiredFields = ['matching_score', 'strengths', 'weaknesses'];\n  const missingFields = requiredFields.filter(f => !aiResponse.hasOwnProperty(f));\n  \n  if (missingFields.length > 0) {\n    console.log('⚠️ Champs manquants:', missingFields.join(', '));\n    throw new Error('Champs manquants: ' + missingFields.join(', '));\n  }\n  \n  if (aiResponse.matching_score === 'N/A' || aiResponse.matching_score === null) {\n    aiResponse.matching_score = 0;\n  }\n  if (aiResponse.matching_score > 100) aiResponse.matching_score = 100;\n  if (aiResponse.matching_score < 0) aiResponse.matching_score = 0;\n  \n  const jobUrl = $input.item.json.job_url || '';\n  const userEmail = $input.item.json.user_email || '';\n  \n  return {\n    json: {\n      ...aiResponse,\n      cv_text: cvText.substring(0, 1000),\n      job_url: jobUrl,\n      user_email: userEmail,\n      analyzed_at: new Date().toISOString(),\n      validation_status: 'success',\n      analysis_type: 'cv_screening'\n    }\n  };\n  \n} catch (error) {\n  console.log('❌ Erreur validation JSON:', error.message);\n  console.log('📄 Réponse brute:', $input.item.json.ai_analysis);\n  \n  const jobUrl = $input.item.json.job_url || '';\n  const userEmail = $input.item.json.user_email || '';\n  \n  return {\n    json: {\n      ...defaultAnalysis,\n      cv_text: cvText.substring(0, 1000),\n      job_url: jobUrl,\n      user_email: userEmail,\n      analyzed_at: new Date().toISOString(),\n      validation_status: 'fallback',\n      validation_error: error.message,\n      analysis_type: 'cv_screening'\n    }\n  };\n}"
+        "jsCode": "const analysis = $input.item.json;\nconst cvText = analysis.cv_text || '';\nconst jobData = analysis.job_data || '';\n\n// Validation de la longueur\nif (cvText.length < 200 || jobData.length < 200) {\n  return {\n    json: {\n      validation_status: \"input_error\",\n      error_message: `CV ou offre trop court(e) (< 200 caractères)`,\n      cv_text: cvText,\n      job_data: jobData,\n      user_language: analysis.user_language // Propage la langue\n    }\n  };\n}\n\n// Ajoute les champs manquants\nconst finalAnalysis = {\n  ...analysis,\n  cv_text: cvText,\n  job_data: jobData,\n  user_email: analysis.user_email,\n  user_language: analysis.user_language, // Propage la langue\n  analyzed_at: new Date().toISOString(),\n  validation_status: \"success\",\n  analysis_type: \"cv_screening\"\n};\n\nreturn {\n  json: finalAnalysis\n};"
       },
-      "id": "4d416085-e000-4f86-8ab7-09ed5f2da8ee",
+      "id": "0c233236-e717-453a-8040-9ceecf6e56c1",
       "name": "Function - JSON Validator",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1696,
-        0
+        944,
+        432
       ]
     },
     {
@@ -242,17 +265,17 @@
           ]
         }
       },
-      "id": "4fa934d6-767f-4b31-b869-1fe258a2dd97",
+      "id": "9aa4933e-2213-4840-aee8-989a4625fa1c",
       "name": "Supabase - Save Analysis",
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        2752,
-        16
+        1936,
+        448
       ],
       "credentials": {
         "supabaseApi": {
-          "id": "ZIv69bb818uqDjr9",
+          "id": "RsG0CR5F5zJGpBIJ",
           "name": "Supabase account"
         }
       }
@@ -279,7 +302,7 @@
             },
             {
               "name": "subject",
-              "value": "={{ `Analyse CV – ${$json.candidate_name || 'Candidat'}` }}"
+              "value": "={{ $json.user_language === 'en' ? `CV Analysis - ${$json.candidate_name}` : `Analyse CV - ${$json.candidate_name}` }}"
             },
             {
               "name": "text",
@@ -287,7 +310,7 @@
             },
             {
               "name": "html",
-              "value": "={{ `<p>Bonjour ${$json.candidate_name || 'Candidat'},</p>\n<p><strong>Score de correspondance :</strong> ${$json.matching_score}%</p>\n<p><strong>Recommandation :</strong><br>${$json.recommendation}</p>\n<p><strong>Points forts :</strong><br>${($json.strengths || []).map(item => ` • ${item}`).join('<br>')}</p>\n<p><strong>Points faibles :</strong><br>${($json.weaknesses || []).map(item => ` • ${item}`).join('<br>')}</p>\n<p><strong>Offre :</strong> <a href='${$json.job_url}'>${$json.job_url}</a></p>\n<p><strong>Insights clés :</strong><br>${($json.key_insights || []).map(item => ` • ${item}`).join('<br>')}</p>\n<p><strong>Questions d'entretien suggérées :</strong><br>${($json.interview_questions || []).map(item => ` • ${item}`).join('<br>')}</p>\n<p>Cordialement,<br>L'équipe JobNexAI</p>` }}"
+              "value": "={{ \n  ($json.user_language || '').trim().toLowerCase() === 'en' \n  ? `\n    <div style=\"font-family: Arial, sans-serif; line-height: 1.6;\">\n      <p>Hello ${$json.candidate_name || 'Candidate'},</p>\n      <p>Here is the analysis of your CV against the job offer:</p>\n      \n      <p><strong>Matching Score:</strong> ${$json.matching_score}%</p>\n      \n      <p><strong>Recommendation:</strong></p>\n      <p>${$json.recommendation}</p>\n      \n      <p><strong>Strengths:</strong></p>\n      <ul>\n        ${($json.strengths || []).map(item => `<li>${item}</li>`).join('')}\n      </ul>\n      \n      <p><strong>Weaknesses:</strong></p>\n      <ul>\n        ${($json.weaknesses || []).map(item => `<li>${item}</li>`).join('')}\n      </ul>\n      \n      <p><strong>Key Insights:</strong></p>\n      <ul>\n        ${($json.key_insights || []).map(item => `<li>${item}</li>`).join('')}\n      </ul>\n      \n      <p><strong>Suggested Interview Questions:</strong></p>\n      <ul>\n        ${($json.interview_questions || []).map(item => `<li>${item}</li>`).join('')}\n      </ul>\n      \n      <p><strong>Job Offer:</strong> <a href=\"${$json.job_url}\">${$json.job_url}</a></p>\n      \n      <p>Best regards,<br>The JobNexAI Team</p>\n    </div>\n  `\n  : `\n    <div style=\"font-family: Arial, sans-serif; line-height: 1.6;\">\n      <p>Bonjour ${$json.candidate_name || 'Candidat'},</p>\n      <p>Voici l'analyse de votre CV par rapport à l'offre d'emploi :</p>\n      \n      <p><strong>Score de correspondance :</strong> ${$json.matching_score}%</p>\n      \n      <p><strong>Recommandation :</strong></p>\n      <p>${$json.recommendation}</p>\n      \n      <p><strong>Points forts :</strong></p>\n      <ul>\n        ${($json.strengths || []).map(item => `<li>${item}</li>`).join('')}\n      </ul>\n      \n      <p><strong>Points faibles :</strong></p>\n      <ul>\n        ${($json.weaknesses || []).map(item => `<li>${item}</li>`).join('')}\n      </ul>\n      \n      <p><strong>Insights clés :</strong></p>\n      <ul>\n        ${($json.key_insights || []).map(item => `<li>${item}</li>`).join('')}\n      </ul>\n      \n      <p><strong>Questions d'entretien suggérées :</strong></p>\n      <ul>\n        ${($json.interview_questions || []).map(item => `<li>${item}</li>`).join('')}\n      </ul>\n      \n      <p><strong>Offre d'emploi :</strong> <a href=\"${$json.job_url}\">${$json.job_url}</a></p>\n      \n      <p>Cordialement,<br>L'équipe JobNexAI</p>\n    </div>\n  `\n}}"
             }
           ]
         },
@@ -296,23 +319,23 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2368,
-        16
+        1520,
+        448
       ],
-      "id": "45a22032-be5c-4d4b-8021-bba7d9aba1db",
+      "id": "932d471d-f268-419a-aa95-9b10566ea4e0",
       "name": "HTTP Request"
     },
     {
       "parameters": {
-        "jsCode": "const html = $input.item.json.data || \"\";\n\n// Supprime scripts, styles, puis toutes les balises HTML\nconst text = html\n  .replace(/<script[\\s\\S]*?<\\/script>/gi, ' ')\n  .replace(/<style[\\s\\S]*?<\\/style>/gi, ' ')\n  .replace(/<nav[\\s\\S]*?<\\/nav>/gi, ' ')\n  .replace(/<header[\\s\\S]*?<\\/header>/gi, ' ')\n  .replace(/<footer[\\s\\S]*?<\\/footer>/gi, ' ')\n  .replace(/<aside[\\s\\S]*?<\\/aside>/gi, ' ')\n  .replace(/<[^>]+>/g, ' ')\n  .replace(/\\s+/g, ' ')\n  .trim();\n\nreturn { json: { job_text: text } };"
+        "jsCode": "// Récupère le HTML brut du nœud précédent\nconst html = $input.item.json.data;\n\n// Fonction simple pour enlever les balises HTML et nettoyer le texte\nfunction stripHtml(htmlString) {\n  if (!htmlString) {\n    return '';\n  }\n  // Enlève les scripts, styles, et commentaires\n  let cleaned = htmlString.replace(/<script[^>]*>([\\S\\s]*?)<\\/script>/gmi, '');\n  cleaned = cleaned.replace(/<style[^>]*>([\\S\\s]*?)<\\/style>/gmi, '');\n  cleaned = cleaned.replace(/<!--[\\s\\S]*?-->/g, '');\n  // Remplace les balises par des espaces et décode les entités HTML\n  cleaned = cleaned.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ');\n  // Supprime les espaces multiples et les lignes vides\n  cleaned = cleaned.replace(/\\s\\s+/g, ' ').trim();\n  return cleaned;\n}\n\nconst jobText = stripHtml(html);\n\nconsole.log(`Longueur du texte de l'offre : ${jobText.length}`);\n\n// Retourne les données de l'offre et l'URL d'origine\nreturn {\n  json: {\n    job_url: $input.item.json.job_url, // Propage l'URL\n    job_data: jobText,\n    data: jobText // Garde \"data\" pour la compatibilité\n  }\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        432,
-        224
+        -720,
+        800
       ],
-      "id": "49b18252-b727-499f-aa60-33c494e93357",
+      "id": "f28444e2-3454-4d0a-b455-c86a04d39ab7",
       "name": "Code in JavaScript"
     },
     {
@@ -353,10 +376,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1888,
-        0
+        1136,
+        432
       ],
-      "id": "ba9aa197-9897-46aa-9f30-49d57a2e2779",
+      "id": "973b8fd6-18aa-46ec-95ed-f4a2482278c8",
       "name": "If"
     },
     {
@@ -364,23 +387,23 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        704,
-        160
+        -240,
+        640
       ],
-      "id": "6695a9a9-9d7d-43dc-be89-613e4f6e334d",
+      "id": "8e2a37db-07d7-44f1-b968-78c855f32fbb",
       "name": "Merge"
     },
     {
       "parameters": {
-        "jsCode": "// Récupère les données des deux items\nconst items = $input.all();\n\n// Item 0 : Données du CV\nconst cvData = items[0].json;\n\n// Item 1 : Données de l'offre\nconst jobData = items[1].json;\n\nconsole.log('=== DEBUG Merge CV + Job Data ===');\nconsole.log('cvData.votre_email:', cvData.votre_email);\nconsole.log('Type:', typeof cvData.votre_email);\n\n// Fusionne les données\nreturn {\n  json: {\n    cv_text: cvData.cv_text || cvData.text || '',\n    job_url: jobData.job_url || '',\n    job_data: jobData.job_text || jobData.data || '',\n    user_email: cvData.votre_email || ''\n  }\n};"
+        "jsCode": "// Récupère les données du CV directement depuis sa branche\nconst cvNode = $node[\"Add Email to CV Data\"];\nconst cvData = cvNode.json;\n\n// Récupère les données de l'offre directement depuis sa branche\nconst jobNode = $node[\"Code in JavaScript\"];\nconst jobData = jobNode.json;\n\n// Récupère la langue depuis Supabase\nlet userLanguage = 'fr';\ntry {\n  const supabaseNode = $node[\"Supabase - Get User Language\"];\n  if (supabaseNode && supabaseNode.json && supabaseNode.json.preferred_language) {\n    userLanguage = supabaseNode.json.preferred_language;\n  }\n} catch (error) {\n  console.log('⚠️ Langue par défaut : français');\n}\n\nconsole.log('=== DEBUG Merge CV + Job Data ===');\nconsole.log('user_email:', cvData.votre_email);\nconsole.log('user_language:', userLanguage);\nconsole.log('Job Data Length:', (jobData.data || jobData.job_text || '').length);\n\nreturn {\n  json: {\n    cv_text: cvData.text || cvData.cv_text || '',\n    job_url: jobData.job_url || '',\n    job_data: jobData.data || jobData.job_text || '',\n    user_email: cvData.votre_email || '',\n    user_language: userLanguage\n  }\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        880,
-        0
+        128,
+        432
       ],
-      "id": "58125c65-4a9f-409c-aa44-a33b46c79de9",
+      "id": "be57989c-a724-4be6-b761-b4d0a00bb527",
       "name": "Merge CV + Job Data"
     },
     {
@@ -390,10 +413,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2192,
-        -80
+        1344,
+        352
       ],
-      "id": "9aa6d5f3-ca70-4eca-871a-ac7c733355a2",
+      "id": "68258196-08ce-4b00-9ad9-cc9badd6bddd",
       "name": "Debug - Check Email"
     },
     {
@@ -403,10 +426,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        544,
-        0
+        -368,
+        416
       ],
-      "id": "6562a0e0-db84-4d68-8da5-6194998d3df5",
+      "id": "d7fd4577-9ad6-4faf-a687-b3f2952a073b",
       "name": "Add Email to CV Data"
     },
     {
@@ -480,11 +503,65 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2576,
-        16
+        1728,
+        448
       ],
-      "id": "d81e9001-cbe3-4edf-a8fb-83156edfe301",
+      "id": "010ec31c-fe43-40c0-b278-3a6eac3e27b6",
       "name": "Merge Email + Analysis Data"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "profiles",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "email",
+              "keyValue": "={{ $json.votre_email }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        432
+      ],
+      "id": "e45615a5-969b-4636-af2c-8780c0ec0b42",
+      "name": "Supabase - Get User Language",
+      "credentials": {
+        "supabaseApi": {
+          "id": "RsG0CR5F5zJGpBIJ",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Récupère les données d'origine (AVANT l'appel à l'IA)\nconst originalData = $node[\"Prepare Mammouth Request\"].json;\n\n// Extrait la réponse JSON de l'IA depuis l'input de ce noeud\nconst aiResponse = $input.item.json.choices[0].message.content;\n\n// Parse le JSON de l'IA\nlet parsedAnalysis = {};\ntry {\n  // Nettoie la réponse de l'IA (supprime les ```json et ```)\n  const cleanedResult = aiResponse.replace(/```json/g, '').replace(/```/g, '').trim();\n  parsedAnalysis = JSON.parse(cleanedResult);\n} catch (e) {\n  console.log(\"Erreur de parsing JSON de l'IA\", e);\n  parsedAnalysis = { error: \"Invalid JSON from AI\" };\n}\n\n// Fusionne les données d'origine avec les données de l'IA\nconst mergedData = { ...originalData, ...parsedAnalysis };\n\n// Retourne les données fusionnées\nreturn {\n  json: mergedData\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        736,
+        432
+      ],
+      "id": "9fc67b0a-1d65-4502-a2cf-b78ae965db47",
+      "name": "Code - Extract and Merge AI Response"
+    },
+    {
+      "parameters": {
+        "jsCode": "const puppeteer = require('puppeteer');\n\n// Récupère l'URL de l'offre depuis le nœud précédent\nconst jobUrl = $input.item.json.url_de_l_offre_d_emploi;\n\n// Fonction asynchrone pour scraper avec Puppeteer\nasync function scrapeWithPuppeteer(url) {\n  let browser = null;\n  try {\n    // Lance le navigateur en mode headless\n    // L'argument '--no-sandbox' est souvent nécessaire dans les environnements conteneurisés\n    browser = await puppeteer.launch({\n      headless: true,\n      args: ['--no-sandbox', '--disable-setuid-sandbox']\n    });\n    \n    const page = await browser.newPage();\n    \n    // Se faire passer pour un navigateur normal\n    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');\n    \n    // Navigue vers l'URL et attend que la page soit complètement chargée\n    await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });\n    \n    // Attend un sélecteur spécifique à la page de l'offre pour être sûr que le contenu est là\n    // Par exemple, pour Welcome to the Jungle, on peut attendre la section de description.\n    // (Ce sélecteur peut avoir besoin d'être ajusté si le site change)\n    await page.waitForSelector('main', { timeout: 10000 });\n\n    // Récupère le contenu HTML complet de la page\n    const content = await page.content();\n    \n    return content;\n\n  } catch (error) {\n    console.error(`Erreur de scraping avec Puppeteer pour l'URL : ${url}`, error.message);\n    return \"\"; // Retourne une chaîne vide en cas d'erreur\n  } finally {\n    // Ferme le navigateur dans tous les cas\n    if (browser) {\n      await browser.close();\n    }\n  }\n}\n\n// Exécute la fonction de scraping\nconst htmlContent = await scrapeWithPuppeteer(jobUrl);\n\n// Fonction simple pour nettoyer le HTML (la même qu'avant)\nfunction stripHtml(htmlString) {\n  if (!htmlString) return '';\n  let cleaned = htmlString.replace(/<script[^>]*>([\\S\\s]*?)<\\/script>/gmi, '');\n  cleaned = cleaned.replace(/<style[^>]*>([\\S\\s]*?)<\\/style>/gmi, '');\n  cleaned = cleaned.replace(/<!--[\\s\\S]*?-->/g, '');\n  cleaned = cleaned.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ');\n  cleaned = cleaned.replace(/\\s\\s+/g, ' ').trim();\n  return cleaned;\n}\n\nconst jobText = stripHtml(htmlContent);\n\nconsole.log(`Scraping terminé. Longueur du texte de l'offre : ${jobText.length}`);\n\n// Retourne les données de l'offre et l'URL d'origine\nreturn {\n  json: {\n    job_url: jobUrl,\n    data: jobText\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -912,
+        800
+      ],
+      "id": "cbd3874b-95eb-4196-b054-ba3461de4bf9",
+      "name": "Code - Fetch Job Description"
     }
   ],
   "pinData": {},
@@ -498,7 +575,7 @@
             "index": 0
           },
           {
-            "node": "HTTP - Fetch Job Description",
+            "node": "Code - Fetch Job Description",
             "type": "main",
             "index": 0
           }
@@ -516,22 +593,6 @@
         ]
       ]
     },
-    "HTTP - Fetch Job Description": {
-      "main": [
-        [
-          {
-            "node": "Code in JavaScript",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Set - Merge CV + Job": {
-      "main": [
-        []
-      ]
-    },
     "Prepare Mammouth Request": {
       "main": [
         [
@@ -547,18 +608,7 @@
       "main": [
         [
           {
-            "node": "Set - Extract AI Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Set - Extract AI Response": {
-      "main": [
-        [
-          {
-            "node": "Function - JSON Validator",
+            "node": "Code - Extract and Merge AI Response",
             "type": "main",
             "index": 0
           }
@@ -620,7 +670,7 @@
       "main": [
         [
           {
-            "node": "Merge CV + Job Data",
+            "node": "Supabase - Get User Language",
             "type": "main",
             "index": 0
           }
@@ -670,36 +720,73 @@
           }
         ]
       ]
+    },
+    "Supabase - Get User Language": {
+      "main": [
+        [
+          {
+            "node": "Merge CV + Job Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Extract and Merge AI Response": {
+      "main": [
+        [
+          {
+            "node": "Function - JSON Validator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Fetch Job Description": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "timezone": "Europe/Paris",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "7q3xz5vy2SWghLGg"
   },
-  "versionId": "c33f1d69-c885-44a5-88aa-17ff27943eb6",
+  "versionId": "698ec20d-1366-438b-864a-3f7c2834cb2a",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "7bd6309b4c2158d8180e8c4d0e8df0d008b2df982880b239f7b6f8d64ea90801"
+    "instanceId": "8ffe9a71d241431c7cc543016b230314e7cc4479cad7629ec14b2bc8fc346801"
   },
-  "id": "LCL7XIXjY1z4rkEL",
+  "id": "7q3xz5vy2SWghLGg",
   "tags": [
     {
-      "createdAt": "2025-10-08T13:40:21.811Z",
-      "updatedAt": "2025-10-08T13:40:21.811Z",
-      "id": "EaFFKvwpw1fSfj6P",
+      "createdAt": "2025-10-11T18:16:52.491Z",
+      "updatedAt": "2025-10-11T18:16:52.491Z",
+      "id": "x2PqPzJTXZeOjb2s",
+      "name": "Mammouth.ai"
+    },
+    {
+      "createdAt": "2025-10-11T18:16:52.492Z",
+      "updatedAt": "2025-10-11T18:16:52.492Z",
+      "id": "LeVMosm1ITGxuftx",
       "name": "JobNexAI"
     },
     {
-      "createdAt": "2025-10-08T13:40:21.857Z",
-      "updatedAt": "2025-10-08T13:40:21.857Z",
-      "id": "LfZcx8hL4hf0iW0f",
+      "createdAt": "2025-10-11T18:16:52.501Z",
+      "updatedAt": "2025-10-11T18:16:52.501Z",
+      "id": "df4K1RL9IbmUFDIM",
       "name": "CV Screening"
-    },
-    {
-      "createdAt": "2025-10-08T13:40:21.878Z",
-      "updatedAt": "2025-10-08T13:40:21.878Z",
-      "id": "jUIEFG1hOsgRC1u6",
-      "name": "Mammouth.ai"
     }
   ]
 }
