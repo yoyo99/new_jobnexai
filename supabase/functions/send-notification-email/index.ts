@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 function getSupabaseJwt(req: Request): string | null {
   console.log("[send-notification-email] Attempting to get JWT. Headers:", JSON.stringify(Object.fromEntries(req.headers.entries())));
@@ -31,39 +32,55 @@ serve(async (req: Request) => {
   }
   const { to, subject, text, html } = payload;
 
-  const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+  // Configuration SMTP depuis les variables d'environnement
+  const SMTP_HOST = Deno.env.get("SMTP_HOST");
+  const SMTP_PORT = parseInt(Deno.env.get("SMTP_PORT") || "587");
+  const SMTP_USER = Deno.env.get("SMTP_USER");
+  const SMTP_PASSWORD = Deno.env.get("SMTP_PASSWORD");
   const EMAIL_FROM = Deno.env.get("EMAIL_FROM");
-  console.log(`[send-notification-email] RESEND_API_KEY loaded: ${RESEND_API_KEY ? 'true' : 'false'}`);
-  console.log(`[send-notification-email] EMAIL_FROM loaded: ${EMAIL_FROM}`);
-
-  if (!RESEND_API_KEY || !EMAIL_FROM) {
-    console.error("[send-notification-email] Email config missing - RESEND_API_KEY or EMAIL_FROM not set.");
-    return new Response("Email config missing", { status: 500 });
-  }
-
-  console.log("[send-notification-email] Email config loaded. Preparing to call Resend API.");
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${RESEND_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: EMAIL_FROM,
-      to,
-      subject,
-      text,
-      html,
-    }),
+  
+  console.log(`[send-notification-email] SMTP config loaded:`, {
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    user: SMTP_USER ? 'set' : 'missing',
+    password: SMTP_PASSWORD ? 'set' : 'missing',
+    from: EMAIL_FROM,
   });
 
-  console.log(`[send-notification-email] Resend API response status: ${response.status}, statusText: ${response.statusText}`);
-  if (!response.ok) {
-    const error = await response.text();
-    console.error(`[send-notification-email] Resend API error: ${error}`);
-    return new Response(`Resend error: ${error}`, { status: 500 });
+  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASSWORD || !EMAIL_FROM) {
+    console.error("[send-notification-email] SMTP config missing");
+    return new Response("SMTP config missing", { status: 500 });
   }
 
-  console.log("[send-notification-email] Email sent successfully via Resend.");
-  return new Response("Email envoyé", { status: 200 });
+  try {
+    console.log("[send-notification-email] Connecting to SMTP server...");
+    const client = new SMTPClient({
+      connection: {
+        hostname: SMTP_HOST,
+        port: SMTP_PORT,
+        tls: true,
+        auth: {
+          username: SMTP_USER,
+          password: SMTP_PASSWORD,
+        },
+      },
+    });
+
+    console.log("[send-notification-email] Sending email...");
+    await client.send({
+      from: EMAIL_FROM,
+      to: to,
+      subject: subject,
+      content: text,
+      html: html,
+    });
+
+    await client.close();
+    console.log("[send-notification-email] Email sent successfully via SMTP.");
+    return new Response("Email envoyé", { status: 200 });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(`[send-notification-email] SMTP error: ${errorMessage}`);
+    return new Response(`SMTP error: ${errorMessage}`, { status: 500 });
+  }
 });
