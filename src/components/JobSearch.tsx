@@ -2,6 +2,7 @@ import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon, HeartIcon, SparklesIcon
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid'
 import { motion } from 'framer-motion'
 import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getJobs, getJobSuggestions, type Job, type JobSuggestion, supabase } from '../lib/supabase'
 import { scrapingApi } from '../services/scrapingApi'
 import { format } from 'date-fns'
@@ -15,6 +16,7 @@ import { LoadingSpinner } from './LoadingSpinner'
 
 function JobSearch() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [jobs, setJobs] = useState<Job[]>([])
   const [suggestions, setSuggestions] = useState<JobSuggestion[]>([])
@@ -209,12 +211,12 @@ function JobSearch() {
   }, [jobs, favorites, showFavoritesOnly])
 
   const renderJob = useCallback((job: Job, matchScore?: number, matchingSkills?: string[]) => (
-    <div key={job.id} className="bg-gray-800/50 backdrop-blur-sm border border-white/10 rounded-lg p-4 flex flex-col md:flex-row gap-4 hover:bg-gray-800 transition-colors duration-200">
+    <div key={job.id} className="bg-gray-800/50 backdrop-blur-sm border border-white/10 rounded-lg p-4 flex flex-col md:flex-row gap-4 hover:bg-gray-800 transition-colors duration-200 cursor-pointer" onClick={() => navigate(`/app/jobs/${job.id}`)}>
       <LazyImage src={job.company_logo || '/placeholder-logo.svg'} alt={`${job.company} logo`} className="w-12 h-12 object-contain mr-4" />
       <div className="flex-grow">
         <div className="flex justify-between items-start">
           <div>
-            <a href={job.url} target="_blank" rel="noopener noreferrer" className="text-lg font-bold text-white hover:text-primary-400 transition-colors duration-200">{job.title}</a>
+            <button onClick={(e) => { e.stopPropagation(); navigate(`/app/jobs/${job.id}`) }} className="text-lg font-bold text-white hover:text-primary-400 transition-colors duration-200 text-left">{job.title}</button>
             <p className="text-sm text-gray-600">{job.company} - {job.location}</p>
           </div>
           <div className="flex items-center gap-2">

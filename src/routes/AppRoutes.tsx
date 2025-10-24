@@ -50,6 +50,7 @@ const ScrapingTestPage = React.lazy(() => import('../pages/ScrapingTestPage'));
 const TestVpsPage = React.lazy(() => import('../pages/TestVpsPage'));
 const CVAnalysisN8N = React.lazy(() => import('../components/CVAnalysisN8N'));
 const JobScrapingN8N = React.lazy(() => import('../components/JobScrapingN8N'));
+const JobDetails = React.lazy(() => import('../components/JobDetails'));
 
 export const AppRoutes = () => {
   return (
@@ -75,6 +76,7 @@ export const AppRoutes = () => {
         
         {/* Routes nécessitant un abonnement */}
         <Route path="jobs" element={<ProtectedRoute requiresSubscription><LazyComponentWrapper><JobSearch /></LazyComponentWrapper></ProtectedRoute>} />
+        <Route path="jobs/:id" element={<ProtectedRoute requiresSubscription><LazyComponentWrapper><JobDetails /></LazyComponentWrapper></ProtectedRoute>} />
         <Route path="france-travail" element={<ProtectedRoute requiresSubscription><LazyComponentWrapper><FranceTravailPage /></LazyComponentWrapper></ProtectedRoute>} />
         <Route path="suivi" element={<ProtectedRoute requiresSubscription><LazyComponentWrapper><JobApplications /></LazyComponentWrapper></ProtectedRoute>} />
         <Route path="market-analysis" element={<ProtectedRoute requiresSubscription><LazyComponentWrapper><MarketAnalysis /></LazyComponentWrapper></ProtectedRoute>} />
