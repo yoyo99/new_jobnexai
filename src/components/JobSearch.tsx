@@ -125,56 +125,35 @@ function JobSearch() {
     setShowScrapingResults(true)
     
     try {
-      // Test d'abord avec Indeed seulement
-      const response = await scrapingApi.triggerScraping('indeed', {
-        query: search,
-        location: location || 'France',
-        max_results: 10,
-        user_email: user?.email || undefined
+      // Appel au webhook n8n
+      const response = await fetch('https://n8n.jobnexai.com/webhook/job-search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: user?.id,
+          competences: [search],
+          localisation: location || 'France',
+          langue: 'fr'
+        })
       })
 
-      if (response.status === 'started' || response.status === 'cached') {
-        // Conversion des jobs N8N vers le format Job de Supabase
-        const convertedJobs: Job[] = response.jobs?.map((job: any) => ({
-          id: `n8n-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          source_id: `n8n-${job.source || 'indeed'}`,
-          title: job.title || 'Titre non disponible',
-          company: job.company || 'Entreprise non spécifiée',
-          location: job.location || location || 'Non spécifié',
-          description: job.description || '',
-          url: job.url || '#',
-          salary_min: null,
-          salary_max: null,
-          currency: 'EUR',
-          job_type: 'FULL_TIME',
-          posted_at: job.scraped_at || new Date().toISOString(),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          remote_type: 'onsite' as 'onsite',
-          experience_level: 'mid' as 'mid'
-        })) || []
-
-        setScrapingJobs(convertedJobs)
-        
-        // Mélanger avec les jobs existants
-        setJobs(prevJobs => {
-          const combined = [...convertedJobs, ...prevJobs]
-          // Déduplication basique par titre + entreprise
-          const unique = combined.filter((job, index, arr) => 
-            arr.findIndex(j => j.title === job.title && j.company === job.company) === index
-          )
-          return unique
-        })
-
-        console.log(`✅ ${convertedJobs.length} jobs scrapés ajoutés`)
+      if (!response.ok) {
+        throw new Error(`Erreur webhook: ${response.statusText}`)
       }
+
+      const data = await response.json()
+      console.log('Webhook déclenché:', data)
+      alert('Recherche lancée! Les résultats seront disponibles dans quelques secondes.')
+      
     } catch (error) {
-      console.error('Erreur lors du scraping:', error)
-      alert('Erreur lors du scraping en temps réel')
+      console.error('Erreur lors du webhook:', error)
+      alert('Erreur lors du lancement de la recherche')
     } finally {
       setScrapingLoading(false)
     }
-  }, [search, location, user, scrapingApi])
+  }, [search, location, user])
 
   useEffect(() => {
     loadJobs()
