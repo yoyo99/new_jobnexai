@@ -4,7 +4,6 @@ import { motion } from 'framer-motion'
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getJobs, getJobSuggestions, type Job, type JobSuggestion, supabase } from '../lib/supabase'
-import { scrapingApi } from '../services/scrapingApi'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { useAuth } from '../stores/auth'
@@ -35,8 +34,6 @@ function JobSearch() {
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [shareJob, setShareJob] = useState<Job | null>(null)
   const [scrapingLoading, setScrapingLoading] = useState(false)
-  const [scrapingJobs, setScrapingJobs] = useState<Job[]>([])
-  const [showScrapingResults, setShowScrapingResults] = useState(false)
 
   const jobTypes = useMemo(() => [
     { value: '', label: 'Tous les types' },
@@ -82,12 +79,12 @@ function JobSearch() {
             search,
             jobType,
             location,
-            salaryMin: salaryMin || undefined,
-            salaryMax: salaryMax || undefined,
+            salaryMin,
+            salaryMax,
             remote: remote === 'all' ? undefined : remote,
             experienceLevel: experienceLevel === 'all' ? undefined : experienceLevel,
-            sortBy: sortBy,
-            currency: selectedCurrency || undefined,
+            sortBy,
+            currency: selectedCurrency,
           })
         },
         { ttl: 5 * 60 * 1000 } // 5 minutes
@@ -124,7 +121,6 @@ function JobSearch() {
     }
 
     setScrapingLoading(true)
-    setShowScrapingResults(true)
     
     try {
       // Appel au webhook n8n
