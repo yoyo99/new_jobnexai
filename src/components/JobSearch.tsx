@@ -75,17 +75,20 @@ function JobSearch() {
       const data = await cache.getOrSet<Job[]>(
         cacheKey,
         async () => {
-          return await getJobs({
+          const params: any = {
             search,
             jobType,
             location,
-            salaryMin: salaryMin === '' ? undefined : salaryMin,
-            salaryMax: salaryMax === '' ? undefined : salaryMax,
-            remote: remote === 'all' ? undefined : remote,
-            experienceLevel: experienceLevel === 'all' ? undefined : experienceLevel,
             sortBy,
-            currency: selectedCurrency,
-          })
+          }
+          
+          if (salaryMin !== '') params.salaryMin = salaryMin
+          if (salaryMax !== '') params.salaryMax = salaryMax
+          if (remote !== 'all') params.remote = remote
+          if (experienceLevel !== 'all') params.experienceLevel = experienceLevel
+          if (selectedCurrency) params.currency = selectedCurrency
+          
+          return await getJobs(params)
         },
         { ttl: 5 * 60 * 1000 } // 5 minutes
       )
@@ -260,8 +263,9 @@ function JobSearch() {
             <p className="text-lg text-gray-300">Trouvez l'opportunité qui vous correspond</p>
           </div>
           <form onSubmit={handleSubmit}>
-            <div className="flex flex-col md:flex-row gap-4 items-center">
-              <div className="relative flex-grow w-full">
+            {/* Row 1: Search inputs */}
+            <div className="flex flex-col md:flex-row gap-3 mb-3">
+              <div className="relative flex-grow">
                 <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
                   type="text"
@@ -271,7 +275,7 @@ function JobSearch() {
                   className="w-full bg-white/5 border border-white/10 rounded-lg pl-12 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
-              <div className="relative flex-grow w-full">
+              <div className="relative flex-grow">
                 <input
                   type="text"
                   value={location}
@@ -283,32 +287,36 @@ function JobSearch() {
               <button
                 type="button"
                 onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
-                className="btn-secondary flex-shrink-0"
+                className="btn-secondary flex-shrink-0 px-3"
               >
                 <AdjustmentsHorizontalIcon className="h-5 w-5" />
               </button>
-              <button type="submit" className="btn-primary flex-shrink-0">
-                📋 Recherche historique (7 jours)
+            </div>
+
+            {/* Row 2: Action buttons */}
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button type="submit" className="btn-primary flex-1 sm:flex-none text-sm">
+                📋 Historique
               </button>
               <button 
                 type="button" 
                 onClick={handleLiveScraping}
                 disabled={scrapingLoading}
-                className="btn-secondary flex-shrink-0 bg-orange-600 hover:bg-orange-700 text-white"
+                className="btn-secondary flex-1 sm:flex-none bg-orange-600 hover:bg-orange-700 text-white text-sm"
               >
                 {scrapingLoading ? (
                   <>
                     <SparklesIcon className="h-4 w-4 mr-1 animate-spin" />
-                    Scraping...
+                    Recherche...
                   </>
                 ) : (
                   <>
                     <SparklesIcon className="h-4 w-4 mr-1" />
-                    🔥 Recherche live
+                    🔥 Live
                   </>
                 )}
               </button>
-              <button type="button" onClick={resetFilters} className="btn-secondary flex-shrink-0">
+              <button type="button" onClick={resetFilters} className="btn-secondary flex-1 sm:flex-none text-sm">
                 Réinitialiser
               </button>
             </div>
