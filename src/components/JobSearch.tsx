@@ -292,7 +292,7 @@ function JobSearch() {
                 <AdjustmentsHorizontalIcon className="h-5 w-5" />
               </button>
               <button type="submit" className="btn-primary flex-shrink-0">
-                Rechercher
+                📋 Recherche historique (7 jours)
               </button>
               <button 
                 type="button" 
@@ -308,7 +308,7 @@ function JobSearch() {
                 ) : (
                   <>
                     <SparklesIcon className="h-4 w-4 mr-1" />
-                    Temps réel
+                    🔥 Recherche live
                   </>
                 )}
               </button>
