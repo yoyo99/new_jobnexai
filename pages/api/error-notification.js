@@ -16,9 +16,10 @@ export default function handler(req, res) {
       ip: req.ip
     });
 
-    // Retourne une erreur pour que le frontend puisse afficher un toast
-    return res.status(500).json({
-      success: false,
+    // Retourne un succès pour que n8n sache que l'erreur a été reçue
+    return res.status(200).json({
+      success: true,
+      message: 'Erreur reçue et loggée',
       error: {
         type: type || 'error',
         message: message || 'Une erreur est survenue',
