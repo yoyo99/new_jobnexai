@@ -3,6 +3,7 @@ import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid'
 import { motion } from 'framer-motion'
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'react-toastify'
 import { getJobs, getJobSuggestions, type Job, type JobSuggestion, supabase } from '../lib/supabase'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -32,6 +33,7 @@ export function JobSearch() {
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [shareJob, setShareJob] = useState<Job | null>(null)
+  const [scrapingLoading, setScrapingLoading] = useState(false)
 
   const jobTypes = useMemo(() => [
     { value: 'FULL_TIME', label: t('jobSearch.types.fullTime') },
@@ -122,6 +124,82 @@ export function JobSearch() {
       loadSuggestions()
     }
   }, [loadJobs, loadSuggestions, user])
+
+  const handleLiveScraping = useCallback(async () => {
+    if (!user) {
+      toast.error('Veuillez vous connecter pour lancer une recherche')
+      return
+    }
+
+    if (!search.trim()) {
+      toast.error('Veuillez saisir des mots-clés de recherche')
+      return
+    }
+
+    setScrapingLoading(true)
+    const loadingToast = toast.loading('🔍 Recherche en cours... Cela peut prendre 30-60 secondes', { duration: 60000 })
+
+    try {
+      const keywords = search
+        .split(/[,;\s]+/)
+        .map((k) => k.trim())
+        .filter((k) => k.length > 0)
+
+      const payload = {
+        profile_id: user.id,
+        keywords: keywords.length > 0 ? keywords : [search.trim()],
+        location: location?.trim() || 'France'
+      }
+
+      const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL || 'https://n8n.jobnexai.com/webhook/jobnexai'
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(90000)
+      })
+
+      if (!response.ok) {
+        throw new Error(`Erreur HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      toast.dismiss(loadingToast)
+
+      if (data.success && data.total_found > 0) {
+        toast.success(
+          `✅ ${data.total_found} offre${data.total_found > 1 ? 's' : ''} pertinente${data.total_found > 1 ? 's' : ''} trouvée${
+            data.total_found > 1 ? 's' : ''
+          } !`,
+          { duration: 5000 }
+        )
+
+        setTimeout(() => {
+          loadJobs()
+        }, 2000)
+      } else {
+        toast.info(data.message || 'Aucune nouvelle offre trouvée pour le moment', { duration: 4000 })
+      }
+    } catch (error) {
+      toast.dismiss(loadingToast)
+
+      if (error instanceof Error) {
+        if (error.name === 'AbortError' || error.name === 'TimeoutError') {
+          toast.error('La recherche a pris trop de temps. Veuillez réessayer.', { duration: 5000 })
+        } else if (error.message.includes('Failed to fetch')) {
+          toast.error('Impossible de contacter le serveur N8N. Vérifiez votre connexion.', { duration: 5000 })
+        } else {
+          toast.error(`Erreur lors de la recherche: ${error.message}`, { duration: 5000 })
+        }
+      } else {
+        toast.error('Erreur inattendue lors de la recherche.', { duration: 5000 })
+      }
+    } finally {
+      setScrapingLoading(false)
+    }
+  }, [user, search, location, loadJobs])
 
   const toggleFavorite = async (jobId: string) => {
     if (!user) return
@@ -459,9 +537,47 @@ export function JobSearch() {
                 </a>
               </div>
 
-              <button type="submit" className="btn-primary">
-                {t('common.search')}
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleLiveScraping}
+                  disabled={scrapingLoading}
+                  className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2 min-w-[140px] justify-center text-white shadow-lg hover:shadow-xl ${
+                    scrapingLoading
+                      ? 'bg-orange-400 cursor-not-allowed opacity-75'
+                      : 'bg-orange-500 hover:bg-orange-600 hover:scale-105 active:scale-95'
+                  }`}
+                >
+                  {scrapingLoading ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                      <span>Recherche...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <span>Lancer la recherche</span>
+                    </>
+                  )}
+                </button>
+
+                <button type="submit" className="btn-primary">
+                  {t('common.search')}
+                </button>
+              </div>
             </div>
           </form>
         </div>
