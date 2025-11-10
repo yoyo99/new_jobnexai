@@ -4,14 +4,14 @@ import { motion } from 'framer-motion'
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'react-toastify'
-import { getJobs, getJobSuggestions, type Job, type JobSuggestion, supabase } from '../lib/supabase'
+import { getJobs, getJobSuggestions, type Job, type JobSuggestion, supabase } from '../src/lib/supabase'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { useAuth } from '../stores/auth'
 import { ShareModal } from './ShareModal'
 import { VirtualizedList } from './VirtualizedList'
 import { LazyImage } from './LazyImage'
-import { cache } from '../lib/cache'
+import { cache } from '../src/lib/cache'
 import { LoadingSpinner } from './LoadingSpinner'
 
 export function JobSearch() {
@@ -91,13 +91,13 @@ export function JobSearch() {
           .eq('user_id', user.id)
 
         const favoritesMap: Record<string, boolean> = {}
-        favoritesData?.forEach(fav => {
+        favoritesData?.forEach((fav: any) => {
           favoritesMap[fav.job_id] = true
         })
         setFavorites(favoritesMap)
       }
 
-      setJobs(showFavoritesOnly ? data.filter(job => favorites[job.id]) : data)
+      setJobs(showFavoritesOnly ? data.filter((job: Job) => favorites[job.id]) : data)
     } catch (error) {
       console.error('Error loading jobs:', error)
     } finally {
