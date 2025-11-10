@@ -192,6 +192,9 @@ export function JobSearch() {
       }
 
       const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL || 'https://n8n.jobnexai.com/webhook/jobnexai-v2'
+      console.log('🚀 Sending webhook request to:', webhookUrl)
+      console.log('📦 Payload:', payload)
+      
       const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
@@ -201,11 +204,16 @@ export function JobSearch() {
         signal: AbortSignal.timeout(90000)
       })
 
+      console.log('📡 Response status:', response.status)
+      
       if (!response.ok) {
-        throw new Error(`Erreur HTTP ${response.status}: ${response.statusText}`)
+        const errorText = await response.text()
+        console.error('❌ HTTP Error response:', errorText)
+        throw new Error(`Erreur HTTP ${response.status}: ${response.statusText}. ${errorText}`)
       }
 
       const data = await response.json()
+      console.log('✅ Response data:', data)
       toast.dismiss(loadingToast)
 
       if (data.success && data.total_found > 0) {
@@ -226,14 +234,16 @@ export function JobSearch() {
       toast.dismiss(loadingToast)
 
       if (error instanceof Error) {
+        console.error('🔴 Error:', error.message)
         if (error.name === 'AbortError' || error.name === 'TimeoutError') {
           toast.error('La recherche a pris trop de temps. Veuillez réessayer.', { duration: 5000 })
         } else if (error.message.includes('Failed to fetch')) {
-          toast.error('Impossible de contacter le serveur N8N. Vérifiez votre connexion.', { duration: 5000 })
+          toast.error('Impossible de contacter le serveur N8N. Vérifiez votre connexion et l\'URL du webhook.', { duration: 5000 })
         } else {
           toast.error(`Erreur lors de la recherche: ${error.message}`, { duration: 5000 })
         }
       } else {
+        console.error('🔴 Unknown error:', error)
         toast.error('Erreur inattendue lors de la recherche.', { duration: 5000 })
       }
     } finally {
