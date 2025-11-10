@@ -70,6 +70,7 @@ export function JobSearch() {
       const data = await cache.getOrSet<Job[]>(
         cacheKey,
         async () => {
+          // @ts-expect-error - exactOptionalPropertyTypes false positive with undefined values
           return await getJobs({
             search,
             jobType,
