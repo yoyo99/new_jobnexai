@@ -135,7 +135,8 @@ function JobSearch() {
         keywords: [search],
         location: location || 'France',
         jobType: 'emploi',
-        profileSummary: (user as any)?.user_metadata?.summary || ''
+        profileSummary: (user as any)?.user_metadata?.summary || '',
+        scrapeOpsApiKey: import.meta.env.VITE_SCRAPEOPS_API_KEY || 'a91510cf-f3eb-4360-8228-1a914ee5617b'
       }
       
       console.log('📦 Payload:', payload)
