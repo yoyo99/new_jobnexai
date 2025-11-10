@@ -191,7 +191,7 @@ export function JobSearch() {
         profileSummary: (user as any).user_metadata?.summary || ''
       }
 
-      const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL || 'https://n8n.jobnexai.com/webhook/jobnexai-v2'
+      const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL || 'https://n8n.jobnexai.com/webhook/jobnexai'
       console.log('🚀 Sending webhook request to:', webhookUrl)
       console.log('📦 Payload:', payload)
       
