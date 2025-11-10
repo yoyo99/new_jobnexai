@@ -1,4 +1,4 @@
-import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon, HeartIcon, SparklesIcon, ShareIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon, HeartIcon, SparklesIcon, ShareIcon, GlobeAltIcon } from '@heroicons/react/24/outline'
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid'
 import { motion } from 'framer-motion'
 import { useEffect, useState, useCallback, useMemo } from 'react'
@@ -23,6 +23,8 @@ export function JobSearch() {
   const [favorites, setFavorites] = useState<Record<string, boolean>>({})
   const [search, setSearch] = useState('')
   const [jobType, setJobType] = useState('')
+  const [jobTypeN8n, setJobTypeN8n] = useState('emploi')
+  const [subscriptionPlan, setSubscriptionPlan] = useState('free')
   const [location, setLocation] = useState('')
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false)
   const [salaryMin, setSalaryMin] = useState<number | ''>('')
@@ -125,6 +127,31 @@ export function JobSearch() {
     }
   }, [loadJobs, loadSuggestions, user])
 
+  useEffect(() => {
+    if (user) {
+      const fetchSubscription = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('subscriptions')
+            .select('plan')
+            .eq('user_id', user.id)
+            .single()
+
+          if (!error && data) {
+            setSubscriptionPlan(data.plan)
+            if (data.plan === 'free') {
+              setJobTypeN8n('emploi')
+            }
+          }
+        } catch (err) {
+          console.error('Error fetching subscription:', err)
+          setSubscriptionPlan('free')
+        }
+      }
+      fetchSubscription()
+    }
+  }, [user])
+
   const handleLiveScraping = useCallback(async () => {
     if (!user) {
       toast.error('Veuillez vous connecter pour lancer une recherche')
@@ -148,10 +175,12 @@ export function JobSearch() {
       const payload = {
         profile_id: user.id,
         keywords: keywords.length > 0 ? keywords : [search.trim()],
-        location: location?.trim() || 'France'
+        location: location?.trim() || 'France',
+        jobType: jobTypeN8n,
+        profileSummary: (user as any).user_metadata?.summary || ''
       }
 
-      const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL || 'https://n8n.jobnexai.com/webhook/jobnexai'
+      const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL || 'https://n8n.jobnexai.com/webhook/jobnexai-v2'
       const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
@@ -366,6 +395,29 @@ export function JobSearch() {
                   placeholder={t('jobSearch.filters.keyword')}
                   className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
+              </div>
+              <div className="flex items-center gap-4">
+                <span className="text-gray-400 text-sm">Type de poste :</span>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    value="emploi"
+                    checked={jobTypeN8n === 'emploi'}
+                    onChange={(e) => setJobTypeN8n(e.target.value)}
+                    className="text-primary-500"
+                  />
+                  <span className="text-white">Emploi</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    value="freelance"
+                    checked={jobTypeN8n === 'freelance'}
+                    onChange={(e) => setJobTypeN8n(e.target.value)}
+                    className="text-primary-500"
+                  />
+                  <span className="text-white">Freelance</span>
+                </label>
               </div>
               <button
                 type="button"
