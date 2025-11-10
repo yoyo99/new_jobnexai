@@ -130,33 +130,48 @@ function JobSearch() {
       const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL || 'https://n8n.jobnexai.com/webhook/jobnexai'
       console.log('🚀 Sending webhook request to:', webhookUrl)
       
+      const payload = {
+        profile_id: user?.id || 'unknown',
+        keywords: [search],
+        location: location || 'France',
+        jobType: 'emploi',
+        profileSummary: (user as any)?.user_metadata?.summary || ''
+      }
+      
+      console.log('📦 Payload:', payload)
+      
       const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          profile_id: user?.id,
-          keywords: [search],
-          location: location || 'France',
-          jobType: 'emploi',
-          profileSummary: (user as any)?.user_metadata?.summary || ''
-        })
+        body: JSON.stringify(payload)
       })
 
       console.log('📡 Response status:', response.status)
       
       if (!response.ok) {
-        throw new Error(`Erreur webhook: ${response.statusText}`)
+        const errorText = await response.text()
+        console.error('❌ HTTP Error response:', errorText)
+        throw new Error(`Erreur webhook: ${response.status} ${response.statusText}`)
       }
 
-      const data = await response.json()
+      const responseText = await response.text()
+      console.log('📝 Raw response:', responseText)
+      
+      if (!responseText) {
+        console.warn('⚠️ Empty response from webhook')
+        alert('Recherche lancée! Les résultats seront disponibles dans quelques secondes.')
+        return
+      }
+      
+      const data = JSON.parse(responseText)
       console.log('✅ Webhook response:', data)
       alert('Recherche lancée! Les résultats seront disponibles dans quelques secondes.')
       
     } catch (error) {
       console.error('❌ Erreur lors du webhook:', error)
-      alert('Erreur lors du lancement de la recherche')
+      alert('Erreur lors du lancement de la recherche: ' + (error instanceof Error ? error.message : String(error)))
     } finally {
       setScrapingLoading(false)
     }
