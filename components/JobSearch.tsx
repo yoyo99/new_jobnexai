@@ -145,7 +145,9 @@ export function JobSearch() {
             setJobTypeN8n('emploi')
           } else if (data) {
             setSubscriptionPlan(data.plan)
-            if (data.plan === 'free') {
+            // Check if plan includes pro or enterprise features
+            const isPro = data.plan?.includes('pro') || data.plan?.includes('enterprise')
+            if (!isPro) {
               setJobTypeN8n('emploi')
             }
           }
@@ -405,7 +407,7 @@ export function JobSearch() {
                   className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
-              {subscriptionPlan === 'pro' || subscriptionPlan === 'enterprise' ? (
+              {subscriptionPlan.includes('pro') || subscriptionPlan.includes('enterprise') ? (
                 <div className="flex items-center gap-4">
                   <span className="text-gray-400 text-sm">Type de poste :</span>
                   <label className="flex items-center gap-2">
