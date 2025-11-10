@@ -138,7 +138,12 @@ export function JobSearch() {
             .eq('user_id', user.id)
             .single()
 
-          if (!error && data) {
+          if (error) {
+            // No subscription found or other error - treat as free
+            console.log('No subscription found, defaulting to free plan')
+            setSubscriptionPlan('free')
+            setJobTypeN8n('emploi')
+          } else if (data) {
             setSubscriptionPlan(data.plan)
             if (data.plan === 'free') {
               setJobTypeN8n('emploi')
@@ -147,9 +152,12 @@ export function JobSearch() {
         } catch (err) {
           console.error('Error fetching subscription:', err)
           setSubscriptionPlan('free')
+          setJobTypeN8n('emploi')
         }
       }
       fetchSubscription()
+    } else {
+      setSubscriptionPlan('free')
     }
   }, [user])
 
