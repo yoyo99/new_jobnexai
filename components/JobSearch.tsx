@@ -3,7 +3,7 @@ import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid'
 import { motion } from 'framer-motion'
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { toast } from 'react-toastify'
+import toast from 'react-hot-toast'
 import { getJobs, getJobSuggestions, type Job, type JobSuggestion, supabase } from '../src/lib/supabase'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -74,8 +74,8 @@ export function JobSearch() {
             search,
             jobType,
             location,
-            salaryMin: salaryMin || undefined,
-            salaryMax: salaryMax || undefined,
+            salaryMin: salaryMin ? Number(salaryMin) : undefined,
+            salaryMax: salaryMax ? Number(salaryMax) : undefined,
             remote: remote === 'all' ? undefined : remote,
             experienceLevel: experienceLevel === 'all' ? undefined : experienceLevel,
             sortBy
@@ -209,7 +209,7 @@ export function JobSearch() {
           loadJobs()
         }, 2000)
       } else {
-        toast.info(data.message || 'Aucune nouvelle offre trouvée pour le moment', { duration: 4000 })
+        toast(data.message || 'Aucune nouvelle offre trouvée pour le moment', { duration: 4000 })
       }
     } catch (error) {
       toast.dismiss(loadingToast)
