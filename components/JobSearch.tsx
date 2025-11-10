@@ -396,29 +396,35 @@ export function JobSearch() {
                   className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
-              <div className="flex items-center gap-4">
-                <span className="text-gray-400 text-sm">Type de poste :</span>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    value="emploi"
-                    checked={jobTypeN8n === 'emploi'}
-                    onChange={(e) => setJobTypeN8n(e.target.value)}
-                    className="text-primary-500"
-                  />
-                  <span className="text-white">Emploi</span>
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    value="freelance"
-                    checked={jobTypeN8n === 'freelance'}
-                    onChange={(e) => setJobTypeN8n(e.target.value)}
-                    className="text-primary-500"
-                  />
-                  <span className="text-white">Freelance</span>
-                </label>
-              </div>
+              {subscriptionPlan === 'pro' || subscriptionPlan === 'enterprise' ? (
+                <div className="flex items-center gap-4">
+                  <span className="text-gray-400 text-sm">Type de poste :</span>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      value="emploi"
+                      checked={jobTypeN8n === 'emploi'}
+                      onChange={(e) => setJobTypeN8n(e.target.value)}
+                      className="text-primary-500"
+                    />
+                    <span className="text-white">Emploi</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      value="freelance"
+                      checked={jobTypeN8n === 'freelance'}
+                      onChange={(e) => setJobTypeN8n(e.target.value)}
+                      className="text-primary-500"
+                    />
+                    <span className="text-white">Freelance</span>
+                  </label>
+                </div>
+              ) : (
+                <div className="text-sm text-gray-400">
+                  Abonnement Free : Recherche CDI uniquement
+                </div>
+              )}
               <button
                 type="button"
                 onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
