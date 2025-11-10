@@ -127,29 +127,35 @@ function JobSearch() {
     
     try {
       // Appel au webhook n8n
-      const response = await fetch('https://n8n.jobnexai.com/webhook/job-search', {
+      const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL || 'https://n8n.jobnexai.com/webhook/jobnexai'
+      console.log('🚀 Sending webhook request to:', webhookUrl)
+      
+      const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          user_id: user?.id,
-          competences: [search],
-          localisation: location || 'France',
-          langue: 'fr'
+          profile_id: user?.id,
+          keywords: [search],
+          location: location || 'France',
+          jobType: 'emploi',
+          profileSummary: (user as any)?.user_metadata?.summary || ''
         })
       })
 
+      console.log('📡 Response status:', response.status)
+      
       if (!response.ok) {
         throw new Error(`Erreur webhook: ${response.statusText}`)
       }
 
       const data = await response.json()
-      console.log('Webhook déclenché:', data)
+      console.log('✅ Webhook response:', data)
       alert('Recherche lancée! Les résultats seront disponibles dans quelques secondes.')
       
     } catch (error) {
-      console.error('Erreur lors du webhook:', error)
+      console.error('❌ Erreur lors du webhook:', error)
       alert('Erreur lors du lancement de la recherche')
     } finally {
       setScrapingLoading(false)
