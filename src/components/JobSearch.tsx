@@ -147,7 +147,8 @@ function JobSearch() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(300000) // 5 minutes timeout
       })
 
       console.log('📡 Response status:', response.status)
