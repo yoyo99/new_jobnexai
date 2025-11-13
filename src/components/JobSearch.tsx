@@ -126,9 +126,9 @@ function JobSearch() {
     setScrapingLoading(true)
     
     try {
-      // Appel à la Netlify Function qui transférera au webhook n8n
-      const apiUrl = '/.netlify/functions/job_suggestion'
-      console.log('🚀 Sending request to Netlify Function:', apiUrl)
+      // Appel ASYNCHRONE au webhook n8n (sans attendre la réponse)
+      const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL || 'https://n8n.jobnexai.com/webhook/jobnexai'
+      console.log('🚀 Launching async search:', webhookUrl)
       
       const payload = {
         profile_id: user?.id || 'unknown',
@@ -142,68 +142,63 @@ function JobSearch() {
       
       console.log('📦 Payload:', payload)
       
-      const response = await fetch(apiUrl, {
+      // Lance la requête SANS attendre (fire and forget)
+      fetch(webhookUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(300000) // 5 minutes timeout
-      })
-
-      console.log('📡 Response status:', response.status)
+      }).catch(err => console.error('❌ Webhook error:', err))
       
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('❌ HTTP Error response:', errorText)
-        throw new Error(`Erreur webhook: ${response.status} ${response.statusText}`)
-      }
-
-      const responseText = await response.text()
-      console.log('📝 Raw response:', responseText)
+      // Affiche un message et commence à poll Supabase
+      alert('🔍 Recherche lancée! Nous cherchons les meilleures offres pour toi...')
       
-      if (!responseText) {
-        console.warn('⚠️ Empty response from webhook')
-        alert('Recherche lancée! Les résultats seront disponibles dans quelques secondes.')
-        return
-      }
+      // Poll Supabase toutes les 2 secondes pour voir les résultats
+      let pollCount = 0
+      const maxPolls = 150 // 5 minutes max (150 * 2 secondes)
       
-      const data = JSON.parse(responseText)
-      console.log('✅ Webhook response:', data)
-      
-      // Sauvegarde les résultats dans job_suggestions
-      if (user && data.jobs && Array.isArray(data.jobs)) {
-        console.log('💾 Saving results to job_suggestions...')
+      const pollInterval = setInterval(async () => {
+        pollCount++
         
-        const { error: insertError } = await supabase
-          .from('job_suggestions')
-          .insert(
-            data.jobs.map((job: any) => ({
-              user_id: user.id,
-              job_id: null,
-              match_score: job.ai_score || 0,
-              created_at: new Date().toISOString()
-            }))
-          )
-        
-        if (insertError) {
-          console.error('❌ Erreur sauvegarde job_suggestions:', insertError)
-        } else {
-          console.log('✅ Résultats sauvegardés dans job_suggestions')
-          // Recharge les suggestions pour afficher les nouveaux résultats
-          loadSuggestions()
+        try {
+          const { data, error } = await supabase
+            .from('job_suggestions')
+            .select('*')
+            .eq('user_id', user?.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+          
+          if (error) {
+            console.error('❌ Erreur poll Supabase:', error)
+            return
+          }
+          
+          // Si on a des résultats, arrête le polling et recharge
+          if (data && data.length > 0) {
+            console.log('✅ Résultats trouvés!', data)
+            clearInterval(pollInterval)
+            loadSuggestions()
+            alert('✅ Recherche terminée! Résultats disponibles.')
+            setScrapingLoading(false)
+          }
+          
+          // Timeout après 5 minutes
+          if (pollCount >= maxPolls) {
+            clearInterval(pollInterval)
+            console.warn('⏱️ Timeout polling')
+            alert('⏱️ La recherche prend plus de temps que prévu. Vérifie les résultats dans quelques instants.')
+            setScrapingLoading(false)
+          }
+        } catch (err) {
+          console.error('❌ Erreur polling:', err)
         }
-      }
-      
-      alert('Recherche lancée! Les résultats seront disponibles dans quelques secondes.')
+      }, 2000) // Poll toutes les 2 secondes
       
     } catch (error) {
-      console.error('❌ Erreur lors du webhook:', error)
-      alert('Erreur lors du lancement de la recherche: ' + (error instanceof Error ? error.message : String(error)))
-    } finally {
+      console.error('❌ Erreur lors du lancement:', error)
+      alert('Erreur: ' + (error instanceof Error ? error.message : String(error)))
       setScrapingLoading(false)
     }
-  }, [search, location, user])
+  }, [search, location, user, loadSuggestions])
 
   useEffect(() => {
     loadJobs()
