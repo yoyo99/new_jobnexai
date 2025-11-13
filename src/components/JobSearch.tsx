@@ -161,7 +161,7 @@ function JobSearch() {
       
       // Poll Supabase toutes les 2 secondes pour voir les résultats
       let pollCount = 0
-      const maxPolls = 150 // 5 minutes max (150 * 2 secondes)
+      const maxPolls = 450 // 15 minutes max (450 * 2 secondes)
       
       const pollInterval = setInterval(async () => {
         pollCount++
