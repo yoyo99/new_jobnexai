@@ -1,0 +1,88 @@
+import { Handler } from '@netlify/functions'
+
+const handler: Handler = async (event) => {
+  // Gère les requêtes OPTIONS pour CORS
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      },
+      body: '',
+    }
+  }
+
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405,
+      body: JSON.stringify({ error: 'Method Not Allowed' }),
+    }
+  }
+
+  try {
+    const body = JSON.parse(event.body || '{}')
+
+    // Récupère l'URL du webhook n8n depuis les variables d'environnement
+    const webhookUrl = process.env.N8N_WEBHOOK_URL
+
+    if (!webhookUrl) {
+      console.error('❌ N8N_WEBHOOK_URL not configured')
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ error: 'N8N_WEBHOOK_URL not configured' }),
+      }
+    }
+
+    console.log('🚀 Forwarding request to n8n webhook:', webhookUrl)
+    console.log('📦 Payload:', body)
+
+    // Envoie la requête au webhook n8n
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    })
+
+    console.log('📡 n8n Response status:', response.status)
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('❌ n8n Error response:', errorText)
+      return {
+        statusCode: response.status,
+        body: JSON.stringify({
+          error: `n8n webhook error: ${response.status} ${response.statusText}`,
+        }),
+      }
+    }
+
+    const data = await response.json()
+    console.log('✅ n8n Response:', data)
+
+    // Retourne la réponse du webhook n8n au frontend
+    return {
+      statusCode: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      },
+      body: JSON.stringify(data),
+    }
+  } catch (error) {
+    console.error('❌ Error in job_suggestion function:', error)
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        error: error instanceof Error ? error.message : 'Unknown error',
+      }),
+    }
+  }
+}
+
+export { handler }

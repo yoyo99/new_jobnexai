@@ -126,9 +126,9 @@ function JobSearch() {
     setScrapingLoading(true)
     
     try {
-      // Appel à l'API Route Next.js qui transférera au webhook n8n
-      const apiUrl = '/api/job_suggestion'
-      console.log('🚀 Sending request to API Route:', apiUrl)
+      // Appel à la Netlify Function qui transférera au webhook n8n
+      const apiUrl = '/.netlify/functions/job_suggestion'
+      console.log('🚀 Sending request to Netlify Function:', apiUrl)
       
       const payload = {
         profile_id: user?.id || 'unknown',
