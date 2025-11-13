@@ -143,11 +143,18 @@ function JobSearch() {
       console.log('📦 Payload:', payload)
       
       // Lance la requête SANS attendre (fire and forget)
+      console.log('🔥 Fire and forget webhook call to:', webhookUrl)
       fetch(webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-      }).catch(err => console.error('❌ Webhook error:', err))
+      })
+        .then(res => {
+          console.log('✅ Webhook called, status:', res.status)
+        })
+        .catch(err => {
+          console.error('❌ Webhook error:', err)
+        })
       
       // Affiche un message et commence à poll Supabase
       alert('🔍 Recherche lancée! Nous cherchons les meilleures offres pour toi...')
