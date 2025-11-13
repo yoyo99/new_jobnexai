@@ -1,15 +1,18 @@
-import { Handler } from '@netlify/functions'
+import { Handler, HandlerResponse } from '@netlify/functions'
 
-const handler: Handler = async (event) => {
+const corsHeaders: Record<string, string> = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Content-Type': 'application/json',
+}
+
+const handler: Handler = async (event): Promise<HandlerResponse> => {
   // Gère les requêtes OPTIONS pour CORS
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
-      },
+      headers: corsHeaders,
       body: '',
     }
   }
@@ -17,6 +20,7 @@ const handler: Handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
+      headers: corsHeaders,
       body: JSON.stringify({ error: 'Method Not Allowed' }),
     }
   }
@@ -31,6 +35,7 @@ const handler: Handler = async (event) => {
       console.error('❌ N8N_WEBHOOK_URL not configured')
       return {
         statusCode: 500,
+        headers: corsHeaders,
         body: JSON.stringify({ error: 'N8N_WEBHOOK_URL not configured' }),
       }
     }
@@ -54,6 +59,7 @@ const handler: Handler = async (event) => {
       console.error('❌ n8n Error response:', errorText)
       return {
         statusCode: response.status,
+        headers: corsHeaders,
         body: JSON.stringify({
           error: `n8n webhook error: ${response.status} ${response.statusText}`,
         }),
@@ -66,18 +72,14 @@ const handler: Handler = async (event) => {
     // Retourne la réponse du webhook n8n au frontend
     return {
       statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
-      },
+      headers: corsHeaders,
       body: JSON.stringify(data),
     }
   } catch (error) {
     console.error('❌ Error in job_suggestion function:', error)
     return {
       statusCode: 500,
+      headers: corsHeaders,
       body: JSON.stringify({
         error: error instanceof Error ? error.message : 'Unknown error',
       }),
