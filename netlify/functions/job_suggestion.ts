@@ -43,14 +43,20 @@ const handler: Handler = async (event): Promise<HandlerResponse> => {
     console.log('🚀 Forwarding request to n8n webhook:', webhookUrl)
     console.log('📦 Payload:', body)
 
-    // Envoie la requête au webhook n8n
+    // Envoie la requête au webhook n8n avec timeout de 5 minutes
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 5 * 60 * 1000) // 5 minutes
+
     const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
+      signal: controller.signal,
     })
+
+    clearTimeout(timeoutId)
 
     console.log('📡 n8n Response status:', response.status)
 
