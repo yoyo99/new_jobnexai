@@ -126,9 +126,9 @@ function JobSearch() {
     setScrapingLoading(true)
     
     try {
-      // Appel au webhook n8n
-      const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL || 'https://n8n.jobnexai.com/webhook/jobnexai'
-      console.log('🚀 Sending webhook request to:', webhookUrl)
+      // Appel à l'API Route Next.js qui transférera au webhook n8n
+      const apiUrl = '/api/job_suggestion'
+      console.log('🚀 Sending request to API Route:', apiUrl)
       
       const payload = {
         profile_id: user?.id || 'unknown',
@@ -142,7 +142,7 @@ function JobSearch() {
       
       console.log('📦 Payload:', payload)
       
-      const response = await fetch(webhookUrl, {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
