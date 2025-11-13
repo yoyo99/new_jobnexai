@@ -170,6 +170,31 @@ function JobSearch() {
       
       const data = JSON.parse(responseText)
       console.log('✅ Webhook response:', data)
+      
+      // Sauvegarde les résultats dans job_suggestions
+      if (user && data.jobs && Array.isArray(data.jobs)) {
+        console.log('💾 Saving results to job_suggestions...')
+        
+        const { error: insertError } = await supabase
+          .from('job_suggestions')
+          .insert(
+            data.jobs.map((job: any) => ({
+              user_id: user.id,
+              job_id: null,
+              match_score: job.ai_score || 0,
+              created_at: new Date().toISOString()
+            }))
+          )
+        
+        if (insertError) {
+          console.error('❌ Erreur sauvegarde job_suggestions:', insertError)
+        } else {
+          console.log('✅ Résultats sauvegardés dans job_suggestions')
+          // Recharge les suggestions pour afficher les nouveaux résultats
+          loadSuggestions()
+        }
+      }
+      
       alert('Recherche lancée! Les résultats seront disponibles dans quelques secondes.')
       
     } catch (error) {
