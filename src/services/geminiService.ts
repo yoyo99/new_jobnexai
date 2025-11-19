@@ -4,8 +4,9 @@ export async function* generateCoverLetterStream(
     profile: Profile,
     job: Job,
     lang: string,
+    t: (key: string) => string,
 ): AsyncGenerator<string> {
-    // TODO: Use profile and lang when implementing real Gemini API streaming
+    // TODO: Use profile, lang, and t when implementing real Gemini API streaming
     // For now, we simulate the streaming response
     // Simulate streaming chunks for cover letter generation
 
