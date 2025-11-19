@@ -1,25 +1,24 @@
 import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon, HeartIcon, SparklesIcon, ShareIcon } from '@heroicons/react/24/outline'
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid'
 import { motion } from 'framer-motion'
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getJobs, getJobSuggestions, type Job, type JobSuggestion, supabase } from '../lib/supabase'
+import { type Job } from '../lib/supabase'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { useAuth } from '../stores/auth'
 import { ShareModal } from './ShareModal'
 import { VirtualizedList } from './VirtualizedList'
 import { LazyImage } from './LazyImage'
-import { cache } from '../lib/cache'
 import { LoadingSpinner } from './LoadingSpinner'
+import { useJobSearch, type JobFilters } from '../hooks/useJobSearch'
+import { JOB_TYPES, REMOTE_OPTIONS, EXPERIENCE_LEVELS, AVAILABLE_CURRENCIES } from '../constants/jobFilters'
 
 function JobSearch() {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
-  const [jobs, setJobs] = useState<Job[]>([])
-  const [suggestions, setSuggestions] = useState<JobSuggestion[]>([])
-  const [favorites, setFavorites] = useState<Record<string, boolean>>({})
+  
+  // Local state for filters
   const [search, setSearch] = useState('')
   const [jobType, setJobType] = useState('')
   const [location, setLocation] = useState('')
@@ -29,211 +28,37 @@ function JobSearch() {
   const [experienceLevel, setExperienceLevel] = useState<'all' | 'junior' | 'mid' | 'senior'>('all')
   const [sortBy, setSortBy] = useState<'date' | 'salary'>('date')
   const [selectedCurrency, setSelectedCurrency] = useState<string>('')
+  
+  // UI state
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false)
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [shareJob, setShareJob] = useState<Job | null>(null)
-  const [scrapingLoading, setScrapingLoading] = useState(false)
 
-  const jobTypes = useMemo(() => [
-    { value: '', label: 'Tous les types' },
-    { value: 'FULL_TIME', label: 'Temps plein' },
-    { value: 'PART_TIME', label: 'Temps partiel' },
-    { value: 'CONTRACT', label: 'Contrat / Mission' },
-    { value: 'FREELANCE', label: 'Freelance' },
-    { value: 'INTERNSHIP', label: 'Stage' }
-  ], [])
+  // Derived filters object for the hook
+  const filters: JobFilters = useMemo(() => ({
+    search,
+    jobType,
+    location,
+    salaryMin,
+    salaryMax,
+    remote,
+    experienceLevel,
+    sortBy,
+    currency: selectedCurrency
+  }), [search, jobType, location, salaryMin, salaryMax, remote, experienceLevel, sortBy, selectedCurrency])
 
-  const remoteOptions = useMemo(() => [
-    { value: 'all', label: 'Tous modes' },
-    { value: 'remote', label: 'Télétravail complet' },
-    { value: 'hybrid', label: 'Hybride' },
-    { value: 'onsite', label: 'Sur site' }
-  ], [])
-
-  const experienceLevels = useMemo(() => [
-    { value: 'all', label: 'Tous niveaux' },
-    { value: 'junior', label: 'Junior (0-2 ans)' },
-    { value: 'mid', label: 'Confirmé (3-5 ans)' },
-    { value: 'senior', label: 'Senior (5+ ans)' }
-  ], [])
-
-  const availableCurrencies = useMemo(() => [
-    { value: '', label: 'Toutes les devises' },
-    { value: 'EUR', label: 'EUR (€) - Euro' },
-    { value: 'USD', label: 'USD ($) - Dollar américain' },
-    { value: 'CAD', label: 'CAD (C$) - Dollar canadien' },
-    { value: 'GBP', label: 'GBP (£) - Livre sterling' },
-    { value: 'CHF', label: 'CHF (Fr) - Franc suisse' },
-  ], []);
-
-  const loadJobs = useCallback(async () => {
-    try {
-      setLoading(true)
-      const cacheKey = `jobs:${search}:${jobType}:${location}:${salaryMin}:${salaryMax}:${remote}:${experienceLevel}:${sortBy}:${selectedCurrency}`
-      
-      const data = await cache.getOrSet<Job[]>(
-        cacheKey,
-        async () => {
-          const params: any = {
-            search,
-            jobType,
-            location,
-            sortBy,
-          }
-          
-          if (salaryMin !== '') params.salaryMin = salaryMin
-          if (salaryMax !== '') params.salaryMax = salaryMax
-          if (remote !== 'all') params.remote = remote
-          if (experienceLevel !== 'all') params.experienceLevel = experienceLevel
-          if (selectedCurrency) params.currency = selectedCurrency
-          
-          return await getJobs(params)
-        },
-        { ttl: 5 * 60 * 1000 } // 5 minutes
-      )
-
-      setJobs(data || [])
-
-      if (user && data) {
-        const { data: userFavorites } = await supabase.from('favorites').select('job_id').eq('user_id', user.id)
-        const favoriteMap = (userFavorites || []).reduce((acc, fav) => ({ ...acc, [fav.job_id]: true }), {})
-        setFavorites(favoriteMap)
-      }
-    } catch (error) {
-      console.error('Erreur lors du chargement des emplois:', error)
-    } finally {
-      setLoading(false)
-    }
-  }, [search, jobType, location, salaryMin, salaryMax, remote, experienceLevel, sortBy, user, selectedCurrency])
-
-  const loadSuggestions = useCallback(async () => {
-    if (!user) return
-    try {
-      const suggestionsData = await getJobSuggestions(user.id)
-      setSuggestions(suggestionsData)
-    } catch (error) {
-      console.error('Erreur lors du chargement des suggestions:', error)
-    }
-  }, [user])
-
-  const handleLiveScraping = useCallback(async () => {
-    if (!search.trim()) {
-      alert('Veuillez saisir une recherche')
-      return
-    }
-
-    setScrapingLoading(true)
-    
-    try {
-      // Appel ASYNCHRONE au webhook n8n (sans attendre la réponse)
-      const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL || 'https://n8n.jobnexai.com/webhook/jobnexai'
-      console.log('🚀 Launching async search:', webhookUrl)
-      
-      const payload = {
-        profile_id: user?.id || 'unknown',
-        keywords: [search],
-        location: location || 'France',
-        jobType: 'emploi',
-        profileSummary: (user as any)?.user_metadata?.summary || '',
-        scrapeOpsApiKey: import.meta.env.VITE_SCRAPEOPS_API_KEY || 'a91510cf-f3eb-4360-8228-1a914ee5617b',
-        scrapeOpsProxyUrl: 'https://proxy.scrapeops.io/v1/'
-      }
-      
-      console.log('📦 Payload:', payload)
-      
-      // Lance la requête SANS attendre (fire and forget)
-      console.log('🔥 Fire and forget webhook call to:', webhookUrl)
-      fetch(webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-        .then(res => {
-          console.log('✅ Webhook called, status:', res.status)
-        })
-        .catch(err => {
-          console.error('❌ Webhook error:', err)
-        })
-      
-      // Affiche un message et commence à poll Supabase
-      alert('🔍 Recherche lancée! Nous cherchons les meilleures offres pour toi...')
-      
-      // Poll Supabase toutes les 2 secondes pour voir les résultats
-      let pollCount = 0
-      const maxPolls = 450 // 15 minutes max (450 * 2 secondes)
-      
-      const pollInterval = setInterval(async () => {
-        pollCount++
-        
-        try {
-          const { data, error } = await supabase
-            .from('job_suggestions')
-            .select('*')
-            .eq('user_id', user?.id)
-            .order('created_at', { ascending: false })
-            .limit(1)
-          
-          if (error) {
-            console.error('❌ Erreur poll Supabase:', error)
-            return
-          }
-          
-          // Si on a des résultats, arrête le polling et recharge
-          if (data && data.length > 0) {
-            console.log('✅ Résultats trouvés!', data)
-            clearInterval(pollInterval)
-            loadSuggestions()
-            alert('✅ Recherche terminée! Résultats disponibles.')
-            setScrapingLoading(false)
-          }
-          
-          // Timeout après 5 minutes
-          if (pollCount >= maxPolls) {
-            clearInterval(pollInterval)
-            console.warn('⏱️ Timeout polling')
-            alert('⏱️ La recherche prend plus de temps que prévu. Vérifie les résultats dans quelques instants.')
-            setScrapingLoading(false)
-          }
-        } catch (err) {
-          console.error('❌ Erreur polling:', err)
-        }
-      }, 2000) // Poll toutes les 2 secondes
-      
-    } catch (error) {
-      console.error('❌ Erreur lors du lancement:', error)
-      alert('Erreur: ' + (error instanceof Error ? error.message : String(error)))
-      setScrapingLoading(false)
-    }
-  }, [search, location, user, loadSuggestions])
-
-  useEffect(() => {
-    loadJobs()
-    if (user) {
-      loadSuggestions()
-    }
-  }, [loadJobs, loadSuggestions, user])
-
-
-
-  const toggleFavorite = async (jobId: string) => {
-    if (!user) return
-
-    const isFavorite = favorites[jobId]
-    const newFavorites = { ...favorites, [jobId]: !isFavorite }
-    setFavorites(newFavorites)
-
-    try {
-      if (isFavorite) {
-        await supabase.from('favorites').delete().match({ user_id: user.id, job_id: jobId })
-      } else {
-        await supabase.from('favorites').insert({ user_id: user.id, job_id: jobId })
-      }
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour des favoris:', error)
-      setFavorites(favorites)
-    }
-  }
+  // Use the custom hook
+  const { 
+    jobs, 
+    suggestions, 
+    loading, 
+    scrapingLoading, 
+    favorites, 
+    toggleFavorite, 
+    handleLiveScraping,
+    refreshJobs 
+  } = useJobSearch(filters)
 
   const resetFilters = () => {
     setSearch('')
@@ -250,7 +75,7 @@ function JobSearch() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    loadJobs()
+    refreshJobs()
   }
 
   const filteredJobs = useMemo(() => {
@@ -303,7 +128,7 @@ function JobSearch() {
         </a>
       </div>
     </div>
-  ), [favorites, toggleFavorite])
+  ), [favorites, toggleFavorite, navigate])
 
   return (
     <>
@@ -390,7 +215,7 @@ function JobSearch() {
                       onChange={(e) => setJobType(e.target.value)}
                       className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                     >
-                      {jobTypes.map((type) => (
+                      {JOB_TYPES.map((type) => (
                         <option key={type.value} value={type.value}>
                           {type.label}
                         </option>
@@ -408,7 +233,7 @@ function JobSearch() {
                       onChange={(e) => setRemote(e.target.value as any)}
                       className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                     >
-                      {remoteOptions.map((option) => (
+                      {REMOTE_OPTIONS.map((option) => (
                         <option key={option.value} value={option.value}>
                           {option.label}
                         </option>
@@ -426,7 +251,7 @@ function JobSearch() {
                       onChange={(e) => setExperienceLevel(e.target.value as any)}
                       className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                     >
-                      {experienceLevels.map((level) => (
+                      {EXPERIENCE_LEVELS.map((level) => (
                         <option key={level.value} value={level.value}>
                           {level.label}
                         </option>
@@ -482,7 +307,7 @@ function JobSearch() {
                       onChange={(e) => setSelectedCurrency(e.target.value)}
                       className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                     >
-                      {availableCurrencies.map((currency) => (
+                      {AVAILABLE_CURRENCIES.map((currency) => (
                         <option key={currency.value} value={currency.value}>
                           {currency.label}
                         </option>
