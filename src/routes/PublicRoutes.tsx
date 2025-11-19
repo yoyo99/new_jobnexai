@@ -60,9 +60,6 @@ const ModernComponentsDemo = React.lazy(() =>
     default: m.ModernComponentsDemo,
   }))
 );
-const JobSearchStandalone = React.lazy(() =>
-  import("../pages/JobSearchStandalone")
-);
 
 // Handler for the landing page route
 const LandingPageRouteHandler = () => {
@@ -111,14 +108,6 @@ export const PublicRoutes = () => {
         element={
           <LazyComponentWrapper>
             <ModernComponentsDemo />
-          </LazyComponentWrapper>
-        }
-      />
-      <Route
-        path="/search"
-        element={
-          <LazyComponentWrapper>
-            <JobSearchStandalone />
           </LazyComponentWrapper>
         }
       />
