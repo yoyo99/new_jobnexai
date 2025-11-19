@@ -90,18 +90,16 @@ try {
     });
 }
 
-import React from "react";
-import { useTranslation } from "react-i18next";
+import React from 'react';
+import { useTranslation, I18nextProvider } from 'react-i18next';
 
 export const useTranslations = () => {
   const { t, i18n } = useTranslation();
   return { t, lang: i18n.language };
 };
 
-export const LanguageProvider = (
-  { children }: { children: React.ReactNode },
-) => {
-  return children;
+export const LanguageProvider = ({ children }: { children: React.ReactNode }) => {
+  return <I18nextProvider i18n={i18n}>{children}</I18nextProvider>;
 };
 
 export default i18n;
