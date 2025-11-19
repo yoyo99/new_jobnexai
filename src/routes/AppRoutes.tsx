@@ -4,7 +4,7 @@ import { ProtectedRoute } from '../components/ProtectedRoute';
 import { DashboardLayout } from '../components/DashboardLayout';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { LoadingFallback } from '../components/LoadingFallback';
-import { AdminDashboard } from '../../components/AdminDashboard';
+import { AdminDashboard } from '../components/AdminDashboard';
 
 // Wrapper pour les composants lazy-loaded avec ErrorBoundary spécifique
 const LazyComponentWrapper = ({ children }: { children: React.ReactNode }) => {

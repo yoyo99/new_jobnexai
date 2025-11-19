@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../stores/auth'
 import { supabase } from '../lib/supabase'
+import { QRCodeCanvas } from 'qrcode.react'
 import {
   BellIcon,
   GlobeAltIcon,
@@ -39,6 +40,13 @@ export function Settings() {
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'security' | 'notifications' | 'privacy' | 'language'>('security')
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+  // MFA State
+  const [mfaEnrolling, setMfaEnrolling] = useState(false)
+  const [mfaFactorId, setMfaFactorId] = useState<string | null>(null)
+  const [mfaQrCode, setMfaQrCode] = useState<string | null>(null)
+  const [mfaCode, setMfaCode] = useState('')
+  const [mfaMessage, setMfaMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   const [securitySettings, setSecuritySettings] = useState<SecuritySettings>({
     enable_mfa: false,
@@ -93,6 +101,47 @@ export function Settings() {
     { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
     { code: 'it', name: 'Italiano', flag: '🇮🇹' },
   ]
+
+  // Fonction pour démarrer l’enrôlement MFA
+  const handleStartMfa = async () => {
+    setMfaMessage(null)
+    setMfaEnrolling(true)
+    try {
+      const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' })
+      if (error || !data) {
+        setMfaMessage({ type: 'error', text: error?.message || 'Erreur lors de la génération du QR code.' })
+        setMfaEnrolling(false)
+        return
+      }
+      setMfaFactorId(data.id)
+      setMfaQrCode(data.totp.qr_code)
+    } catch (err: any) {
+      setMfaMessage({ type: 'error', text: err.message || 'Erreur MFA inconnue.' })
+      setMfaEnrolling(false)
+    }
+  }
+
+  // Fonction pour vérifier le code TOTP
+  const handleVerifyMfa = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setMfaMessage(null)
+    if (!mfaFactorId) return
+    try {
+      const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId: mfaFactorId, code: mfaCode })
+      if (error) {
+        setMfaMessage({ type: 'error', text: error.message })
+        return
+      }
+      setMfaMessage({ type: 'success', text: 'Double authentification activée avec succès.' })
+      setMfaEnrolling(false)
+      setMfaQrCode(null)
+      setMfaFactorId(null)
+      setMfaCode('')
+      setSecuritySettings(prev => ({ ...prev, enable_mfa: true }))
+    } catch (err: any) {
+      setMfaMessage({ type: 'error', text: err.message || 'Erreur MFA inconnue.' })
+    }
+  }
 
   return (
     <div className="max-w-4xl">
@@ -158,31 +207,56 @@ export function Settings() {
             <h2 className="text-lg font-medium text-white mb-6">{t('settings.security.title', 'Paramètres de sécurité')}</h2>
 
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-white">
-                    Authentification à deux facteurs
-                  </p>
-                  <p className="text-sm text-gray-400">
-                    Ajoutez une couche de sécurité supplémentaire à votre compte
-                  </p>
+              
+              {/* Bloc MFA */}
+              <div className="bg-gray-800/50 p-4 rounded-lg border border-white/10 mb-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="text-lg font-medium text-white">Double authentification (2FA)</h3>
+                    <p className="text-sm text-gray-400">
+                      Protégez votre compte avec une application d’authentification (TOTP)
+                    </p>
+                  </div>
+                  {!securitySettings.enable_mfa && !mfaEnrolling && (
+                    <button
+                      onClick={handleStartMfa}
+                      className="btn-primary"
+                    >
+                      Activer la double authentification
+                    </button>
+                  )}
                 </div>
-                <button
-                  onClick={() => setSecuritySettings(prev => ({
-                    ...prev,
-                    enable_mfa: !prev.enable_mfa
-                  }))}
-                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
-                    securitySettings.enable_mfa ? 'bg-primary-600' : 'bg-gray-700'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                      securitySettings.enable_mfa ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
+                {mfaEnrolling && mfaQrCode && (
+                  <div className="mt-4">
+                    <p className="text-sm text-gray-400 mb-2">Scannez ce QR code avec Google Authenticator, FreeOTP, etc.</p>
+                    <div className="flex justify-center mb-4">
+                      <QRCodeCanvas value={mfaQrCode} size={180} />
+                    </div>
+                    <form onSubmit={handleVerifyMfa} className="flex flex-col items-center gap-2">
+                      <input
+                        type="text"
+                        value={mfaCode}
+                        onChange={e => setMfaCode(e.target.value)}
+                        placeholder="Code à 6 chiffres"
+                        className="w-40 px-3 py-2 rounded-lg border bg-white/5 text-white border-white/10 text-center"
+                        maxLength={6}
+                        inputMode="numeric"
+                        autoFocus
+                      />
+                      <button type="submit" className="btn-primary w-40 mt-2">Valider</button>
+                    </form>
+                    {mfaMessage && (
+                      <div className={`mt-2 rounded-md p-2 text-center ${mfaMessage.type === 'success' ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'}`}>
+                        {mfaMessage.text}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {securitySettings.enable_mfa && !mfaEnrolling && (
+                  <div className="mt-2 text-green-400 text-sm">Double authentification activée</div>
+                )}
               </div>
+              {/* Fin Bloc MFA */}
 
               <div className="flex items-center justify-between">
                 <div>
