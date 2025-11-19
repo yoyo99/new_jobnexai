@@ -109,7 +109,7 @@ const App: React.FC = () => {
     setIsModalOpen(true);
     
     try {
-      const stream = generateCoverLetterStream(profile, job, lang, t);
+      const stream = generateCoverLetterStream(profile, job, lang);
       for await (const chunk of stream) {
         setCoverLetterContent(prev => prev + chunk);
       }
