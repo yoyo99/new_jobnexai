@@ -58,6 +58,7 @@ const JobSearchStandalone: React.FC = () => {
           // Try to parse specific error message from n8n if available
           let errorMessage =
             `Network response was not ok, status: ${response.status}`;
+
           try {
             const errorData = await response.json();
             // n8n often returns 'errorMessage', 'errorDescription' or 'message' depending on the node failure
@@ -66,25 +67,75 @@ const JobSearchStandalone: React.FC = () => {
               let rawError = errorData.errorDescription ||
                 errorData.errorMessage || errorData.message || errorMessage;
 
-              // Clean up ugly Python-dict style errors often returned by AI proxies
-              // e.g. "{'error': 'Invalid model...'}"
+              // Detect 504 timeout errors from AI providers (Cloudflare HTML pages)
               if (typeof rawError === "string") {
-                // Try to extract message from Python dict string or JSON string
-                if (rawError.includes("'error':")) {
+                // Check if it's HTML (Cloudflare error page)
+                if (
+                  rawError.includes("<!DOCTYPE html>") ||
+                  rawError.includes("<html")
+                ) {
+                  // Extract meaningful info from HTML if possible
+                  if (
+                    rawError.includes("Gateway time-out") ||
+                    rawError.includes("504")
+                  ) {
+                    // Check which AI provider timed out
+                    const providerMatch = rawError.match(
+                      /api\.(mammouth|openai|anthropic|mistral)\.ai/i,
+                    );
+                    const provider = providerMatch
+                      ? providerMatch[1]
+                      : "AI provider";
+
+                    rawError = lang === "fr"
+                      ? `Le fournisseur d'IA (${provider}) a mis trop de temps à répondre (timeout 504). Réessayez dans quelques minutes ou contactez l'admin pour vérifier la configuration.`
+                      : `AI provider (${provider}) timed out (504). Please try again in a few minutes or contact admin to check configuration.`;
+                  } else {
+                    // Generic HTML error
+                    rawError = lang === "fr"
+                      ? "Erreur du serveur (HTML retourné au lieu de JSON). Vérifiez la configuration n8n."
+                      : "Server error (HTML returned instead of JSON). Check n8n configuration.";
+                  }
+                } // Clean up ugly Python-dict style errors
+                else if (rawError.includes("'error':")) {
                   const match = rawError.match(/'error':\s*['"](.*?)['"]/);
                   if (match && match[1]) rawError = match[1];
-                } else if (rawError.startsWith('{"error":')) {
+                } // Try to extract from JSON string that might be double-encoded
+                else if (
+                  rawError.trim().startsWith("{") ||
+                  rawError.trim().startsWith('"{')
+                ) {
                   try {
-                    const parsed = JSON.parse(rawError);
+                    const toParse = rawError.startsWith('"')
+                      ? JSON.parse(rawError)
+                      : rawError;
+                    const parsed = JSON.parse(toParse);
                     if (parsed.error?.message) rawError = parsed.error.message;
                     else if (parsed.error) rawError = String(parsed.error);
                   } catch (e) { /* ignore */ }
+                }
+
+                // Clean up common technical prefixes from AI providers
+                rawError = rawError.replace(/^\/chat\/completions:\s*/, "");
+
+                // Handle generic "Gateway timed out" from n8n
+                if (
+                  rawError.toLowerCase().includes("gateway timed out") ||
+                  rawError.toLowerCase().includes("gateway time-out")
+                ) {
+                  rawError = lang === "fr"
+                    ? `${rawError}. Le fournisseur d'IA prend trop de temps. Réessayez dans quelques minutes.`
+                    : `${rawError}. AI provider is taking too long. Try again in a few minutes.`;
                 }
               }
               errorMessage = rawError;
             }
           } catch (e) {
-            // Ignore JSON parse error, use generic message
+            // JSON parse failed - likely HTML error page
+            console.warn("Failed to parse error response as JSON:", e);
+            errorMessage = lang === "fr"
+              ? `Erreur ${response.status}: Le serveur a retourné une réponse invalide. Vérifiez la configuration n8n.`
+              : `Error ${response.status}: Server returned invalid response. Check n8n configuration.`;
           }
           throw new Error(errorMessage);
         }
