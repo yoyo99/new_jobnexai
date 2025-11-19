@@ -1,17 +1,17 @@
 import React, { useCallback, useState } from "react";
-import type { Job, Profile } from "./types";
-import { generateCoverLetterStream } from "./services/geminiService";
-import { Header } from "./components/Header";
-import { SearchForm } from "./components/SearchForm";
-import { LoadingState } from "./components/LoadingState";
-import { JobCard } from "./components/JobCard";
-import { CoverLetterModal } from "./components/CoverLetterModal";
-import { useTranslations } from "./i18n";
+import type { Job, Profile } from "../types";
+import { generateCoverLetterStream } from "../services/geminiService";
+import { Header } from "../components/Header";
+import { SearchForm } from "../components/SearchForm";
+import { LoadingState } from "../components/LoadingState";
+import { JobCard } from "../components/JobCard";
+import { CoverLetterModal } from "../components/CoverLetterModal";
+import { useTranslations } from "../i18n";
 
 // n8n Webhook URL (Production)
 const N8N_WEBHOOK_URL = "https://n8n.jobnexai.com/webhook/jobnexai";
 
-const App: React.FC = () => {
+const JobSearchStandalone: React.FC = () => {
   const { t, lang } = useTranslations();
   const [profile, setProfile] = useState<Profile>({ summary: "" });
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -63,8 +63,25 @@ const App: React.FC = () => {
             // n8n often returns 'errorMessage', 'errorDescription' or 'message' depending on the node failure
             if (errorData) {
               // Prioritize errorDescription as it often contains the specific validation error
-              errorMessage = errorData.errorDescription ||
+              let rawError = errorData.errorDescription ||
                 errorData.errorMessage || errorData.message || errorMessage;
+
+              // Clean up ugly Python-dict style errors often returned by AI proxies
+              // e.g. "{'error': 'Invalid model...'}"
+              if (typeof rawError === "string") {
+                // Try to extract message from Python dict string or JSON string
+                if (rawError.includes("'error':")) {
+                  const match = rawError.match(/'error':\s*['"](.*?)['"]/);
+                  if (match && match[1]) rawError = match[1];
+                } else if (rawError.startsWith('{"error":')) {
+                  try {
+                    const parsed = JSON.parse(rawError);
+                    if (parsed.error?.message) rawError = parsed.error.message;
+                    else if (parsed.error) rawError = String(parsed.error);
+                  } catch (e) { /* ignore */ }
+                }
+              }
+              errorMessage = rawError;
             }
           } catch (e) {
             // Ignore JSON parse error, use generic message
@@ -206,4 +223,4 @@ const App: React.FC = () => {
   );
 };
 
-export default App;
+export default JobSearchStandalone;
