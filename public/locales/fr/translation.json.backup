@@ -369,45 +369,5 @@
       "favorite": "Favori",
       "status_change": "Changement de statut"
     }
-  },
-  "header": {
-    "powered": "Propulsé par l'IA",
-    "tagline": "Trouvez l'emploi de vos rêves grâce à l'IA"
-  },
-  "search": {
-    "keywords": "Mots-clés",
-    "keywordsPlaceholder": "ex: D développeur React, Data Scientist",
-    "location": "Localisation",
-    "locationPlaceholder": "ex: Paris, Télétravail",
-    "profileSummary": "Votre Profil (Optionnel)",
-    "profilePlaceholder": "Brève description de vos compétences et expérience...",
-    "searching": "Recherche en cours...",
-    "searchButton": "Rechercher des emplois"
-  },
-  "loading": {
-    "analyzing": "Analyse des offres d'emploi avec l'IA...",
-    "patience": "Cela peut prendre jusqu'à 3 minutes"
-  },
-  "app": {
-    "invalidResponse": "Réponse invalide du serveur",
-    "searchError": "Erreur lors de la recherche d'emplois",
-    "retry": "Réessayer",
-    "topMatches": "Meilleures correspondances",
-    "initialMessage": "Commencez votre recherche d'emploi intelligente",
-    "initialSubMessage": "L'IA analysera et classera les meilleures offres pour vous"
-  },
-  "job": {
-    "viewDetails": "Voir les détails",
-    "generateLetter": "Générer une lettre"
-  },
-  "modal": {
-    "title": "Lettre de Motivation Générée",
-    "generating": "Génération de votre lettre de motivation...",
-    "copy": "Copier dans le presse-papier",
-    "close": "Fermer",
-    "copied": "Copié dans le presse-papier !"
-  },
-  "gemini": {
-    "errorGenerate": "Erreur lors de la génération de la lettre"
   }
 }
