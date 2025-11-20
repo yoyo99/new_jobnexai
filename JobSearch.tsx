@@ -19,6 +19,8 @@ export function JobSearch() {
   const [loading, setLoading] = useState(true)
   const [jobs, setJobs] = useState<Job[]>([])
   const [suggestions, setSuggestions] = useState<JobSuggestion[]>([])
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false)
+  const [suggestionsError, setSuggestionsError] = useState<string | null>(null)
   const [favorites, setFavorites] = useState<Record<string, boolean>>({})
   const [search, setSearch] = useState('')
   const [jobType, setJobType] = useState('')
@@ -104,17 +106,81 @@ export function JobSearch() {
   const loadSuggestions = useCallback(async () => {
     if (!user) return
     try {
-      // Utiliser le cache pour les suggestions
-      const suggestions = await cache.getOrSet<JobSuggestion[]>(
-        `suggestions:${user.id}`,
-        async () => await getJobSuggestions(user.id),
-        { ttl: 15 * 60 * 1000 } // 15 minutes
-      )
-      setSuggestions(suggestions)
+      setSuggestionsError(null)
+      const latest = await getJobSuggestions(user.id)
+      setSuggestions(latest)
     } catch (error) {
       console.error('Error loading suggestions:', error)
+      setSuggestionsError('Erreur lors du chargement des suggestions.')
     }
   }, [user])
+
+  const startAiSuggestions = useCallback(async () => {
+    if (!user) return
+
+    setShowSuggestions(true)
+    setSuggestionsLoading(true)
+    setSuggestionsError(null)
+
+    try {
+      const payload = {
+        userId: user.id,
+        search,
+        filters: {
+          jobType,
+          location,
+          salaryMin: salaryMin || undefined,
+          salaryMax: salaryMax || undefined,
+          remote: remote === 'all' ? undefined : remote,
+          experienceLevel: experienceLevel === 'all' ? undefined : experienceLevel,
+        },
+      }
+
+      const response = await fetch('/.netlify/functions/job_suggestion', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        console.error('Error triggering job suggestions:', await response.text())
+        setSuggestionsError('Impossible de lancer la recherche IA. Veuillez réessayer.')
+        return
+      }
+
+      const maxAttempts = 30
+      const delayMs = 2000
+
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        try {
+          const latest = await getJobSuggestions(user.id)
+          if (latest.length > 0) {
+            setSuggestions(latest)
+            break
+          }
+        } catch (error) {
+          console.error('Error polling suggestions:', error)
+        }
+        await new Promise((resolve) => setTimeout(resolve, delayMs))
+      }
+    } catch (error) {
+      console.error('Error in startAiSuggestions:', error)
+      setSuggestionsError('Erreur inattendue lors de la recherche IA.')
+    } finally {
+      setSuggestionsLoading(false)
+    }
+  }, [
+    user,
+    search,
+    jobType,
+    location,
+    salaryMin,
+    salaryMax,
+    remote,
+    experienceLevel,
+  ])
 
   useEffect(() => {
     loadJobs()
@@ -437,16 +503,22 @@ export function JobSearch() {
                   {showFavoritesOnly ? 'Tous les emplois' : 'Voir mes favoris'}
                 </button>
 
-                {user && suggestions.length > 0 && (
+                {user && (
                   <button
                     type="button"
-                    onClick={() => setShowSuggestions(!showSuggestions)}
+                    onClick={() => {
+                      if (showSuggestions) {
+                        setShowSuggestions(false)
+                      } else {
+                        void startAiSuggestions()
+                      }
+                    }}
                     className={`btn-secondary flex items-center gap-2 ${
                       showSuggestions ? 'bg-primary-600 hover:bg-primary-500' : ''
                     }`}
                   >
                     <SparklesIcon className="h-5 w-5" />
-                    Suggestions
+                    Suggestions IA
                   </button>
                 )}
               </div>
@@ -465,7 +537,15 @@ export function JobSearch() {
         ) : (
           <div className="space-y-4">
             {showSuggestions ? (
-              suggestions.length > 0 ? (
+              suggestionsLoading ? (
+                <div className="flex justify-center py-12">
+                  <LoadingSpinner size="lg" text="Recherche d'offres personnalisées..." />
+                </div>
+              ) : suggestionsError ? (
+                <div className="text-center py-12 text-red-400">
+                  {suggestionsError}
+                </div>
+              ) : suggestions.length > 0 ? (
                 <VirtualizedList
                   items={suggestions}
                   height={600}

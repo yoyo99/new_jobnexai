@@ -72,14 +72,11 @@ const handler: Handler = async (event): Promise<HandlerResponse> => {
       }
     }
 
-    const data = await response.json()
-    console.log('✅ n8n Response:', data)
-
     // Retourne la réponse du webhook n8n au frontend
     return {
-      statusCode: 200,
+      statusCode: 202,
       headers: corsHeaders,
-      body: JSON.stringify(data),
+      body: JSON.stringify({ status: 'accepted' }),
     }
   } catch (error) {
     console.error('❌ Error in job_suggestion function:', error)
