@@ -37,6 +37,7 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
   const [navigation, setNavigation] = useState<any[]>([]);
 
   useEffect(() => {
+    console.log("[DashboardLayout] Mounted. User:", user?.id);
     let navItems: NavItem[] = [];
     const userType = user?.user_type;
 
