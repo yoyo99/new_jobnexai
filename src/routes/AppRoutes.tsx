@@ -105,7 +105,7 @@ export const AppRoutes = () => {
         }
       />
       <Route
-        path="/app"
+        path="/"
         element={
           <ProtectedRoute>
             <DashboardLayout />

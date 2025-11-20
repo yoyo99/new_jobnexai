@@ -77,3 +77,10 @@ Archives src/
 # Applications (ne pas commiter les .app)
 applications/*.app
 *.app/
+
+# Spec-kit artefacts & generated documentation
+.specify/
+speckit.constitution
+specs/
+Jobnexai/
+Jobnexai_SaaS/
