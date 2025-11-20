@@ -1,26 +1,26 @@
-import React, { Fragment, useState, useEffect } from 'react'
-import { Dialog, Transition } from '@headlessui/react'
-import { XMarkIcon } from '@heroicons/react/24/outline'
-import { Link, Outlet } from 'react-router-dom'
-import { cn } from '../utils/cn'
-import { Header } from './Header';
+import React, { Fragment, useEffect, useState } from "react";
+import { Dialog, Transition } from "@headlessui/react";
+import { XMarkIcon } from "@heroicons/react/24/outline";
+import { Link, Outlet, useLocation } from "react-router-dom";
+import { cn } from "../utils/cn";
+import { Header } from "./Header";
 import {
   ChartPieIcon,
+  ClipboardDocumentListIcon,
+  Cog6ToothIcon,
+  CreditCardIcon,
   DocumentTextIcon,
   FolderIcon,
   HomeIcon,
-  UserIcon,
-  UsersIcon,
-  ClipboardDocumentListIcon,
-  RectangleGroupIcon,
   MagnifyingGlassIcon,
   PlusCircleIcon,
-  CreditCardIcon,
-  Cog6ToothIcon,
+  RectangleGroupIcon,
   SparklesIcon,
-} from '@heroicons/react/24/outline'
-import { useTranslation } from 'react-i18next'
-import { useAuth } from '../stores/auth'
+  UserIcon,
+  UsersIcon,
+} from "@heroicons/react/24/outline";
+import { useTranslation } from "react-i18next";
+import { useAuth } from "../stores/auth";
 
 interface NavItem {
   nameKey: string;
@@ -30,71 +30,194 @@ interface NavItem {
 }
 
 export function DashboardLayout({ children }: { children?: React.ReactNode }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { user, signOut } = useAuth()
-  const { t } = useTranslation()
-    const [navigation, setNavigation] = useState<any[]>([])
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const { t } = useTranslation();
+  const location = useLocation();
+  const [navigation, setNavigation] = useState<any[]>([]);
 
   useEffect(() => {
     let navItems: NavItem[] = [];
     const userType = user?.user_type;
 
     const commonItems = [
-      { nameKey: 'navigation.coverLetterGenerator', href: '/app/cover-letter-generator', icon: SparklesIcon, fallback: 'Générateur de lettres' },
-      { nameKey: 'navigation.myLetters', href: '/app/cover-letters', icon: ClipboardDocumentListIcon, fallback: 'Mes lettres' },
+      {
+        nameKey: "navigation.coverLetterGenerator",
+        href: "/app/cover-letter-generator",
+        icon: SparklesIcon,
+        fallback: "Générateur de lettres",
+      },
+      {
+        nameKey: "navigation.myLetters",
+        href: "/app/cover-letters",
+        icon: ClipboardDocumentListIcon,
+        fallback: "Mes lettres",
+      },
     ];
 
-    if (userType === 'freelancer') {
+    if (userType === "freelancer") {
       navItems = [
-        { nameKey: 'navigation.dashboard', href: '/app/dashboard', icon: HomeIcon },
-        { nameKey: 'navigation.freelanceProjects', href: '/app/freelance/projects', icon: RectangleGroupIcon, fallback: 'Projets disponibles' },
-        { nameKey: 'navigation.freelanceProfile', href: '/app/freelance/profile', icon: UserIcon, fallback: 'Mon profil freelance' },
-        { nameKey: 'navigation.cvBuilder', href: '/app/cv-builder', icon: DocumentTextIcon },
+        {
+          nameKey: "navigation.dashboard",
+          href: "/app/dashboard",
+          icon: HomeIcon,
+        },
+        {
+          nameKey: "navigation.freelanceProjects",
+          href: "/app/freelance/projects",
+          icon: RectangleGroupIcon,
+          fallback: "Projets disponibles",
+        },
+        {
+          nameKey: "navigation.freelanceProfile",
+          href: "/app/freelance/profile",
+          icon: UserIcon,
+          fallback: "Mon profil freelance",
+        },
+        {
+          nameKey: "navigation.cvBuilder",
+          href: "/app/cv-builder",
+          icon: DocumentTextIcon,
+        },
         ...commonItems,
-        { nameKey: 'navigation.network.title', href: '/app/network', icon: UsersIcon },
-        { nameKey: 'navigation.marketAnalysis', href: '/app/market-analysis', icon: ChartPieIcon },
-        { nameKey: 'navigation.billing', href: '/app/billing', icon: CreditCardIcon, fallback: 'Facturation' },
-        { nameKey: 'navigation.settings', href: '/app/settings', icon: Cog6ToothIcon },
+        {
+          nameKey: "navigation.network.title",
+          href: "/app/network",
+          icon: UsersIcon,
+        },
+        {
+          nameKey: "navigation.marketAnalysis",
+          href: "/app/market-analysis",
+          icon: ChartPieIcon,
+        },
+        {
+          nameKey: "navigation.billing",
+          href: "/app/billing",
+          icon: CreditCardIcon,
+          fallback: "Facturation",
+        },
+        {
+          nameKey: "navigation.settings",
+          href: "/app/settings",
+          icon: Cog6ToothIcon,
+        },
       ];
-    } else if (userType === 'recruiter') {
+    } else if (userType === "recruiter") {
       navItems = [
-        { nameKey: 'navigation.dashboard', href: '/app/recruiter/dashboard', icon: HomeIcon },
-        { nameKey: 'navigation.candidateSearch', href: '/app/recruiter/candidates', icon: MagnifyingGlassIcon, fallback: 'Recherche de candidats' },
-        { nameKey: 'navigation.jobPostings', href: '/app/recruiter/job-postings', icon: ClipboardDocumentListIcon, fallback: "Mes offres d'emploi" },
-        { nameKey: 'navigation.createJob', href: '/app/recruiter/create-job', icon: PlusCircleIcon, fallback: 'Créer une offre' },
+        {
+          nameKey: "navigation.dashboard",
+          href: "/app/recruiter/dashboard",
+          icon: HomeIcon,
+        },
+        {
+          nameKey: "navigation.candidateSearch",
+          href: "/app/recruiter/candidates",
+          icon: MagnifyingGlassIcon,
+          fallback: "Recherche de candidats",
+        },
+        {
+          nameKey: "navigation.jobPostings",
+          href: "/app/recruiter/job-postings",
+          icon: ClipboardDocumentListIcon,
+          fallback: "Mes offres d'emploi",
+        },
+        {
+          nameKey: "navigation.createJob",
+          href: "/app/recruiter/create-job",
+          icon: PlusCircleIcon,
+          fallback: "Créer une offre",
+        },
         ...commonItems,
-        { nameKey: 'navigation.network.title', href: '/app/network', icon: UsersIcon },
-        { nameKey: 'navigation.profile', href: '/app/profile', icon: UserIcon },
-        { nameKey: 'navigation.billing', href: '/app/billing', icon: CreditCardIcon, fallback: 'Facturation' },
-        { nameKey: 'navigation.settings', href: '/app/settings', icon: Cog6ToothIcon },
+        {
+          nameKey: "navigation.network.title",
+          href: "/app/network",
+          icon: UsersIcon,
+        },
+        { nameKey: "navigation.profile", href: "/app/profile", icon: UserIcon },
+        {
+          nameKey: "navigation.billing",
+          href: "/app/billing",
+          icon: CreditCardIcon,
+          fallback: "Facturation",
+        },
+        {
+          nameKey: "navigation.settings",
+          href: "/app/settings",
+          icon: Cog6ToothIcon,
+        },
       ];
     } else {
       // Default navigation for candidates
       navItems = [
-        { nameKey: 'navigation.dashboard', href: '/app/dashboard', icon: HomeIcon },
-        { nameKey: 'navigation.jobSearch', href: '/app/jobs', icon: FolderIcon },
-        { nameKey: 'navigation.franceTravail', href: '/app/france-travail', icon: MagnifyingGlassIcon, fallback: 'France Travail' },
-        { nameKey: 'navigation.applications', href: '/app/suivi', icon: ClipboardDocumentListIcon },
-        { nameKey: 'navigation.cvBuilder', href: '/app/cv-builder', icon: DocumentTextIcon },
+        {
+          nameKey: "navigation.dashboard",
+          href: "/app/dashboard",
+          icon: HomeIcon,
+        },
+        {
+          nameKey: "navigation.jobSearch",
+          href: "/app/jobs",
+          icon: FolderIcon,
+        },
+        {
+          nameKey: "navigation.franceTravail",
+          href: "/app/france-travail",
+          icon: MagnifyingGlassIcon,
+          fallback: "France Travail",
+        },
+        {
+          nameKey: "navigation.applications",
+          href: "/app/suivi",
+          icon: ClipboardDocumentListIcon,
+        },
+        {
+          nameKey: "navigation.cvBuilder",
+          href: "/app/cv-builder",
+          icon: DocumentTextIcon,
+        },
         ...commonItems,
-        { nameKey: 'navigation.network.title', href: '/app/network', icon: UsersIcon },
-        { nameKey: 'navigation.marketAnalysis', href: '/app/market-analysis', icon: ChartPieIcon },
-        { nameKey: 'navigation.profile', href: '/app/profile', icon: UserIcon },
-        { nameKey: 'navigation.billing', href: '/app/billing', icon: CreditCardIcon, fallback: 'Facturation' },
-        { nameKey: 'navigation.settings', href: '/app/settings', icon: Cog6ToothIcon },
+        {
+          nameKey: "navigation.network.title",
+          href: "/app/network",
+          icon: UsersIcon,
+        },
+        {
+          nameKey: "navigation.marketAnalysis",
+          href: "/app/market-analysis",
+          icon: ChartPieIcon,
+        },
+        { nameKey: "navigation.profile", href: "/app/profile", icon: UserIcon },
+        {
+          nameKey: "navigation.billing",
+          href: "/app/billing",
+          icon: CreditCardIcon,
+          fallback: "Facturation",
+        },
+        {
+          nameKey: "navigation.settings",
+          href: "/app/settings",
+          icon: Cog6ToothIcon,
+        },
       ];
     }
 
-    setNavigation(navItems.map(item => ({ ...item, name: t(item.nameKey, item.fallback || '') })));
-
+    setNavigation(
+      navItems.map((item) => ({
+        ...item,
+        name: t(item.nameKey, item.fallback || ""),
+      })),
+    );
   }, [user?.user_type, t]);
 
-  
   return (
     <div>
       {/* <ResendQuotaBanner /> */}
       <Transition.Root show={sidebarOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-50 lg:hidden" onClose={setSidebarOpen}>
+        <Dialog
+          as="div"
+          className="relative z-50 lg:hidden"
+          onClose={setSidebarOpen}
+        >
           <Transition.Child
             as={Fragment}
             enter="transition-opacity ease-linear duration-300"
@@ -128,15 +251,25 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
                   leaveTo="opacity-0"
                 >
                   <div className="absolute left-full top-0 flex w-16 justify-center pt-5">
-                    <button type="button" className="-m-2.5 p-2.5" onClick={() => setSidebarOpen(false)}>
+                    <button
+                      type="button"
+                      className="-m-2.5 p-2.5"
+                      onClick={() => setSidebarOpen(false)}
+                    >
                       <span className="sr-only">Close sidebar</span>
-                      <XMarkIcon className="h-6 w-6 text-white" aria-hidden="true" />
+                      <XMarkIcon
+                        className="h-6 w-6 text-white"
+                        aria-hidden="true"
+                      />
                     </button>
                   </div>
                 </Transition.Child>
                 <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-background px-6 pb-4 ring-1 ring-white/10">
                   <div className="flex h-16 shrink-0 items-center">
-                    <Link to="/" className="text-2xl font-bold bg-gradient-to-r from-primary-400 to-secondary-400 text-transparent bg-clip-text">
+                    <Link
+                      to="/"
+                      className="text-2xl font-bold bg-gradient-to-r from-primary-400 to-secondary-400 text-transparent bg-clip-text"
+                    >
                       JobNexAI
                     </Link>
                   </div>
@@ -149,11 +282,15 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
                               <Link
                                 to={item.href}
                                 className={cn(
-                                  'text-gray-400 hover:text-white hover:bg-gray-800 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold',
-                                  location.pathname === item.href && 'bg-gray-800 text-white'
+                                  "text-gray-400 hover:text-white hover:bg-gray-800 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold",
+                                  location.pathname === item.href &&
+                                    "bg-gray-800 text-white",
                                 )}
                               >
-                                <item.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
+                                <item.icon
+                                  className="h-6 w-6 shrink-0"
+                                  aria-hidden="true"
+                                />
                                 {item.name}
                               </Link>
                             </li>
@@ -169,16 +306,26 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
         </Dialog>
       </Transition.Root>
 
-      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col" style={{ zIndex: 50 }}>
+      <div
+        className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col"
+        style={{ zIndex: 50 }}
+      >
         {/* Le cercle jaune de débogage était ici */}
         <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-background px-6 pb-4 border-r border-white/10">
           <div className="flex flex-col h-16 shrink-0 items-start justify-center">
-            <Link to="/" className="text-2xl font-bold bg-gradient-to-r from-primary-400 to-secondary-400 text-transparent bg-clip-text">
+            <Link
+              to="/"
+              className="text-2xl font-bold bg-gradient-to-r from-primary-400 to-secondary-400 text-transparent bg-clip-text"
+            >
               JobNexAI
             </Link>
             {user?.last_sign_in_at && (
               <span className="mt-2 text-xs text-gray-400">
-                Dernière connexion : {new Date(user.last_sign_in_at).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'medium' })}
+                Dernière connexion :{" "}
+                {new Date(user.last_sign_in_at).toLocaleString("fr-FR", {
+                  dateStyle: "short",
+                  timeStyle: "medium",
+                })}
               </span>
             )}
           </div>
@@ -191,11 +338,15 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
                       <Link
                         to={item.href}
                         className={cn(
-                          'text-gray-400 hover:text-white hover:bg-gray-800 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold',
-                          location.pathname === item.href && 'bg-gray-800 text-white active'
+                          "text-gray-400 hover:text-white hover:bg-gray-800 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold",
+                          location.pathname === item.href &&
+                            "bg-gray-800 text-white active",
                         )}
                       >
-                        <item.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
+                        <item.icon
+                          className="h-6 w-6 shrink-0"
+                          aria-hidden="true"
+                        />
                         {t(item.name)}
                       </Link>
                     </li>
@@ -225,5 +376,5 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
         </main>
       </div>
     </div>
-  )
+  );
 }
