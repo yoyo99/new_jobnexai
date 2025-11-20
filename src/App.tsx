@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect } from "react";
+import React, { Suspense } from "react";
 import {
   BrowserRouter as Router,
   Navigate,
@@ -6,21 +6,19 @@ import {
   Routes,
   useLocation,
 } from "react-router-dom";
-import { AuthProvider, useAuth } from "./components/AuthProvider";
-import { SubscriptionProvider } from "./components/SubscriptionManager";
+import { AuthProvider } from "./components/AuthProvider";
+import { useAuth } from "./stores/auth";
 import { LoadingFallback } from "./components/LoadingFallback";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { PublicRoutes } from "./routes/PublicRoutes";
 import { AppRoutes } from "./routes/AppRoutes";
 import { Toaster } from "react-hot-toast";
-import { useTranslations } from "./i18n";
 import "./index.css";
 
 // Composant pour gérer les redirections basées sur l'état d'authentification
 const AuthRedirectHandler = () => {
   const { user, loading } = useAuth();
   const location = useLocation();
-  const { t } = useTranslations();
 
   if (loading) {
     return <LoadingFallback />;
@@ -52,7 +50,7 @@ const AuthRedirectHandler = () => {
 };
 
 const AppContent = () => {
-  const { user, loading } = useAuth();
+  const { loading } = useAuth();
 
   if (loading) {
     return <LoadingFallback />;
@@ -102,9 +100,7 @@ const App: React.FC = () => {
     <ErrorBoundary>
       <Router>
         <AuthProvider>
-          <SubscriptionProvider>
-            <AppContent />
-          </SubscriptionProvider>
+          <AppContent />
         </AuthProvider>
       </Router>
     </ErrorBoundary>
