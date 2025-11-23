@@ -20,6 +20,18 @@ const LOADING_MESSAGES = [
 ];
 const LOADING_MESSAGE_FALLBACK = LOADING_MESSAGES[0] ?? "";
 
+const isJobResultArray = (value: unknown): value is Job[] => {
+  if (!Array.isArray(value)) return false;
+  return value.every((item) =>
+    item && typeof item === "object" && (
+      "title" in item ||
+      "company" in item ||
+      "url" in item ||
+      "json" in item
+    ),
+  );
+};
+
 const JobSearchStandalone: React.FC = () => {
   const { t, lang } = useTranslations();
   const [profile, setProfile] = useState<Profile>({ summary: "" });
@@ -73,6 +85,53 @@ const JobSearchStandalone: React.FC = () => {
           signal: abortSignal,
         });
 
+        const buildExternalErrorMessage = (raw: string): string => {
+          if (!raw) {
+            return lang === "fr"
+              ? "Réponse invalide reçue du serveur."
+              : "Invalid response received from server.";
+          }
+          const normalized = raw.trim();
+          const lower = normalized.toLowerCase();
+
+          if (
+            lower.includes("cloudflare") ||
+            lower.includes("additional verification required") ||
+            lower.includes("ray id")
+          ) {
+            return lang === "fr"
+              ? "Le site cible (ex: Indeed) a bloqué l'accès (protections Cloudflare / 403). Réessayez plus tard ou utilisez une autre source."
+              : "The target site (e.g. Indeed) blocked the request (Cloudflare / 403). Please try again later or switch to another source.";
+          }
+
+          if (lower.includes("403") || lower.includes("forbidden")) {
+            return lang === "fr"
+              ? "Accès refusé par la source de données (403 Forbidden)."
+              : "Access was denied by the data source (403 Forbidden).";
+          }
+
+          if (lower.startsWith("<html") || lower.startsWith("<!doctype")) {
+            return lang === "fr"
+              ? "Le serveur a renvoyé une page HTML au lieu de données JSON."
+              : "Server returned HTML instead of JSON.";
+          }
+
+          const truncated = normalized.length > 300
+            ? `${normalized.slice(0, 300)}…`
+            : normalized;
+          return truncated;
+        };
+
+        const responseText = await response.text();
+        let parsedBody: any = null;
+        if (responseText) {
+          try {
+            parsedBody = JSON.parse(responseText);
+          } catch {
+            parsedBody = null;
+          }
+        }
+
         if (response.status === 401) {
           throw new Error(
             lang === "fr"
@@ -87,7 +146,7 @@ const JobSearchStandalone: React.FC = () => {
             `Network response was not ok, status: ${response.status}`;
 
           try {
-            const errorData = await response.json();
+            const errorData = parsedBody;
             // n8n often returns 'errorMessage', 'errorDescription' or 'message' depending on the node failure
             if (errorData) {
               // Prioritize errorDescription as it often contains the specific validation error
@@ -160,26 +219,33 @@ const JobSearchStandalone: React.FC = () => {
           } catch (e) {
             // JSON parse failed - likely HTML error page
             console.warn("Failed to parse error response as JSON:", e);
-            errorMessage = lang === "fr"
-              ? `Erreur ${response.status}: Le serveur a retourné une réponse invalide. Vérifiez la configuration n8n.`
-              : `Error ${response.status}: Server returned invalid response. Check n8n configuration.`;
+            errorMessage = buildExternalErrorMessage(responseText);
           }
           throw new Error(errorMessage);
         }
 
-        const foundJobs: Job[] = await response.json();
+        if (Array.isArray(parsedBody) && parsedBody.length === 1 && typeof parsedBody[0]?.data === "string") {
+          throw new Error(buildExternalErrorMessage(parsedBody[0].data));
+        }
 
-        if (!Array.isArray(foundJobs)) {
-          // Sometimes n8n returns { json: [...] } wrapper if not formatted correctly
-          // @ts-ignore
-          if (foundJobs.json && Array.isArray(foundJobs.json)) {
-            // @ts-ignore
-            setJobs(foundJobs.json);
+        if (parsedBody && typeof parsedBody === "object") {
+          const jsonWrapper = (parsedBody as any).json;
+          if (Array.isArray(jsonWrapper)) {
+            setJobs(jsonWrapper as Job[]);
+          } else if (isJobResultArray(parsedBody)) {
+            setJobs(parsedBody);
+          } else if (Array.isArray(parsedBody) && Array.isArray(parsedBody[0]?.json)) {
+            setJobs(parsedBody[0].json as Job[]);
+          } else if ((parsedBody as any).error || (parsedBody as any).message) {
+            const raw = (parsedBody as any).errorDescription || (parsedBody as any).error || (parsedBody as any).message;
+            throw new Error(buildExternalErrorMessage(String(raw)));
           } else {
-            throw new Error(t("app.invalidResponse"));
+            throw new Error(buildExternalErrorMessage(responseText));
           }
+        } else if (isJobResultArray(parsedBody)) {
+          setJobs(parsedBody);
         } else {
-          setJobs(foundJobs);
+          throw new Error(buildExternalErrorMessage(responseText));
         }
 
         // Save profile to localStorage on successful search to simulate a session
