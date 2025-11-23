@@ -3,13 +3,22 @@ import type { Job, Profile } from "../types";
 import { generateCoverLetterStream } from "../services/geminiService";
 import { Header } from "../components/Header";
 import { SearchForm } from "../components/SearchForm";
-import { LoadingState } from "../components/LoadingState";
 import { JobCard } from "../components/JobCard";
 import { CoverLetterModal } from "../components/CoverLetterModal";
 import { useTranslations } from "../i18n";
 
-// n8n Webhook URL (Production)
-const N8N_WEBHOOK_URL = "https://n8n.jobnexai.com/webhook/jobnexai";
+// n8n webhooks configuration (fallbacks ensure DX locally)
+const JOB_SEARCH_ENDPOINT =
+  import.meta.env.VITE_JOB_SEARCH_ENDPOINT || "/.netlify/functions/job-search";
+const N8N_TIMEOUT_MS = Number(import.meta.env.VITE_N8N_TIMEOUT_MS || 120000);
+const LOADING_MESSAGES = [
+  "🚀 Démarrage des moteurs IA...",
+  "🔍 Scraping des offres...",
+  "🧠 Analyse des compétences...",
+  "⭐ Notation des meilleures opportunités...",
+  "✅ Finalisation du tri...",
+];
+const LOADING_MESSAGE_FALLBACK = LOADING_MESSAGES[0] ?? "";
 
 const JobSearchStandalone: React.FC = () => {
   const { t, lang } = useTranslations();
@@ -17,6 +26,7 @@ const JobSearchStandalone: React.FC = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadingMessage, setLoadingMessage] = useState<string>("");
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [coverLetterContent, setCoverLetterContent] = useState<string>("");
@@ -29,12 +39,21 @@ const JobSearchStandalone: React.FC = () => {
       setIsLoading(true);
       setError(null);
       setJobs([]);
+      setLoadingMessage(LOADING_MESSAGE_FALLBACK);
+      let intervalId: ReturnType<typeof setInterval> | null = null;
+      let messageIndex = 0;
+
+      const startMessageRotation = () => {
+        intervalId = setInterval(() => {
+          messageIndex = (messageIndex + 1) % LOADING_MESSAGES.length;
+          const nextMessage = LOADING_MESSAGES[messageIndex] ?? LOADING_MESSAGE_FALLBACK;
+          setLoadingMessage(nextMessage);
+        }, 15000);
+      };
+
+      startMessageRotation();
       const currentProfile = { summary: profileSummary };
       setProfile(currentProfile);
-
-      // Setup timeout (180 seconds / 3 minutes for heavy AI workflows with throttling)
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 180000);
 
       try {
         console.log("Calling n8n webhook with:", {
@@ -43,16 +62,24 @@ const JobSearchStandalone: React.FC = () => {
           profileSummary,
         });
 
-        const response = await fetch(N8N_WEBHOOK_URL, {
+        const abortSignal = AbortSignal.timeout(N8N_TIMEOUT_MS);
+
+        const response = await fetch(JOB_SEARCH_ENDPOINT, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ keywords, location, profileSummary }),
-          signal: controller.signal,
+          signal: abortSignal,
         });
 
-        clearTimeout(timeoutId);
+        if (response.status === 401) {
+          throw new Error(
+            lang === "fr"
+              ? "Erreur de sécurité : clé API invalide"
+              : "Security error: invalid API key",
+          );
+        }
 
         if (!response.ok) {
           // Try to parse specific error message from n8n if available
@@ -178,7 +205,8 @@ const JobSearchStandalone: React.FC = () => {
         }
         setJobs([]);
       } finally {
-        clearTimeout(timeoutId);
+        if (intervalId) clearInterval(intervalId);
+        setLoadingMessage("");
         setIsLoading(false);
       }
     },
@@ -219,7 +247,19 @@ const JobSearchStandalone: React.FC = () => {
           <SearchForm onSearch={handleSearch} disabled={isLoading} />
 
           <div className="mt-12">
-            {isLoading && <LoadingState />}
+            {isLoading && (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mb-4"></div>
+                <p className="text-slate-200 text-lg animate-pulse text-center">
+                  {loadingMessage}
+                </p>
+                <p className="text-slate-500 text-sm mt-2">
+                  {lang === "fr"
+                    ? "Cela peut prendre une minute..."
+                    : "This may take up to a minute..."}
+                </p>
+              </div>
+            )}
 
             {error && (
               <div className="text-center bg-red-900/20 p-6 rounded-md border border-red-800/50 animate-fade-in">
