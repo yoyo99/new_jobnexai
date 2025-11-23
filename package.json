@@ -18,7 +18,7 @@
     "build:clean": "rimraf dist && node verify-deps.js && node check-imports.js && tsc && vite build --config vite.config.mts && node clean-build.js",
     "fix-imports": "node fix-component-imports.js",
     "fix-router-imports": "node fix-router-imports.js",
-    "build:netlify": "rimraf dist && vite build --config vite.config.mts && npm run postbuild:locales && echo 'Contenu du dossier dist après le build:' && ls -R dist && npx netlify functions:build --src functions",
+    "build:netlify": "rimraf dist && vite build --config vite.config.mts && npm run postbuild:locales && echo 'Contenu du dossier dist après le build:' && ls -R dist && npx netlify functions:build --src netlify/functions",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "listfiles": "find . -not -path \"*/node_modules/*\" -not -path \"*/.git/*\" -not -path \"*/dist/*\"",
