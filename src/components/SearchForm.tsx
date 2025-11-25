@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTranslations } from '../i18n';
 
 interface SearchFormProps {
-  onSearch: (keywords: string, location: string, profileSummary: string) => void;
+  onSearch: (keywords: string, location: string, profileSummary: string, jobType: string) => void;
   disabled?: boolean;
 }
 
@@ -11,11 +11,12 @@ export const SearchForm: React.FC<SearchFormProps> = ({ onSearch, disabled }) =>
   const [keywords, setKeywords] = useState('');
   const [location, setLocation] = useState('');
   const [profileSummary, setProfileSummary] = useState('');
+  const [jobType, setJobType] = useState<'cdi_cdd' | 'freelance'>('cdi_cdd');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (keywords.trim()) {
-      onSearch(keywords, location, profileSummary);
+      onSearch(keywords, location, profileSummary, jobType);
     }
   };
 
@@ -50,6 +51,22 @@ export const SearchForm: React.FC<SearchFormProps> = ({ onSearch, disabled }) =>
           className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-md text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           disabled={disabled}
         />
+      </div>
+
+      <div>
+        <label htmlFor="jobType" className="block text-sm font-medium text-slate-300 mb-2">
+          {t('search.jobType') || 'Type de contrat'}
+        </label>
+        <select
+          id="jobType"
+          value={jobType}
+          onChange={(e) => setJobType(e.target.value as 'cdi_cdd' | 'freelance')}
+          className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          disabled={disabled}
+        >
+          <option value="cdi_cdd">{t('search.jobTypeEmployee') || 'CDI / CDD'}</option>
+          <option value="freelance">{t('search.jobTypeFreelance') || 'Freelance'}</option>
+        </select>
       </div>
 
       <div>

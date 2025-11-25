@@ -47,7 +47,7 @@ const JobSearchStandalone: React.FC = () => {
   >(false);
 
   const handleSearch = useCallback(
-    async (keywords: string, location: string, profileSummary: string) => {
+    async (keywords: string, location: string, profileSummary: string, jobType: string) => {
       setIsLoading(true);
       setError(null);
       setJobs([]);
@@ -81,7 +81,7 @@ const JobSearchStandalone: React.FC = () => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ keywords, location, profileSummary }),
+          body: JSON.stringify({ keywords, location, profileSummary, jobType }),
           signal: abortSignal,
         });
 
@@ -336,6 +336,7 @@ const JobSearchStandalone: React.FC = () => {
                       localStorage.getItem("lastKeywords") || "React Developer",
                       localStorage.getItem("lastLocation") || "Paris",
                       profile.summary,
+                      localStorage.getItem("lastJobType") || "cdi_cdd",
                     )}
                   className="mt-4 px-4 py-2 bg-red-800/40 hover:bg-red-800/60 text-red-200 text-sm rounded-md transition-colors"
                 >
