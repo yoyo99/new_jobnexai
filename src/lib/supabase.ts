@@ -345,44 +345,24 @@ export async function getJobs(filters: {
   requiredSkills?: string[];
   preferredSkills?: string[];
 } = {}): Promise<Job[]> {
-  let query = supabase
-    .from('jobs')
-    .select('*');
+  const endpoint =
+    (typeof window !== 'undefined' && (window as any).__JOB_SEARCH_ENDPOINT__) ||
+    (import.meta as any)?.env?.VITE_JOB_SEARCH_PROXY_ENDPOINT ||
+    '/.netlify/functions/jobs-search';
 
-  if (filters.search) {
-    query = query.textSearch('search_vector', filters.search);
-  }
-  if (filters.jobType) {
-    query = query.eq('job_type', filters.jobType);
-  }
-  if (filters.location) {
-    query = query.ilike('location', `%${filters.location}%`);
-  }
-  if (filters.salaryMin) {
-    query = query.gte('salary_min', filters.salaryMin);
-  }
-  if (filters.salaryMax) {
-    query = query.lte('salary_max', filters.salaryMax);
-  }
-  if (filters.remote) {
-    query = query.eq('remote_type', filters.remote);
-  }
-  if (filters.experienceLevel) {
-    query = query.eq('experience_level', filters.experienceLevel);
-  }
-  if (filters.currency) {
-    query = query.eq('currency', filters.currency);
-  }
-  if (filters.sortBy === 'salary') {
-    query = query.order('salary_max', { ascending: false });
-  } else {
-    query = query.order('posted_at', { ascending: false });
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(filters),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Job search proxy error (${response.status}): ${errorText}`);
   }
 
-  const { data, error } = await query;
-  if (error) throw error;
-  // On force le cast via unknown pour satisfaire TypeScript, car la structure est contrôlée par la requête Supabase.
-  return data as unknown as Job[];
+  const payload = await response.json();
+  return (payload?.data ?? []) as Job[];
 }
 
 export async function getJobSuggestions(userId: string): Promise<JobSuggestion[]> {
