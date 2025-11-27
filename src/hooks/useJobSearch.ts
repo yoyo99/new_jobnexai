@@ -103,8 +103,8 @@ export function useJobSearch(filters: JobFilters) {
 
         try {
             const webhookUrl =
-                import.meta.env.VITE_N8N_SCRAPING_WEBHOOK_URL ||
-                "https://PLACEHOLDER-N8N-WEBHOOK";
+                import.meta.env.VITE_JOB_SEARCH_ENDPOINT ||
+                "/.netlify/functions/job-search";
 
             const payload = {
                 user_id: user?.id,
@@ -130,7 +130,7 @@ export function useJobSearch(filters: JobFilters) {
 
                 try {
                     const { data, error } = await supabase
-                        .from("job_suggestions")
+                        .from("job_listings")
                         .select("*")
                         .eq("user_id", user?.id)
                         .order("created_at", { ascending: false })
