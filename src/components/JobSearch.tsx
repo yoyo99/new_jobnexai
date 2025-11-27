@@ -176,7 +176,10 @@ function JobSearch() {
               </button>
               <button 
                 type="button" 
-                onClick={handleLiveScraping}
+                onClick={async () => {
+                  await handleLiveScraping()
+                  navigate('/app/dashboard/jobs')
+                }}
                 disabled={scrapingLoading}
                 className="btn-secondary flex-1 sm:flex-none bg-orange-600 hover:bg-orange-700 text-white text-sm"
               >

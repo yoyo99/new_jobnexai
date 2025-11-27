@@ -27,6 +27,10 @@ JobNexAI est une plateforme moderne de recherche d'emploi qui utilise l'intellig
   - Notifications en temps réel
   - Rappels d'entretiens
   - Mises à jour des candidatures
+- **Scraping en temps réel**
+  - Déclenchement sécurisé via Netlify Function et webhook n8n avec `user_id` uniquement
+  - Dashboard dédié `/app/dashboard/jobs` qui écoute `job_listings` et `scraping_history` avec Supabase Realtime
+  - Fichette d'expérience live (progression, skeleton loaders, animations, filtres smart) pour suivre les offres palpables
 
 ## Technologies utilisées
 

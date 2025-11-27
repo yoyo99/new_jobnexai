@@ -13,6 +13,7 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { PublicRoutes } from "./routes/PublicRoutes";
 import { AppRoutes } from "./routes/AppRoutes";
 import { Toaster } from "react-hot-toast";
+import { useScrapingNotifications } from "./hooks/useScrapingNotifications";
 import "./index.css";
 
 // Composant pour gérer les redirections basées sur l'état d'authentification
@@ -51,6 +52,7 @@ const AuthRedirectHandler = () => {
 
 const AppContent = () => {
   const { loading } = useAuth();
+  useScrapingNotifications();
 
   if (loading) {
     return <LoadingFallback />;

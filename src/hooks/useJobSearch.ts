@@ -102,18 +102,12 @@ export function useJobSearch(filters: JobFilters) {
         setScrapingLoading(true);
 
         try {
-            const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL ||
-                "https://n8n.jobnexai.com/webhook/jobnexai";
+            const webhookUrl =
+                import.meta.env.VITE_N8N_SCRAPING_WEBHOOK_URL ||
+                "https://PLACEHOLDER-N8N-WEBHOOK";
 
             const payload = {
-                profile_id: user?.id || "unknown",
-                keywords: [filters.search],
-                location: filters.location || "France",
-                jobType: "emploi",
-                profileSummary: (user as any)?.user_metadata?.summary || "",
-                scrapeOpsApiKey: import.meta.env.VITE_SCRAPEOPS_API_KEY ||
-                    "a91510cf-f3eb-4360-8228-1a914ee5617b",
-                scrapeOpsProxyUrl: "https://proxy.scrapeops.io/v1/",
+                user_id: user?.id,
             };
 
             // Fire and forget
