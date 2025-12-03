@@ -4,6 +4,8 @@
   "version": "0.0.0",
   "scripts": {
     "postbuild:locales": "mkdir -p dist/locales/fr dist/locales/en dist/locales/de dist/locales/es dist/locales/it && cp public/locales/fr/translation.json dist/locales/fr/translation.json && cp public/locales/en/translation.json dist/locales/en/translation.json && cp public/locales/de/translation.json dist/locales/de/translation.json && cp public/locales/es/translation.json dist/locales/es/translation.json && cp public/locales/it/translation.json dist/locales/it/translation.json",
+    "mcp:n8n": "supergateway --config ./mcp_config.json --server n8n-mcp",
+    "dev:mcp": "supergateway --config ./mcp_config.json --server n8n-mcp & npm run dev",
     "dev": "vite --host",
     "start": "netlify dev",
     "check-imports": "node check-imports.js",
