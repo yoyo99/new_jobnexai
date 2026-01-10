@@ -1,39 +1,93 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
+import { supabase } from "../lib/supabase";
+import { useAuth } from "../stores/auth";
+import { toast } from "react-hot-toast";
 
 /**
- * Bouton d'automatisation de candidature (MVP).
- * Simule une candidature automatique et affiche un état de progression.
- * TODO: Brancher sur une vraie API d'automatisation ou workflow backend.
+ * Bouton d'automatisation de candidature.
+ * Appelle l'Edge Function jobnexai-submitter de Supabase.
  */
 
 interface AutomatedApplyButtonProps {
-  jobId: string;
+  job: any; // Utilisation de any pour simplifier l'intégration avec différents types d'objets job
   disabled?: boolean;
 }
 
-const AutomatedApplyButton: React.FC<AutomatedApplyButtonProps> = ({ jobId, disabled }) => {
+const AutomatedApplyButton: React.FC<AutomatedApplyButtonProps> = (
+  { job, disabled },
+) => {
+  const { user } = useAuth();
   const [isApplying, setIsApplying] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const handleAutomatedApply = async () => {
-    setIsApplying(true);
-    setSuccess(false);
-    // Simulation (à remplacer par appel API réelle)
-    await new Promise((res) => setTimeout(res, 1500));
-    setIsApplying(false);
-    setSuccess(true);
+  const handleAutomatedApply = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!user) {
+      toast.error("Vous devez être connecté pour utiliser l'auto-apply");
+      return;
+    }
+
+    try {
+      setIsApplying(true);
+      setSuccess(false);
+
+      const { data, error } = await supabase.functions.invoke(
+        "jobnexai-submitter",
+        {
+          body: {
+            userId: user.id,
+            job: job,
+            applicationContent: {
+              motivationAnswer:
+                "Candidature générée automatiquement via JobNexAI.",
+            },
+          },
+        },
+      );
+
+      if (error) throw error;
+
+      if (data?.success) {
+        setSuccess(true);
+        toast.success("Candidature envoyée avec succès !");
+      } else {
+        throw new Error(data?.error || "Erreur lors de l'envoi");
+      }
+    } catch (error: any) {
+      console.error("Error in automated apply:", error);
+      toast.error(`Erreur : ${error.message}`);
+    } finally {
+      setIsApplying(false);
+    }
   };
 
   return (
-    <div className="my-2">
-      <button
-        className="btn-primary"
-        onClick={handleAutomatedApply}
-        disabled={isApplying || disabled}
-      >
-        {isApplying ? 'Candidature en cours...' : success ? 'Candidature envoyée !' : 'Candidater automatiquement'}
-      </button>
-    </div>
+    <button
+      className={`text-sm py-2 px-4 rounded-md font-medium transition-all ${
+        success
+          ? "bg-green-600/20 text-green-400 border border-green-500/30"
+          : "bg-primary-600 hover:bg-primary-500 text-white shadow-lg shadow-primary-500/20"
+      } disabled:opacity-50 disabled:cursor-not-allowed`}
+      onClick={handleAutomatedApply}
+      disabled={isApplying || success || disabled}
+    >
+      {isApplying
+        ? (
+          <span className="flex items-center gap-2">
+            <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            Envoi...
+          </span>
+        )
+        : success
+        ? (
+          "✅ Envoyée"
+        )
+        : (
+          "🤖 Auto-apply"
+        )}
+    </button>
   );
 };
 

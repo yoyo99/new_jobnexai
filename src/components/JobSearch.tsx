@@ -25,6 +25,7 @@ import {
   REMOTE_OPTIONS,
 } from "../constants/jobFilters";
 import { AutoApplyToggle } from "./AutoApplyToggle";
+import AutomatedApplyButton from "./AutomatedApplyButton";
 
 function JobSearch() {
   const { user } = useAuth();
@@ -200,14 +201,17 @@ function JobSearch() {
           <p className="text-xs text-gray-500">
             {format(new Date(job.created_at), "d MMMM yyyy", { locale: fr })}
           </p>
-          <a
-            href={job.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-secondary mt-2 w-full md:w-auto text-center"
-          >
-            Voir l'offre
-          </a>
+          <div className="flex flex-col md:flex-row gap-2 mt-2 w-full md:w-auto">
+            <AutomatedApplyButton job={job} />
+            <a
+              href={job.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-secondary text-center"
+            >
+              Voir l'offre
+            </a>
+          </div>
         </div>
       </div>
     ),

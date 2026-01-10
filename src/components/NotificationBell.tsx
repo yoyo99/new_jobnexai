@@ -1,114 +1,110 @@
-import { Fragment, useEffect, useState } from 'react'
-import { BellIcon } from '@heroicons/react/24/outline'
-import { Menu, Transition } from '@headlessui/react'
-import { motion } from 'framer-motion'
-import { supabase } from '../lib/supabase'
-import { useAuth } from '../stores/auth'
-import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
+import { Fragment, useEffect, useState } from "react";
+import { BellIcon } from "@heroicons/react/24/outline";
+import { Menu, Transition } from "@headlessui/react";
+import { motion } from "framer-motion";
+import { supabase } from "../lib/supabase";
+import { useAuth } from "../stores/auth";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
 interface Notification {
-  id: string
-  type: 'new_job' | 'match_update' | 'favorite_update'
-  title: string
-  content: string
-  link: string | null
-  read: boolean
-  created_at: string
+  id: string;
+  type: "new_job" | "match_update" | "favorite_update" | "job_match";
+  title: string;
+  content: string;
+  link: string | null;
+  read: boolean;
+  created_at: string;
 }
 
 export function NotificationBell() {
-  const { user } = useAuth()
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [unreadCount, setUnreadCount] = useState(0)
-  const [loading, setLoading] = useState(true)
+  const { user } = useAuth();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      loadNotifications()
-      
-      // Souscrire aux nouvelles notifications
-      const channel = supabase
-        .channel('notifications')
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'notifications',
-            filter: `user_id=eq.${user.id}`,
-          },
-          (payload) => {
-            const newNotification = payload.new as Notification
-            setNotifications(prev => [newNotification, ...prev])
-            setUnreadCount(prev => prev + 1)
-          }
-        )
-        .subscribe()
+    if (!user) return;
 
-      return () => {
-        supabase.removeChannel(channel)
-      }
-    }
-  }, [user])
+    loadNotifications();
+
+    // Souscrire aux nouvelles notifications
+    const channel = supabase
+      .channel("notifications")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const newNotification = payload.new as Notification;
+          setNotifications((prev) => [newNotification, ...prev]);
+          setUnreadCount((prev) => prev + 1);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
 
   const loadNotifications = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const { data } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false })
-        .limit(10)
+        .from("notifications")
+        .select("*")
+        .eq("user_id", user?.id)
+        .order("created_at", { ascending: false })
+        .limit(10);
 
       if (data) {
-        setNotifications(data)
-        setUnreadCount(data.filter(n => !n.read).length)
+        setNotifications(data);
+        setUnreadCount(data.filter((n) => !n.read).length);
       }
     } catch (error) {
-      console.error('Error loading notifications:', error)
+      console.error("Error loading notifications:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const markAsRead = async (notificationId: string) => {
     try {
       await supabase
-        .from('notifications')
+        .from("notifications")
         .update({ read: true })
-        .eq('id', notificationId)
+        .eq("id", notificationId);
 
-      setNotifications(prev =>
-        prev.map(n =>
-          n.id === notificationId ? { ...n, read: true } : n
-        )
-      )
-      setUnreadCount(prev => Math.max(0, prev - 1))
+      setNotifications((prev) =>
+        prev.map((n) => n.id === notificationId ? { ...n, read: true } : n)
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (error) {
-      console.error('Error marking notification as read:', error)
+      console.error("Error marking notification as read:", error);
     }
-  }
+  };
 
   const markAllAsRead = async () => {
     try {
       await supabase
-        .from('notifications')
+        .from("notifications")
         .update({ read: true })
-        .eq('user_id', user?.id)
-        .eq('read', false)
+        .eq("user_id", user?.id)
+        .eq("read", false);
 
-      setNotifications(prev =>
-        prev.map(n => ({ ...n, read: true }))
-      )
-      setUnreadCount(0)
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+      setUnreadCount(0);
     } catch (error) {
-      console.error('Error marking all notifications as read:', error)
+      console.error("Error marking all notifications as read:", error);
     }
-  }
+  };
 
-  if (loading || !user) return null
+  if (loading || !user) return null;
 
   return (
     <Menu as="div" className="relative">
@@ -149,58 +145,64 @@ export function NotificationBell() {
             </div>
 
             <div className="space-y-4">
-              {notifications.length === 0 ? (
-                <p className="text-center text-gray-400 py-4">
-                  Aucune notification
-                </p>
-              ) : (
-                notifications.map((notification) => (
-                  <div
-                    key={notification.id}
-                    className={`p-3 rounded-lg transition-colors ${
-                      notification.read
-                        ? 'bg-white/5'
-                        : 'bg-primary-600/20 hover:bg-primary-600/30'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="text-sm font-medium text-white">
-                          {notification.title}
-                        </p>
-                        <p className="text-sm text-gray-400 mt-1">
-                          {notification.content}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-2">
-                          {format(new Date(notification.created_at), 'dd MMMM yyyy à HH:mm', { locale: fr })}
-                        </p>
+              {notifications.length === 0
+                ? (
+                  <p className="text-center text-gray-400 py-4">
+                    Aucune notification
+                  </p>
+                )
+                : (
+                  notifications.map((notification) => (
+                    <div
+                      key={notification.id}
+                      className={`p-3 rounded-lg transition-colors ${
+                        notification.read
+                          ? "bg-white/5"
+                          : "bg-primary-600/20 hover:bg-primary-600/30"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="text-sm font-medium text-white">
+                            {notification.title}
+                          </p>
+                          <p className="text-sm text-gray-400 mt-1">
+                            {notification.content}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-2">
+                            {format(
+                              new Date(notification.created_at),
+                              "dd MMMM yyyy à HH:mm",
+                              { locale: fr },
+                            )}
+                          </p>
+                        </div>
+                        {!notification.read && (
+                          <button
+                            onClick={() => markAsRead(notification.id)}
+                            className="shrink-0 text-xs text-primary-400 hover:text-primary-300"
+                          >
+                            Marquer comme lu
+                          </button>
+                        )}
                       </div>
-                      {!notification.read && (
-                        <button
-                          onClick={() => markAsRead(notification.id)}
-                          className="shrink-0 text-xs text-primary-400 hover:text-primary-300"
+                      {notification.link && (
+                        <a
+                          href={notification.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block text-sm text-primary-400 hover:text-primary-300 mt-2"
                         >
-                          Marquer comme lu
-                        </button>
+                          Voir les détails →
+                        </a>
                       )}
                     </div>
-                    {notification.link && (
-                      <a
-                        href={notification.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block text-sm text-primary-400 hover:text-primary-300 mt-2"
-                      >
-                        Voir les détails →
-                      </a>
-                    )}
-                  </div>
-                ))
-              )}
+                  ))
+                )}
             </div>
           </div>
         </Menu.Items>
       </Transition>
     </Menu>
-  )
+  );
 }
