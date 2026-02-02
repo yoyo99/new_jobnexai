@@ -19,7 +19,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extrait et valide les critères de recherche\nconst input = $input.first().json;\n\n// Configuration Firecrawl et Ollama (à définir dans les credentials n8n)\nconst FIRECRAWL_API_URL = $env.FIRECRAWL_API_URL || 'https://firecrawl.votre-vps.com';\nconst OLLAMA_API_URL = $env.OLLAMA_API_URL || 'https://ollama.votre-vps.com';\n\nconst searchCriteria = {\n  query: input.query || input.searchQuery || '',\n  location: input.location || 'France',\n  contract_type: input.contract_type || input.contractType || 'all',\n  experience_level: input.experience_level || input.experienceLevel || 'all',\n  remote: input.remote || false,\n  salary_min: input.salary_min || input.salaryMin || null,\n  salary_max: input.salary_max || input.salaryMax || null,\n  max_results: input.max_results || input.maxResults || 20,\n  selected_sites: input.selected_sites || input.selectedSites || ['indeed', 'linkedin', 'malt', 'free-work', 'wttj'],\n  user_id: input.user_id || input.userId || null,\n  user_email: input.user_email || input.userEmail || null,\n  session_id: input.session_id || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,\n  timestamp: new Date().toISOString(),\n  firecrawl_url: FIRECRAWL_API_URL,\n  ollama_url: OLLAMA_API_URL\n};\n\nif (!searchCriteria.query || searchCriteria.query.trim() === '') {\n  throw new Error('Le champ \"query\" est requis pour effectuer une recherche');\n}\n\nconsole.log('=== Critères de recherche validés ===');\nconsole.log('Query:', searchCriteria.query);\nconsole.log('Location:', searchCriteria.location);\nconsole.log('Firecrawl URL:', FIRECRAWL_API_URL);\nconsole.log('Ollama URL:', OLLAMA_API_URL);\n\nreturn { json: searchCriteria };"
+        "jsCode": "// Extrait et valide les critères de recherche\nconst input = $input.first().json;\n\n// Configuration Firecrawl et Ollama (URLs Docker internes Coolify)\n// Firecrawl: http://firecrawl:3002 (ou le nom de votre container)\n// Ollama: http://ollama:11434\nconst FIRECRAWL_API_URL = $env.FIRECRAWL_API_URL || 'http://firecrawl:3002';\nconst OLLAMA_API_URL = $env.OLLAMA_API_URL || 'http://ollama:11434';\n\nconst searchCriteria = {\n  query: input.query || input.searchQuery || '',\n  location: input.location || 'France',\n  contract_type: input.contract_type || input.contractType || 'all',\n  experience_level: input.experience_level || input.experienceLevel || 'all',\n  remote: input.remote || false,\n  salary_min: input.salary_min || input.salaryMin || null,\n  salary_max: input.salary_max || input.salaryMax || null,\n  max_results: input.max_results || input.maxResults || 20,\n  selected_sites: input.selected_sites || input.selectedSites || ['indeed', 'linkedin', 'malt', 'free-work', 'wttj'],\n  user_id: input.user_id || input.userId || null,\n  user_email: input.user_email || input.userEmail || null,\n  session_id: input.session_id || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,\n  timestamp: new Date().toISOString(),\n  firecrawl_url: FIRECRAWL_API_URL,\n  ollama_url: OLLAMA_API_URL\n};\n\nif (!searchCriteria.query || searchCriteria.query.trim() === '') {\n  throw new Error('Le champ \"query\" est requis pour effectuer une recherche');\n}\n\nconsole.log('=== Critères de recherche validés ===');\nconsole.log('Query:', searchCriteria.query);\nconsole.log('Location:', searchCriteria.location);\nconsole.log('Firecrawl URL:', FIRECRAWL_API_URL);\nconsole.log('Ollama URL:', OLLAMA_API_URL);\n\nreturn { json: searchCriteria };"
       },
       "id": "validate-criteria",
       "name": "Validate Search Criteria",
@@ -80,8 +80,12 @@
       "parameters": {
         "method": "POST",
         "url": "={{ $json.firecrawl_url }}/v1/scrape",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"url\": \"{{ $json.search_url }}\",\n  \"formats\": [\"markdown\", \"links\"],\n  \"onlyMainContent\": true,\n  \"waitFor\": 3000,\n  \"timeout\": 30000\n}",
@@ -93,13 +97,7 @@
       "name": "Firecrawl - Scrape Search Page",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1100, 400],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "firecrawl-auth",
-          "name": "Firecrawl API Key"
-        }
-      }
+      "position": [1100, 400]
     },
     {
       "parameters": {
@@ -115,8 +113,12 @@
       "parameters": {
         "method": "POST",
         "url": "={{ $json.firecrawl_url }}/v1/scrape",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"url\": \"{{ $json.job_url }}\",\n  \"formats\": [\"markdown\"],\n  \"onlyMainContent\": true,\n  \"waitFor\": 2000,\n  \"excludeTags\": [\"nav\", \"footer\", \"header\", \"aside\", \".sidebar\", \".ads\"]\n}",
@@ -128,13 +130,7 @@
       "name": "Firecrawl - Scrape Job Page",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1540, 400],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "firecrawl-auth",
-          "name": "Firecrawl API Key"
-        }
-      }
+      "position": [1540, 400]
     },
     {
       "parameters": {
