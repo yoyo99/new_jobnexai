@@ -1,5 +1,5 @@
 {
-  "name": "JobNexAI - Multi-Source Job Scraping",
+  "name": "JobNexAI - Multi-Source Job Scraping (Firecrawl + Ollama)",
   "nodes": [
     {
       "parameters": {
@@ -19,7 +19,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extrait et valide les critères de recherche\nconst input = $input.first().json;\n\nconst searchCriteria = {\n  query: input.query || input.searchQuery || '',\n  location: input.location || 'France',\n  contract_type: input.contract_type || input.contractType || 'all',\n  experience_level: input.experience_level || input.experienceLevel || 'all',\n  remote: input.remote || false,\n  salary_min: input.salary_min || input.salaryMin || null,\n  salary_max: input.salary_max || input.salaryMax || null,\n  max_results: input.max_results || input.maxResults || 20,\n  selected_sites: input.selected_sites || input.selectedSites || ['indeed', 'linkedin', 'malt', 'free-work', 'wttj'],\n  user_id: input.user_id || input.userId || null,\n  user_email: input.user_email || input.userEmail || null,\n  session_id: input.session_id || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,\n  timestamp: new Date().toISOString()\n};\n\n// Validation\nif (!searchCriteria.query || searchCriteria.query.trim() === '') {\n  throw new Error('Le champ \"query\" est requis pour effectuer une recherche');\n}\n\nconsole.log('=== Critères de recherche validés ===');\nconsole.log('Query:', searchCriteria.query);\nconsole.log('Location:', searchCriteria.location);\nconsole.log('Sites sélectionnés:', searchCriteria.selected_sites.join(', '));\n\nreturn { json: searchCriteria };"
+        "jsCode": "// Extrait et valide les critères de recherche\nconst input = $input.first().json;\n\n// Configuration Firecrawl et Ollama (à définir dans les credentials n8n)\nconst FIRECRAWL_API_URL = $env.FIRECRAWL_API_URL || 'https://firecrawl.votre-vps.com';\nconst OLLAMA_API_URL = $env.OLLAMA_API_URL || 'https://ollama.votre-vps.com';\n\nconst searchCriteria = {\n  query: input.query || input.searchQuery || '',\n  location: input.location || 'France',\n  contract_type: input.contract_type || input.contractType || 'all',\n  experience_level: input.experience_level || input.experienceLevel || 'all',\n  remote: input.remote || false,\n  salary_min: input.salary_min || input.salaryMin || null,\n  salary_max: input.salary_max || input.salaryMax || null,\n  max_results: input.max_results || input.maxResults || 20,\n  selected_sites: input.selected_sites || input.selectedSites || ['indeed', 'linkedin', 'malt', 'free-work', 'wttj'],\n  user_id: input.user_id || input.userId || null,\n  user_email: input.user_email || input.userEmail || null,\n  session_id: input.session_id || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,\n  timestamp: new Date().toISOString(),\n  firecrawl_url: FIRECRAWL_API_URL,\n  ollama_url: OLLAMA_API_URL\n};\n\nif (!searchCriteria.query || searchCriteria.query.trim() === '') {\n  throw new Error('Le champ \"query\" est requis pour effectuer une recherche');\n}\n\nconsole.log('=== Critères de recherche validés ===');\nconsole.log('Query:', searchCriteria.query);\nconsole.log('Location:', searchCriteria.location);\nconsole.log('Firecrawl URL:', FIRECRAWL_API_URL);\nconsole.log('Ollama URL:', OLLAMA_API_URL);\n\nreturn { json: searchCriteria };"
       },
       "id": "validate-criteria",
       "name": "Validate Search Criteria",
@@ -35,7 +35,7 @@
           "fieldValues": [
             { "fieldId": "id", "fieldValue": "={{ $json.session_id }}" },
             { "fieldId": "user_id", "fieldValue": "={{ $json.user_id }}" },
-            { "fieldId": "criteria", "fieldValue": "={{ JSON.stringify({ query: $json.query, location: $json.location, contract_type: $json.contract_type, experience_level: $json.experience_level, remote: $json.remote, salary_min: $json.salary_min, salary_max: $json.salary_max }) }}" },
+            { "fieldId": "criteria", "fieldValue": "={{ JSON.stringify({ query: $json.query, location: $json.location, contract_type: $json.contract_type, experience_level: $json.experience_level, remote: $json.remote }) }}" },
             { "fieldId": "selected_sites", "fieldValue": "={{ $json.selected_sites }}" },
             { "fieldId": "status", "fieldValue": "running" },
             { "fieldId": "total_jobs", "fieldValue": "0" },
@@ -57,7 +57,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Prépare les requêtes pour chaque site sélectionné\nconst criteria = $node['Validate Search Criteria'].json;\nconst selectedSites = criteria.selected_sites;\n\nconst siteConfigs = {\n  'indeed': {\n    name: 'Indeed',\n    baseUrl: 'https://fr.indeed.com/emplois',\n    searchParams: (q, loc) => `?q=${encodeURIComponent(q)}&l=${encodeURIComponent(loc)}`,\n    category: 'cdi_cdd'\n  },\n  'linkedin': {\n    name: 'LinkedIn Jobs',\n    baseUrl: 'https://www.linkedin.com/jobs/search',\n    searchParams: (q, loc) => `?keywords=${encodeURIComponent(q)}&location=${encodeURIComponent(loc)}`,\n    category: 'cdi_cdd'\n  },\n  'malt': {\n    name: 'Malt',\n    baseUrl: 'https://www.malt.fr/s',\n    searchParams: (q, loc) => `?q=${encodeURIComponent(q)}&searchCity=${encodeURIComponent(loc)}`,\n    category: 'freelance'\n  },\n  'free-work': {\n    name: 'Free-Work',\n    baseUrl: 'https://www.free-work.com/fr/tech-it/jobs',\n    searchParams: (q, loc) => `?query=${encodeURIComponent(q)}&localisation=${encodeURIComponent(loc)}`,\n    category: 'freelance'\n  },\n  'wttj': {\n    name: 'Welcome to the Jungle',\n    baseUrl: 'https://www.welcometothejungle.com/fr/jobs',\n    searchParams: (q, loc) => `?query=${encodeURIComponent(q)}&aroundQuery=${encodeURIComponent(loc)}`,\n    category: 'cdi_cdd'\n  }\n};\n\nconst scrapingTasks = selectedSites\n  .filter(site => siteConfigs[site])\n  .map(site => {\n    const config = siteConfigs[site];\n    return {\n      site_id: site,\n      site_name: config.name,\n      category: config.category,\n      search_url: config.baseUrl + config.searchParams(criteria.query, criteria.location),\n      query: criteria.query,\n      location: criteria.location,\n      contract_type: criteria.contract_type,\n      experience_level: criteria.experience_level,\n      remote: criteria.remote,\n      max_results: Math.ceil(criteria.max_results / selectedSites.length),\n      session_id: criteria.session_id,\n      user_id: criteria.user_id\n    };\n  });\n\nconsole.log(`Préparation de ${scrapingTasks.length} tâches de scraping`);\n\nreturn scrapingTasks.map(task => ({ json: task }));"
+        "jsCode": "// Prépare les URLs de recherche pour chaque site\nconst criteria = $node['Validate Search Criteria'].json;\nconst selectedSites = criteria.selected_sites;\n\nconst siteConfigs = {\n  'indeed': {\n    name: 'Indeed',\n    searchUrl: `https://fr.indeed.com/emplois?q=${encodeURIComponent(criteria.query)}&l=${encodeURIComponent(criteria.location)}`,\n    jobUrlPattern: '/viewjob',\n    category: 'cdi_cdd'\n  },\n  'linkedin': {\n    name: 'LinkedIn Jobs',\n    searchUrl: `https://www.linkedin.com/jobs/search?keywords=${encodeURIComponent(criteria.query)}&location=${encodeURIComponent(criteria.location)}`,\n    jobUrlPattern: '/jobs/view/',\n    category: 'cdi_cdd'\n  },\n  'malt': {\n    name: 'Malt',\n    searchUrl: `https://www.malt.fr/s?q=${encodeURIComponent(criteria.query)}&searchCity=${encodeURIComponent(criteria.location)}`,\n    jobUrlPattern: '/project/',\n    category: 'freelance'\n  },\n  'free-work': {\n    name: 'Free-Work',\n    searchUrl: `https://www.free-work.com/fr/tech-it/jobs?query=${encodeURIComponent(criteria.query)}&localisation=${encodeURIComponent(criteria.location)}`,\n    jobUrlPattern: '/job/',\n    category: 'freelance'\n  },\n  'wttj': {\n    name: 'Welcome to the Jungle',\n    searchUrl: `https://www.welcometothejungle.com/fr/jobs?query=${encodeURIComponent(criteria.query)}&aroundQuery=${encodeURIComponent(criteria.location)}`,\n    jobUrlPattern: '/jobs/',\n    category: 'cdi_cdd'\n  }\n};\n\nconst scrapingTasks = selectedSites\n  .filter(site => siteConfigs[site])\n  .map(site => {\n    const config = siteConfigs[site];\n    return {\n      site_id: site,\n      site_name: config.name,\n      category: config.category,\n      search_url: config.searchUrl,\n      job_url_pattern: config.jobUrlPattern,\n      query: criteria.query,\n      location: criteria.location,\n      max_results: Math.ceil(criteria.max_results / selectedSites.length),\n      session_id: criteria.session_id,\n      user_id: criteria.user_id,\n      firecrawl_url: criteria.firecrawl_url,\n      ollama_url: criteria.ollama_url\n    };\n  });\n\nreturn scrapingTasks.map(task => ({ json: task }));"
       },
       "id": "prepare-scraping-tasks",
       "name": "Prepare Scraping Tasks",
@@ -78,94 +78,100 @@
     },
     {
       "parameters": {
-        "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
-          "conditions": [
-            { "id": "cond-indeed", "leftValue": "={{ $json.site_id }}", "rightValue": "indeed", "operator": { "type": "string", "operation": "equals" } }
-          ],
-          "combinator": "or"
-        },
-        "options": {}
+        "method": "POST",
+        "url": "={{ $json.firecrawl_url }}/v1/scrape",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"url\": \"{{ $json.search_url }}\",\n  \"formats\": [\"markdown\", \"links\"],\n  \"onlyMainContent\": true,\n  \"waitFor\": 3000,\n  \"timeout\": 30000\n}",
+        "options": {
+          "timeout": 60000
+        }
       },
-      "id": "route-indeed",
-      "name": "Route Indeed",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [1100, 200]
+      "id": "firecrawl-search",
+      "name": "Firecrawl - Scrape Search Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1100, 400],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "firecrawl-auth",
+          "name": "Firecrawl API Key"
+        }
+      }
     },
     {
       "parameters": {
-        "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
-          "conditions": [
-            { "id": "cond-linkedin", "leftValue": "={{ $json.site_id }}", "rightValue": "linkedin", "operator": { "type": "string", "operation": "equals" } }
-          ],
-          "combinator": "or"
-        },
-        "options": {}
+        "jsCode": "// Extrait les URLs d'offres depuis les résultats Firecrawl\nconst task = $node['Split In Batches'].json;\nconst firecrawlResult = $input.first().json;\n\nif (!firecrawlResult.success || !firecrawlResult.data) {\n  console.log(`Erreur Firecrawl pour ${task.site_name}:`, firecrawlResult.error);\n  return [];\n}\n\nconst links = firecrawlResult.data.links || [];\nconst jobUrlPattern = task.job_url_pattern;\n\n// Filtrer les liens d'offres d'emploi\nconst jobLinks = links\n  .filter(link => link.includes(jobUrlPattern))\n  .slice(0, task.max_results);\n\nconsole.log(`${task.site_name}: ${jobLinks.length} offres trouvées`);\n\n// Préparer les tâches de scraping individuel\nreturn jobLinks.map((url, index) => ({\n  json: {\n    job_url: url,\n    site_id: task.site_id,\n    site_name: task.site_name,\n    category: task.category,\n    session_id: task.session_id,\n    index: index,\n    firecrawl_url: task.firecrawl_url,\n    ollama_url: task.ollama_url,\n    query: task.query,\n    location: task.location\n  }\n}));"
       },
-      "id": "route-linkedin",
-      "name": "Route LinkedIn",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [1100, 400]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
-          "conditions": [
-            { "id": "cond-freelance", "leftValue": "={{ $json.category }}", "rightValue": "freelance", "operator": { "type": "string", "operation": "equals" } }
-          ],
-          "combinator": "or"
-        },
-        "options": {}
-      },
-      "id": "route-freelance",
-      "name": "Route Freelance (Malt/Free-Work)",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [1100, 600]
-    },
-    {
-      "parameters": {
-        "jsCode": "// Scraper Indeed via API ou simulation\nconst task = $input.first().json;\n\nconsole.log(`=== Scraping Indeed ===`);\nconsole.log('URL:', task.search_url);\n\n// Simulation de résultats Indeed (à remplacer par vrai scraping)\nconst mockJobs = [\n  {\n    title: `${task.query} - CDI`,\n    company: 'TechCorp France',\n    location: task.location,\n    salary: '45 000 - 55 000 EUR/an',\n    contract_type: 'CDI',\n    experience_level: 'Confirmé',\n    description: `Poste de ${task.query} en CDI. Nous recherchons un profil expérimenté...`,\n    url: `https://fr.indeed.com/viewjob?jk=abc123`,\n    posted_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),\n    source: 'indeed',\n    remote: task.remote ? 'Télétravail partiel' : 'Sur site'\n  },\n  {\n    title: `Senior ${task.query}`,\n    company: 'StartupAI',\n    location: task.location,\n    salary: '55 000 - 70 000 EUR/an',\n    contract_type: 'CDI',\n    experience_level: 'Senior',\n    description: `Rejoignez notre équipe en tant que Senior ${task.query}...`,\n    url: `https://fr.indeed.com/viewjob?jk=def456`,\n    posted_date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),\n    source: 'indeed',\n    remote: 'Full remote'\n  },\n  {\n    title: `${task.query} Junior`,\n    company: 'ConsultingPro',\n    location: task.location,\n    salary: '35 000 - 42 000 EUR/an',\n    contract_type: 'CDI',\n    experience_level: 'Junior',\n    description: `Opportunité pour un ${task.query} junior motivé...`,\n    url: `https://fr.indeed.com/viewjob?jk=ghi789`,\n    posted_date: new Date().toISOString(),\n    source: 'indeed',\n    remote: 'Sur site'\n  }\n];\n\nconst jobs = mockJobs.slice(0, task.max_results).map((job, index) => ({\n  ...job,\n  id: `indeed_${task.session_id}_${index}`,\n  session_id: task.session_id,\n  scraped_at: new Date().toISOString()\n}));\n\nconsole.log(`Indeed: ${jobs.length} offres trouvées`);\n\nreturn jobs.map(job => ({ json: job }));"
-      },
-      "id": "scrape-indeed",
-      "name": "Scrape Indeed",
+      "id": "extract-job-urls",
+      "name": "Extract Job URLs",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1320, 100]
+      "position": [1320, 400]
     },
     {
       "parameters": {
-        "jsCode": "// Scraper LinkedIn via Google Custom Search API (méthode recommandée)\nconst task = $input.first().json;\n\nconsole.log(`=== Scraping LinkedIn ===`);\nconsole.log('URL:', task.search_url);\n\n// Simulation de résultats LinkedIn\nconst mockJobs = [\n  {\n    title: `${task.query} - Entreprise internationale`,\n    company: 'GlobalTech Solutions',\n    location: task.location,\n    salary: '50 000 - 65 000 EUR/an',\n    contract_type: 'CDI',\n    experience_level: 'Confirmé',\n    description: `Nous recrutons un ${task.query} pour rejoindre notre équipe...`,\n    url: `https://www.linkedin.com/jobs/view/12345678`,\n    posted_date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),\n    source: 'linkedin',\n    remote: 'Hybride'\n  },\n  {\n    title: `Lead ${task.query}`,\n    company: 'InnovateTech',\n    location: task.location,\n    salary: '70 000 - 85 000 EUR/an',\n    contract_type: 'CDI',\n    experience_level: 'Lead/Manager',\n    description: `Poste de Lead ${task.query} avec management d'équipe...`,\n    url: `https://www.linkedin.com/jobs/view/23456789`,\n    posted_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),\n    source: 'linkedin',\n    remote: 'Full remote'\n  }\n];\n\nconst jobs = mockJobs.slice(0, task.max_results).map((job, index) => ({\n  ...job,\n  id: `linkedin_${task.session_id}_${index}`,\n  session_id: task.session_id,\n  scraped_at: new Date().toISOString()\n}));\n\nconsole.log(`LinkedIn: ${jobs.length} offres trouvées`);\n\nreturn jobs.map(job => ({ json: job }));"
+        "method": "POST",
+        "url": "={{ $json.firecrawl_url }}/v1/scrape",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"url\": \"{{ $json.job_url }}\",\n  \"formats\": [\"markdown\"],\n  \"onlyMainContent\": true,\n  \"waitFor\": 2000,\n  \"excludeTags\": [\"nav\", \"footer\", \"header\", \"aside\", \".sidebar\", \".ads\"]\n}",
+        "options": {
+          "timeout": 30000
+        }
       },
-      "id": "scrape-linkedin",
-      "name": "Scrape LinkedIn",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [1320, 300]
+      "id": "firecrawl-job",
+      "name": "Firecrawl - Scrape Job Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1540, 400],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "firecrawl-auth",
+          "name": "Firecrawl API Key"
+        }
+      }
     },
     {
       "parameters": {
-        "jsCode": "// Scraper Malt et Free-Work (plateformes freelance)\nconst task = $input.first().json;\n\nconsole.log(`=== Scraping ${task.site_name} ===`);\nconsole.log('URL:', task.search_url);\n\nlet mockJobs = [];\n\nif (task.site_id === 'malt') {\n  mockJobs = [\n    {\n      title: `Mission ${task.query} - 6 mois`,\n      company: 'Client Malt',\n      location: task.location,\n      salary: '500 - 650 EUR/jour',\n      contract_type: 'Freelance',\n      experience_level: 'Confirmé',\n      description: `Mission freelance de 6 mois pour un ${task.query}...`,\n      url: `https://www.malt.fr/project/abc123`,\n      posted_date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),\n      source: 'malt',\n      remote: 'Télétravail partiel',\n      duration: '6 mois'\n    },\n    {\n      title: `${task.query} Expert - Startup`,\n      company: 'Startup Tech',\n      location: task.location,\n      salary: '600 - 750 EUR/jour',\n      contract_type: 'Freelance',\n      experience_level: 'Expert',\n      description: `Recherche ${task.query} expert pour mission stratégique...`,\n      url: `https://www.malt.fr/project/def456`,\n      posted_date: new Date().toISOString(),\n      source: 'malt',\n      remote: 'Full remote',\n      duration: '3 mois renouvelable'\n    }\n  ];\n} else if (task.site_id === 'free-work') {\n  mockJobs = [\n    {\n      title: `${task.query} - Mission longue durée`,\n      company: 'ESN Partenaire',\n      location: task.location,\n      salary: '450 - 550 EUR/jour',\n      contract_type: 'Freelance',\n      experience_level: 'Confirmé',\n      description: `Mission longue durée pour un ${task.query}...`,\n      url: `https://www.free-work.com/fr/tech-it/job/xyz789`,\n      posted_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),\n      source: 'free-work',\n      remote: 'Hybride',\n      duration: '12 mois'\n    },\n    {\n      title: `${task.query} Senior - Banque`,\n      company: 'Grande Banque',\n      location: task.location,\n      salary: '550 - 700 EUR/jour',\n      contract_type: 'Freelance',\n      experience_level: 'Senior',\n      description: `Secteur bancaire, recherche ${task.query} senior...`,\n      url: `https://www.free-work.com/fr/tech-it/job/uvw456`,\n      posted_date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),\n      source: 'free-work',\n      remote: 'Sur site',\n      duration: '6 mois renouvelable'\n    }\n  ];\n}\n\nconst jobs = mockJobs.slice(0, task.max_results).map((job, index) => ({\n  ...job,\n  id: `${task.site_id}_${task.session_id}_${index}`,\n  session_id: task.session_id,\n  scraped_at: new Date().toISOString()\n}));\n\nconsole.log(`${task.site_name}: ${jobs.length} offres trouvées`);\n\nreturn jobs.map(job => ({ json: job }));"
+        "jsCode": "// Prépare le prompt pour Ollama\nconst jobData = $node['Extract Job URLs'].json;\nconst firecrawlResult = $input.first().json;\n\nif (!firecrawlResult.success || !firecrawlResult.data?.markdown) {\n  return {\n    json: {\n      error: 'Failed to scrape job page',\n      ...jobData\n    }\n  };\n}\n\nconst jobMarkdown = firecrawlResult.data.markdown;\nconst metadata = firecrawlResult.data.metadata || {};\n\n// Prompt d'extraction structurée pour Ollama\nconst extractionPrompt = `Tu es un expert en extraction de données d'offres d'emploi.\nExtrait les informations suivantes de cette offre et retourne UNIQUEMENT un objet JSON valide.\n\nFormat attendu:\n{\n  \"title\": \"Titre exact du poste\",\n  \"company\": \"Nom de l'entreprise\",\n  \"location\": \"Ville, Pays\",\n  \"salary\": \"Salaire si mentionné, sinon null\",\n  \"contract_type\": \"CDI|CDD|Freelance|Stage|Alternance|Autre\",\n  \"experience_required\": \"Junior|Confirmé|Senior|Lead|Non précisé\",\n  \"remote_policy\": \"Sur site|Hybride|Full remote|Non précisé\",\n  \"skills\": [\"skill1\", \"skill2\"],\n  \"description\": \"Résumé court de l'offre (max 200 caractères)\"\n}\n\nOFFRE D'EMPLOI:\n${jobMarkdown.substring(0, 6000)}\n\nRéponds UNIQUEMENT avec le JSON, sans texte avant ou après.`;\n\nreturn {\n  json: {\n    ...jobData,\n    job_markdown: jobMarkdown,\n    page_title: metadata.title || '',\n    extraction_prompt: extractionPrompt\n  }\n};"
       },
-      "id": "scrape-freelance",
-      "name": "Scrape Freelance Sites",
+      "id": "prepare-ollama",
+      "name": "Prepare Ollama Extraction",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1320, 500]
+      "position": [1760, 400]
     },
     {
       "parameters": {
-        "jsCode": "// Scraper WTTJ\nconst task = $input.first().json;\n\nconsole.log(`=== Scraping Welcome to the Jungle ===`);\nconsole.log('URL:', task.search_url);\n\nconst mockJobs = [\n  {\n    title: `${task.query} - Scale-up en croissance`,\n    company: 'TechScale',\n    location: task.location,\n    salary: '48 000 - 58 000 EUR/an',\n    contract_type: 'CDI',\n    experience_level: 'Confirmé',\n    description: `Rejoignez une scale-up en pleine croissance en tant que ${task.query}...`,\n    url: `https://www.welcometothejungle.com/fr/companies/techscale/jobs/abc123`,\n    posted_date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),\n    source: 'wttj',\n    remote: 'Télétravail partiel',\n    company_size: '50-200 employés'\n  },\n  {\n    title: `${task.query} - Startup IA`,\n    company: 'AIStartup',\n    location: task.location,\n    salary: '52 000 - 68 000 EUR/an',\n    contract_type: 'CDI',\n    experience_level: 'Confirmé',\n    description: `Startup spécialisée en IA recherche ${task.query}...`,\n    url: `https://www.welcometothejungle.com/fr/companies/aistartup/jobs/def456`,\n    posted_date: new Date().toISOString(),\n    source: 'wttj',\n    remote: 'Full remote',\n    company_size: '10-50 employés'\n  },\n  {\n    title: `${task.query} Junior - Fintech`,\n    company: 'FintechPay',\n    location: task.location,\n    salary: '38 000 - 45 000 EUR/an',\n    contract_type: 'CDI',\n    experience_level: 'Junior',\n    description: `Fintech innovante cherche ${task.query} junior...`,\n    url: `https://www.welcometothejungle.com/fr/companies/fintechpay/jobs/ghi789`,\n    posted_date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),\n    source: 'wttj',\n    remote: 'Hybride',\n    company_size: '200-500 employés'\n  }\n];\n\nconst jobs = mockJobs.slice(0, task.max_results).map((job, index) => ({\n  ...job,\n  id: `wttj_${task.session_id}_${index}`,\n  session_id: task.session_id,\n  scraped_at: new Date().toISOString()\n}));\n\nconsole.log(`WTTJ: ${jobs.length} offres trouvées`);\n\nreturn jobs.map(job => ({ json: job }));"
+        "method": "POST",
+        "url": "={{ $json.ollama_url }}/api/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama3.1:8b\",\n  \"prompt\": {{ JSON.stringify($json.extraction_prompt) }},\n  \"stream\": false,\n  \"options\": {\n    \"temperature\": 0.1,\n    \"num_predict\": 1500\n  }\n}",
+        "options": {
+          "timeout": 60000
+        }
       },
-      "id": "scrape-wttj",
-      "name": "Scrape WTTJ",
+      "id": "ollama-extract",
+      "name": "Ollama - Extract Job Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1980, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse la réponse Ollama et structure les données\nconst prevData = $node['Prepare Ollama Extraction'].json;\nconst ollamaResult = $input.first().json;\n\nlet extractedData = {};\n\ntry {\n  // Extraire le JSON de la réponse Ollama\n  const response = ollamaResult.response || '';\n  const jsonMatch = response.match(/\\{[\\s\\S]*\\}/);\n  \n  if (jsonMatch) {\n    extractedData = JSON.parse(jsonMatch[0]);\n  }\n} catch (e) {\n  console.log('Erreur parsing Ollama:', e.message);\n  // Fallback avec données basiques\n  extractedData = {\n    title: prevData.page_title || 'Offre d\\'emploi',\n    company: 'Non précisé',\n    location: prevData.location || 'France',\n    salary: null,\n    contract_type: prevData.category === 'freelance' ? 'Freelance' : 'CDI',\n    experience_required: 'Non précisé',\n    remote_policy: 'Non précisé',\n    skills: [],\n    description: prevData.job_markdown?.substring(0, 200) || ''\n  };\n}\n\n// Construire l'objet job final\nconst job = {\n  id: `${prevData.site_id}_${prevData.session_id}_${prevData.index}`,\n  session_id: prevData.session_id,\n  source: prevData.site_id,\n  site_name: prevData.site_name,\n  url: prevData.job_url,\n  title: extractedData.title || 'Offre d\\'emploi',\n  company: extractedData.company || 'Non précisé',\n  location: extractedData.location || prevData.location,\n  salary: extractedData.salary,\n  contract_type: extractedData.contract_type || (prevData.category === 'freelance' ? 'Freelance' : 'CDI'),\n  experience_level: extractedData.experience_required || 'Non précisé',\n  remote: extractedData.remote_policy || 'Non précisé',\n  skills: extractedData.skills || [],\n  description: extractedData.description || prevData.job_markdown?.substring(0, 300) || '',\n  posted_date: new Date().toISOString(),\n  scraped_at: new Date().toISOString()\n};\n\nreturn { json: job };"
+      },
+      "id": "parse-ollama",
+      "name": "Parse Ollama Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1320, 700]
+      "position": [2200, 400]
     },
     {
       "parameters": {
@@ -179,17 +185,17 @@
       "name": "Merge All Results",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
-      "position": [1560, 400]
+      "position": [2420, 400]
     },
     {
       "parameters": {
-        "jsCode": "// Déduplique les offres similaires\nconst allJobs = $input.all().map(item => item.json);\n\nconsole.log(`=== Déduplication ===`);\nconsole.log(`Offres avant déduplication: ${allJobs.length}`);\n\n// Fonction de normalisation pour comparaison\nfunction normalize(str) {\n  return (str || '').toLowerCase().trim().replace(/[^a-z0-9]/g, '');\n}\n\n// Fonction de calcul de similarité (Jaccard)\nfunction similarity(str1, str2) {\n  const s1 = new Set(normalize(str1).split(''));\n  const s2 = new Set(normalize(str2).split(''));\n  const intersection = new Set([...s1].filter(x => s2.has(x)));\n  const union = new Set([...s1, ...s2]);\n  return intersection.size / union.size;\n}\n\n// Détection des doublons\nconst uniqueJobs = [];\nconst seenSignatures = new Map();\n\nfor (const job of allJobs) {\n  // Créer une signature basée sur titre + entreprise + localisation\n  const signature = `${normalize(job.title)}_${normalize(job.company)}_${normalize(job.location)}`;\n  \n  let isDuplicate = false;\n  \n  for (const [existingSignature, existingJob] of seenSignatures) {\n    // Vérifier similarité du titre et de l'entreprise\n    const titleSim = similarity(job.title, existingJob.title);\n    const companySim = similarity(job.company, existingJob.company);\n    \n    if (titleSim > 0.8 && companySim > 0.8) {\n      isDuplicate = true;\n      console.log(`Doublon détecté: \"${job.title}\" (${job.source}) ~ \"${existingJob.title}\" (${existingJob.source})`);\n      break;\n    }\n  }\n  \n  if (!isDuplicate) {\n    seenSignatures.set(signature, job);\n    uniqueJobs.push(job);\n  }\n}\n\nconsole.log(`Offres après déduplication: ${uniqueJobs.length}`);\n\n// Trier par date de publication (plus récent en premier)\nuniqueJobs.sort((a, b) => new Date(b.posted_date) - new Date(a.posted_date));\n\nreturn uniqueJobs.map(job => ({ json: job }));"
+        "jsCode": "// Déduplique les offres similaires\nconst allJobs = $input.all().map(item => item.json).filter(job => job.title && !job.error);\n\nconsole.log(`=== Déduplication ===`);\nconsole.log(`Offres avant déduplication: ${allJobs.length}`);\n\nfunction normalize(str) {\n  return (str || '').toLowerCase().trim().replace(/[^a-z0-9]/g, '');\n}\n\nfunction similarity(str1, str2) {\n  const s1 = new Set(normalize(str1).split(''));\n  const s2 = new Set(normalize(str2).split(''));\n  const intersection = new Set([...s1].filter(x => s2.has(x)));\n  const union = new Set([...s1, ...s2]);\n  return union.size > 0 ? intersection.size / union.size : 0;\n}\n\nconst uniqueJobs = [];\nconst seenSignatures = new Map();\n\nfor (const job of allJobs) {\n  const signature = `${normalize(job.title)}_${normalize(job.company)}`;\n  let isDuplicate = false;\n  \n  for (const [existingSignature, existingJob] of seenSignatures) {\n    const titleSim = similarity(job.title, existingJob.title);\n    const companySim = similarity(job.company, existingJob.company);\n    \n    if (titleSim > 0.8 && companySim > 0.7) {\n      isDuplicate = true;\n      console.log(`Doublon: \"${job.title}\" (${job.source}) ~ \"${existingJob.title}\" (${existingJob.source})`);\n      break;\n    }\n  }\n  \n  if (!isDuplicate) {\n    seenSignatures.set(signature, job);\n    uniqueJobs.push(job);\n  }\n}\n\nconsole.log(`Offres après déduplication: ${uniqueJobs.length}`);\nuniqueJobs.sort((a, b) => new Date(b.posted_date) - new Date(a.posted_date));\n\nreturn uniqueJobs.map(job => ({ json: job }));"
       },
       "id": "deduplicate-jobs",
       "name": "Deduplicate Jobs",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1780, 400]
+      "position": [2640, 400]
     },
     {
       "parameters": {
@@ -217,7 +223,7 @@
       "name": "Supabase - Save Jobs",
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [2000, 400],
+      "position": [2860, 400],
       "credentials": {
         "supabaseApi": {
           "id": "RsG0CR5F5zJGpBIJ",
@@ -227,13 +233,13 @@
     },
     {
       "parameters": {
-        "jsCode": "// Génère la page HTML des résultats\nconst allJobs = $input.all().map(item => item.json);\nconst criteria = $node['Validate Search Criteria'].json;\n\nconsole.log(`=== Génération HTML ===`);\nconsole.log(`Nombre d'offres: ${allJobs.length}`);\n\n// Grouper par source\nconst jobsBySource = {};\nfor (const job of allJobs) {\n  if (!jobsBySource[job.source]) {\n    jobsBySource[job.source] = [];\n  }\n  jobsBySource[job.source].push(job);\n}\n\n// Sources avec leurs couleurs\nconst sourceColors = {\n  'indeed': '#2164f3',\n  'linkedin': '#0a66c2',\n  'malt': '#fc5757',\n  'free-work': '#00b4d8',\n  'wttj': '#ffcd00'\n};\n\nconst sourceNames = {\n  'indeed': 'Indeed',\n  'linkedin': 'LinkedIn',\n  'malt': 'Malt',\n  'free-work': 'Free-Work',\n  'wttj': 'Welcome to the Jungle'\n};\n\n// Fonction pour formater la date\nfunction formatDate(dateStr) {\n  const date = new Date(dateStr);\n  const now = new Date();\n  const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));\n  \n  if (diffDays === 0) return \"Aujourd'hui\";\n  if (diffDays === 1) return 'Hier';\n  if (diffDays < 7) return `Il y a ${diffDays} jours`;\n  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });\n}\n\n// Générer le HTML\nlet jobCardsHtml = '';\n\nfor (const job of allJobs) {\n  const sourceColor = sourceColors[job.source] || '#6c757d';\n  const sourceName = sourceNames[job.source] || job.source;\n  const remoteIcon = job.remote?.toLowerCase().includes('remote') || job.remote?.toLowerCase().includes('télétravail') ? '🏠' : '🏢';\n  const contractIcon = job.contract_type === 'Freelance' ? '💼' : '📋';\n  \n  jobCardsHtml += `\n    <div class=\"job-card\" data-source=\"${job.source}\">\n      <div class=\"job-header\">\n        <span class=\"source-badge\" style=\"background-color: ${sourceColor}\">${sourceName}</span>\n        <span class=\"posted-date\">${formatDate(job.posted_date)}</span>\n      </div>\n      <h3 class=\"job-title\">\n        <a href=\"${job.url}\" target=\"_blank\" rel=\"noopener noreferrer\">${job.title}</a>\n      </h3>\n      <div class=\"job-company\">\n        <strong>${job.company}</strong>\n      </div>\n      <div class=\"job-details\">\n        <span class=\"detail\">📍 ${job.location}</span>\n        <span class=\"detail\">${contractIcon} ${job.contract_type}</span>\n        <span class=\"detail\">${remoteIcon} ${job.remote || 'Non précisé'}</span>\n        ${job.salary ? `<span class=\"detail\">💰 ${job.salary}</span>` : ''}\n        ${job.experience_level ? `<span class=\"detail\">📊 ${job.experience_level}</span>` : ''}\n        ${job.duration ? `<span class=\"detail\">⏱️ ${job.duration}</span>` : ''}\n      </div>\n      <p class=\"job-description\">${job.description.substring(0, 200)}...</p>\n      <a href=\"${job.url}\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"apply-btn\">Voir l'offre →</a>\n    </div>\n  `;\n}\n\n// Stats par source\nlet statsHtml = '';\nfor (const [source, jobs] of Object.entries(jobsBySource)) {\n  const color = sourceColors[source] || '#6c757d';\n  const name = sourceNames[source] || source;\n  statsHtml += `<span class=\"stat-badge\" style=\"background-color: ${color}\">${name}: ${jobs.length}</span>`;\n}\n\nconst html = `\n<!DOCTYPE html>\n<html lang=\"fr\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Résultats de recherche - ${criteria.query} | JobNexAI</title>\n  <style>\n    * { box-sizing: border-box; margin: 0; padding: 0; }\n    \n    body {\n      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;\n      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n      min-height: 100vh;\n      padding: 20px;\n    }\n    \n    .container {\n      max-width: 1200px;\n      margin: 0 auto;\n    }\n    \n    .header {\n      background: white;\n      border-radius: 16px;\n      padding: 24px;\n      margin-bottom: 24px;\n      box-shadow: 0 10px 40px rgba(0,0,0,0.1);\n    }\n    \n    .header h1 {\n      color: #1a1a2e;\n      font-size: 28px;\n      margin-bottom: 8px;\n    }\n    \n    .search-info {\n      color: #6c757d;\n      font-size: 14px;\n      margin-bottom: 16px;\n    }\n    \n    .stats {\n      display: flex;\n      flex-wrap: wrap;\n      gap: 8px;\n      margin-bottom: 16px;\n    }\n    \n    .stat-badge {\n      color: white;\n      padding: 6px 12px;\n      border-radius: 20px;\n      font-size: 13px;\n      font-weight: 500;\n    }\n    \n    .total-badge {\n      background: linear-gradient(135deg, #667eea, #764ba2);\n      color: white;\n      padding: 8px 16px;\n      border-radius: 20px;\n      font-weight: 600;\n    }\n    \n    .filters {\n      display: flex;\n      flex-wrap: wrap;\n      gap: 8px;\n      margin-top: 16px;\n    }\n    \n    .filter-btn {\n      background: #f8f9fa;\n      border: 2px solid #e9ecef;\n      padding: 8px 16px;\n      border-radius: 20px;\n      cursor: pointer;\n      font-size: 13px;\n      transition: all 0.2s;\n    }\n    \n    .filter-btn:hover, .filter-btn.active {\n      background: #667eea;\n      border-color: #667eea;\n      color: white;\n    }\n    \n    .jobs-grid {\n      display: grid;\n      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));\n      gap: 20px;\n    }\n    \n    .job-card {\n      background: white;\n      border-radius: 12px;\n      padding: 20px;\n      box-shadow: 0 4px 20px rgba(0,0,0,0.08);\n      transition: transform 0.2s, box-shadow 0.2s;\n    }\n    \n    .job-card:hover {\n      transform: translateY(-4px);\n      box-shadow: 0 8px 30px rgba(0,0,0,0.12);\n    }\n    \n    .job-header {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      margin-bottom: 12px;\n    }\n    \n    .source-badge {\n      color: white;\n      padding: 4px 10px;\n      border-radius: 12px;\n      font-size: 11px;\n      font-weight: 600;\n      text-transform: uppercase;\n    }\n    \n    .posted-date {\n      color: #6c757d;\n      font-size: 12px;\n    }\n    \n    .job-title {\n      font-size: 18px;\n      margin-bottom: 8px;\n      line-height: 1.3;\n    }\n    \n    .job-title a {\n      color: #1a1a2e;\n      text-decoration: none;\n    }\n    \n    .job-title a:hover {\n      color: #667eea;\n    }\n    \n    .job-company {\n      color: #495057;\n      margin-bottom: 12px;\n      font-size: 15px;\n    }\n    \n    .job-details {\n      display: flex;\n      flex-wrap: wrap;\n      gap: 8px;\n      margin-bottom: 12px;\n    }\n    \n    .detail {\n      background: #f8f9fa;\n      padding: 4px 8px;\n      border-radius: 6px;\n      font-size: 12px;\n      color: #495057;\n    }\n    \n    .job-description {\n      color: #6c757d;\n      font-size: 13px;\n      line-height: 1.5;\n      margin-bottom: 16px;\n    }\n    \n    .apply-btn {\n      display: inline-block;\n      background: linear-gradient(135deg, #667eea, #764ba2);\n      color: white;\n      padding: 10px 20px;\n      border-radius: 8px;\n      text-decoration: none;\n      font-weight: 500;\n      font-size: 14px;\n      transition: transform 0.2s, box-shadow 0.2s;\n    }\n    \n    .apply-btn:hover {\n      transform: translateY(-2px);\n      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);\n    }\n    \n    .no-results {\n      text-align: center;\n      padding: 60px;\n      background: white;\n      border-radius: 16px;\n    }\n    \n    .no-results h2 {\n      color: #6c757d;\n      margin-bottom: 16px;\n    }\n    \n    .footer {\n      text-align: center;\n      margin-top: 40px;\n      color: white;\n      opacity: 0.8;\n      font-size: 14px;\n    }\n    \n    .footer a {\n      color: white;\n      text-decoration: underline;\n    }\n    \n    @media (max-width: 768px) {\n      .jobs-grid {\n        grid-template-columns: 1fr;\n      }\n      \n      .header h1 {\n        font-size: 22px;\n      }\n    }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <div class=\"header\">\n      <h1>🔍 Résultats pour \"${criteria.query}\"</h1>\n      <p class=\"search-info\">\n        📍 ${criteria.location} • \n        🕐 Recherche effectuée le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}\n      </p>\n      <div class=\"stats\">\n        <span class=\"total-badge\">📊 ${allJobs.length} offres trouvées</span>\n        ${statsHtml}\n      </div>\n      <div class=\"filters\">\n        <button class=\"filter-btn active\" onclick=\"filterJobs('all')\">Tous</button>\n        <button class=\"filter-btn\" onclick=\"filterJobs('cdi')\">CDI/CDD</button>\n        <button class=\"filter-btn\" onclick=\"filterJobs('freelance')\">Freelance</button>\n        ${Object.keys(jobsBySource).map(source => \n          `<button class=\"filter-btn\" onclick=\"filterJobs('${source}')\">${sourceNames[source]}</button>`\n        ).join('')}\n      </div>\n    </div>\n    \n    ${allJobs.length > 0 ? `\n      <div class=\"jobs-grid\">\n        ${jobCardsHtml}\n      </div>\n    ` : `\n      <div class=\"no-results\">\n        <h2>😔 Aucune offre trouvée</h2>\n        <p>Essayez de modifier vos critères de recherche ou d'élargir la zone géographique.</p>\n      </div>\n    `}\n    \n    <div class=\"footer\">\n      <p>Propulsé par <a href=\"https://jobnexai.com\">JobNexAI</a> • Session: ${criteria.session_id}</p>\n    </div>\n  </div>\n  \n  <script>\n    function filterJobs(filter) {\n      const cards = document.querySelectorAll('.job-card');\n      const buttons = document.querySelectorAll('.filter-btn');\n      \n      buttons.forEach(btn => btn.classList.remove('active'));\n      event.target.classList.add('active');\n      \n      cards.forEach(card => {\n        const source = card.dataset.source;\n        let show = false;\n        \n        if (filter === 'all') {\n          show = true;\n        } else if (filter === 'cdi') {\n          show = ['indeed', 'linkedin', 'wttj'].includes(source);\n        } else if (filter === 'freelance') {\n          show = ['malt', 'free-work'].includes(source);\n        } else {\n          show = source === filter;\n        }\n        \n        card.style.display = show ? 'block' : 'none';\n      });\n    }\n  </script>\n</body>\n</html>\n`;\n\nreturn {\n  json: {\n    html: html,\n    session_id: criteria.session_id,\n    total_jobs: allJobs.length,\n    jobs_by_source: Object.fromEntries(\n      Object.entries(jobsBySource).map(([k, v]) => [k, v.length])\n    ),\n    criteria: criteria\n  }\n};"
+        "jsCode": "// Génère la page HTML des résultats\nconst allJobs = $input.all().map(item => item.json);\nconst criteria = $node['Validate Search Criteria'].json;\n\nconst jobsBySource = {};\nfor (const job of allJobs) {\n  if (!jobsBySource[job.source]) jobsBySource[job.source] = [];\n  jobsBySource[job.source].push(job);\n}\n\nconst sourceColors = {\n  'indeed': '#2164f3',\n  'linkedin': '#0a66c2',\n  'malt': '#fc5757',\n  'free-work': '#00b4d8',\n  'wttj': '#ffcd00'\n};\n\nconst sourceNames = {\n  'indeed': 'Indeed',\n  'linkedin': 'LinkedIn',\n  'malt': 'Malt',\n  'free-work': 'Free-Work',\n  'wttj': 'Welcome to the Jungle'\n};\n\nfunction formatDate(dateStr) {\n  const date = new Date(dateStr);\n  const now = new Date();\n  const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));\n  if (diffDays === 0) return \"Aujourd'hui\";\n  if (diffDays === 1) return 'Hier';\n  if (diffDays < 7) return `Il y a ${diffDays} jours`;\n  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });\n}\n\nlet jobCardsHtml = '';\nfor (const job of allJobs) {\n  const sourceColor = sourceColors[job.source] || '#6c757d';\n  const sourceName = sourceNames[job.source] || job.source;\n  const remoteIcon = job.remote?.toLowerCase().includes('remote') || job.remote?.toLowerCase().includes('télétravail') ? '🏠' : '🏢';\n  const contractIcon = job.contract_type === 'Freelance' ? '💼' : '📋';\n  const skillsHtml = (job.skills || []).slice(0, 3).map(s => `<span class=\"skill\">${s}</span>`).join('');\n  \n  jobCardsHtml += `\n    <div class=\"job-card\" data-source=\"${job.source}\">\n      <div class=\"job-header\">\n        <span class=\"source-badge\" style=\"background-color: ${sourceColor}\">${sourceName}</span>\n        <span class=\"posted-date\">${formatDate(job.posted_date)}</span>\n      </div>\n      <h3 class=\"job-title\"><a href=\"${job.url}\" target=\"_blank\">${job.title}</a></h3>\n      <div class=\"job-company\"><strong>${job.company}</strong></div>\n      <div class=\"job-details\">\n        <span class=\"detail\">📍 ${job.location}</span>\n        <span class=\"detail\">${contractIcon} ${job.contract_type}</span>\n        <span class=\"detail\">${remoteIcon} ${job.remote || 'Non précisé'}</span>\n        ${job.salary ? `<span class=\"detail\">💰 ${job.salary}</span>` : ''}\n        ${job.experience_level && job.experience_level !== 'Non précisé' ? `<span class=\"detail\">📊 ${job.experience_level}</span>` : ''}\n      </div>\n      ${skillsHtml ? `<div class=\"skills\">${skillsHtml}</div>` : ''}\n      <p class=\"job-description\">${(job.description || '').substring(0, 180)}...</p>\n      <a href=\"${job.url}\" target=\"_blank\" class=\"apply-btn\">Voir l'offre →</a>\n    </div>`;\n}\n\nlet statsHtml = '';\nfor (const [source, jobs] of Object.entries(jobsBySource)) {\n  const color = sourceColors[source] || '#6c757d';\n  const name = sourceNames[source] || source;\n  statsHtml += `<span class=\"stat-badge\" style=\"background-color: ${color}\">${name}: ${jobs.length}</span>`;\n}\n\nconst html = `<!DOCTYPE html>\n<html lang=\"fr\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Résultats - ${criteria.query} | JobNexAI</title>\n  <style>\n    * { box-sizing: border-box; margin: 0; padding: 0; }\n    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }\n    .container { max-width: 1200px; margin: 0 auto; }\n    .header { background: white; border-radius: 16px; padding: 24px; margin-bottom: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }\n    .header h1 { color: #1a1a2e; font-size: 28px; margin-bottom: 8px; }\n    .search-info { color: #6c757d; font-size: 14px; margin-bottom: 16px; }\n    .stats { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }\n    .stat-badge, .total-badge { color: white; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; }\n    .total-badge { background: linear-gradient(135deg, #667eea, #764ba2); padding: 8px 16px; font-weight: 600; }\n    .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }\n    .filter-btn { background: #f8f9fa; border: 2px solid #e9ecef; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 13px; transition: all 0.2s; }\n    .filter-btn:hover, .filter-btn.active { background: #667eea; border-color: #667eea; color: white; }\n    .jobs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; }\n    .job-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); transition: transform 0.2s, box-shadow 0.2s; }\n    .job-card:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(0,0,0,0.12); }\n    .job-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }\n    .source-badge { color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; }\n    .posted-date { color: #6c757d; font-size: 12px; }\n    .job-title { font-size: 18px; margin-bottom: 8px; line-height: 1.3; }\n    .job-title a { color: #1a1a2e; text-decoration: none; }\n    .job-title a:hover { color: #667eea; }\n    .job-company { color: #495057; margin-bottom: 12px; font-size: 15px; }\n    .job-details { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }\n    .detail { background: #f8f9fa; padding: 4px 8px; border-radius: 6px; font-size: 12px; color: #495057; }\n    .skills { display: flex; gap: 6px; margin-bottom: 12px; }\n    .skill { background: #e8f4f8; color: #0077b5; padding: 3px 8px; border-radius: 4px; font-size: 11px; }\n    .job-description { color: #6c757d; font-size: 13px; line-height: 1.5; margin-bottom: 16px; }\n    .apply-btn { display: inline-block; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 500; font-size: 14px; transition: transform 0.2s, box-shadow 0.2s; }\n    .apply-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); }\n    .powered-by { text-align: center; margin-top: 40px; color: white; opacity: 0.8; font-size: 14px; }\n    .powered-by a { color: white; }\n    @media (max-width: 768px) { .jobs-grid { grid-template-columns: 1fr; } .header h1 { font-size: 22px; } }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <div class=\"header\">\n      <h1>🔍 Résultats pour \"${criteria.query}\"</h1>\n      <p class=\"search-info\">📍 ${criteria.location} • 🤖 Propulsé par Firecrawl + Ollama • ${new Date().toLocaleDateString('fr-FR')}</p>\n      <div class=\"stats\">\n        <span class=\"total-badge\">📊 ${allJobs.length} offres trouvées</span>\n        ${statsHtml}\n      </div>\n      <div class=\"filters\">\n        <button class=\"filter-btn active\" onclick=\"filterJobs('all')\">Tous</button>\n        <button class=\"filter-btn\" onclick=\"filterJobs('cdi')\">CDI/CDD</button>\n        <button class=\"filter-btn\" onclick=\"filterJobs('freelance')\">Freelance</button>\n        ${Object.keys(jobsBySource).map(s => `<button class=\"filter-btn\" onclick=\"filterJobs('${s}')\">${sourceNames[s] || s}</button>`).join('')}\n      </div>\n    </div>\n    <div class=\"jobs-grid\">${jobCardsHtml}</div>\n    <div class=\"powered-by\">Propulsé par <a href=\"https://jobnexai.com\">JobNexAI</a> • Session: ${criteria.session_id}</div>\n  </div>\n  <script>\n    function filterJobs(filter) {\n      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));\n      event.target.classList.add('active');\n      document.querySelectorAll('.job-card').forEach(card => {\n        const source = card.dataset.source;\n        let show = filter === 'all' || source === filter || (filter === 'cdi' && ['indeed','linkedin','wttj'].includes(source)) || (filter === 'freelance' && ['malt','free-work'].includes(source));\n        card.style.display = show ? 'block' : 'none';\n      });\n    }\n  </script>\n</body>\n</html>`;\n\nreturn { json: { html, session_id: criteria.session_id, total_jobs: allJobs.length, jobs_by_source: Object.fromEntries(Object.entries(jobsBySource).map(([k,v]) => [k, v.length])) } };"
       },
       "id": "generate-html",
       "name": "Generate HTML Results Page",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2220, 400]
+      "position": [3080, 400]
     },
     {
       "parameters": {
@@ -253,7 +259,7 @@
       "name": "Supabase - Update Session",
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [2440, 400],
+      "position": [3300, 400],
       "credentials": {
         "supabaseApi": {
           "id": "RsG0CR5F5zJGpBIJ",
@@ -279,50 +285,7 @@
       "name": "Respond to Webhook",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [2660, 400]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
-          "conditions": [
-            { "id": "cond-error", "leftValue": "={{ $json.error }}", "rightValue": "", "operator": { "type": "string", "operation": "notEmpty" } }
-          ],
-          "combinator": "or"
-        },
-        "options": {}
-      },
-      "id": "check-errors",
-      "name": "Check for Errors",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [1780, 600]
-    },
-    {
-      "parameters": {
-        "operation": "create",
-        "tableId": "workflow_errors",
-        "fieldsUi": {
-          "fieldValues": [
-            { "fieldId": "workflow_name", "fieldValue": "job-scraping" },
-            { "fieldId": "error_type", "fieldValue": "scraping_error" },
-            { "fieldId": "error_message", "fieldValue": "={{ $json.error }}" },
-            { "fieldId": "severity", "fieldValue": "medium" },
-            { "fieldId": "context", "fieldValue": "={{ JSON.stringify($json) }}" }
-          ]
-        }
-      },
-      "id": "log-error",
-      "name": "Supabase - Log Error",
-      "type": "n8n-nodes-base.supabase",
-      "typeVersion": 1,
-      "position": [2000, 700],
-      "credentials": {
-        "supabaseApi": {
-          "id": "RsG0CR5F5zJGpBIJ",
-          "name": "Supabase account"
-        }
-      }
+      "position": [3520, 400]
     }
   ],
   "pinData": {},
@@ -340,54 +303,31 @@
       "main": [[{ "node": "Split In Batches", "type": "main", "index": 0 }]]
     },
     "Split In Batches": {
-      "main": [
-        [
-          { "node": "Route Indeed", "type": "main", "index": 0 },
-          { "node": "Route LinkedIn", "type": "main", "index": 0 },
-          { "node": "Route Freelance (Malt/Free-Work)", "type": "main", "index": 0 }
-        ]
-      ]
+      "main": [[{ "node": "Firecrawl - Scrape Search Page", "type": "main", "index": 0 }]]
     },
-    "Route Indeed": {
-      "main": [
-        [{ "node": "Scrape Indeed", "type": "main", "index": 0 }],
-        [{ "node": "Scrape WTTJ", "type": "main", "index": 0 }]
-      ]
+    "Firecrawl - Scrape Search Page": {
+      "main": [[{ "node": "Extract Job URLs", "type": "main", "index": 0 }]]
     },
-    "Route LinkedIn": {
-      "main": [
-        [{ "node": "Scrape LinkedIn", "type": "main", "index": 0 }],
-        []
-      ]
+    "Extract Job URLs": {
+      "main": [[{ "node": "Firecrawl - Scrape Job Page", "type": "main", "index": 0 }]]
     },
-    "Route Freelance (Malt/Free-Work)": {
-      "main": [
-        [{ "node": "Scrape Freelance Sites", "type": "main", "index": 0 }],
-        []
-      ]
+    "Firecrawl - Scrape Job Page": {
+      "main": [[{ "node": "Prepare Ollama Extraction", "type": "main", "index": 0 }]]
     },
-    "Scrape Indeed": {
-      "main": [[{ "node": "Merge All Results", "type": "main", "index": 0 }]]
+    "Prepare Ollama Extraction": {
+      "main": [[{ "node": "Ollama - Extract Job Data", "type": "main", "index": 0 }]]
     },
-    "Scrape LinkedIn": {
-      "main": [[{ "node": "Merge All Results", "type": "main", "index": 0 }]]
+    "Ollama - Extract Job Data": {
+      "main": [[{ "node": "Parse Ollama Response", "type": "main", "index": 0 }]]
     },
-    "Scrape Freelance Sites": {
-      "main": [[{ "node": "Merge All Results", "type": "main", "index": 0 }]]
-    },
-    "Scrape WTTJ": {
+    "Parse Ollama Response": {
       "main": [[{ "node": "Merge All Results", "type": "main", "index": 0 }]]
     },
     "Merge All Results": {
       "main": [[{ "node": "Deduplicate Jobs", "type": "main", "index": 0 }]]
     },
     "Deduplicate Jobs": {
-      "main": [
-        [
-          { "node": "Supabase - Save Jobs", "type": "main", "index": 0 },
-          { "node": "Check for Errors", "type": "main", "index": 0 }
-        ]
-      ]
+      "main": [[{ "node": "Supabase - Save Jobs", "type": "main", "index": 0 }]]
     },
     "Supabase - Save Jobs": {
       "main": [[{ "node": "Generate HTML Results Page", "type": "main", "index": 0 }]]
@@ -397,12 +337,6 @@
     },
     "Supabase - Update Session": {
       "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]]
-    },
-    "Check for Errors": {
-      "main": [
-        [{ "node": "Supabase - Log Error", "type": "main", "index": 0 }],
-        []
-      ]
     }
   },
   "active": true,
@@ -410,27 +344,18 @@
     "executionOrder": "v1",
     "timezone": "Europe/Paris",
     "callerPolicy": "workflowsFromSameOwner",
-    "availableInMCP": true,
-    "errorWorkflow": "7q3xz5vy2SWghLGg"
+    "availableInMCP": true
   },
-  "versionId": "1.0.0",
+  "versionId": "2.0.0",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "8ffe9a71d241431c7cc543016b230314e7cc4479cad7629ec14b2bc8fc346801"
   },
-  "id": "job-scraping-workflow",
+  "id": "job-scraping-workflow-v2",
   "tags": [
-    {
-      "id": "scraping-tag",
-      "name": "Scraping"
-    },
-    {
-      "id": "jobnexai-tag",
-      "name": "JobNexAI"
-    },
-    {
-      "id": "jobs-tag",
-      "name": "Jobs"
-    }
+    { "id": "scraping-tag", "name": "Scraping" },
+    { "id": "jobnexai-tag", "name": "JobNexAI" },
+    { "id": "firecrawl-tag", "name": "Firecrawl" },
+    { "id": "ollama-tag", "name": "Ollama" }
   ]
 }
