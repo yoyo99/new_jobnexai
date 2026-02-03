@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "n8n-mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "supergateway",
+        "--streamableHttp",
+        "https://n8n.jobnexai.com/mcp-server/http",
+        "--header",
+        "authorization:Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkMDkwNGRmOS03NGVmLTQ4MGEtYTkxZi01YTUzNWUzMWQ1MWMiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiMjdjMmMyM2UtNTU4MC00MTU4LWE5Y2EtMjk3YTUyNjVlMjc1IiwiaWF0IjoxNzcwMTQxNzc4fQ.LM6GNFHRat5Kk99Be1VO2wX8xFJ22OrWDxpKgJY9iQE"
+      ]
+    }
+  },
+  "env": {
+    "SUPABASE_URL": "${SUPABASE_URL}",
+    "SUPABASE_SERVICE_ROLE_KEY": "${SUPABASE_SERVICE_ROLE_KEY}"
+  }
+}
