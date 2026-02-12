@@ -1,0 +1,56 @@
+{
+  "name": "CV Screening Workflow - 2026-02-05",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "cv-screening-form",
+        "formTitle": "CV Screening Analysis",
+        "formDescription": "Upload CV and job offer URL for analysis",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Upload CV (PDF)",
+              "fieldType": "file",
+              "acceptFileTypes": ".pdf",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Job Offer URL",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Your Email",
+              "fieldType": "email",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "88798898-aa0c-4b80-ab14-802e1279c1f6",
+      "name": "Form Trigger - CV Upload",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2,
+      "position": [
+        -900,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "Upload_CV_PDF",
+        "options": {}
+      },
+      "id": "615e9aa7-42a0-436d-a391-b7b007c05a3b",
+      "name": "Extract - CV Text",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -600,
+        400
+      ]
+    }
+  ],
+  "connections": {}
+}

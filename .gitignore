@@ -84,8 +84,3 @@ speckit.constitution
 specs/
 Jobnexai/
 Jobnexai_SaaS/
-
-# BMAD (local symlinks)
-_bmad/
-_bmad-output/
-.windsurf/
