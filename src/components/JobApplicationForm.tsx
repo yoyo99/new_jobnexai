@@ -1,32 +1,34 @@
-import { useState } from 'react'
-import { Dialog } from '@headlessui/react'
-import { XMarkIcon } from '@heroicons/react/24/outline'
-import { supabase } from '../lib/supabase'
-import { useAuth } from '../stores/auth'
+import { useState } from "react";
+import { Dialog } from "@headlessui/react";
+import { XMarkIcon } from "@heroicons/react/24/outline";
+import { supabase } from "../lib/supabase";
+import { useAuth } from "../stores/auth";
 
 interface JobApplicationFormProps {
-  isOpen: boolean
-  onClose: () => void
-  onSubmit: () => void
-  jobId?: string
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: () => void;
+  jobId?: string | undefined;
 }
 
-export function JobApplicationForm({ isOpen, onClose, onSubmit, jobId }: JobApplicationFormProps) {
-  const { user } = useAuth()
-  const [loading, setLoading] = useState(false)
-  const [status, setStatus] = useState<string>('draft')
-  const [notes, setNotes] = useState('')
-  const [nextStepDate, setNextStepDate] = useState('')
-  const [nextStepType, setNextStepType] = useState<string>('')
+export function JobApplicationForm(
+  { isOpen, onClose, onSubmit, jobId }: JobApplicationFormProps,
+) {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<string>("draft");
+  const [notes, setNotes] = useState("");
+  const [nextStepDate, setNextStepDate] = useState("");
+  const [nextStepType, setNextStepType] = useState<string>("");
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!user || !jobId) return
+    e.preventDefault();
+    if (!user || !jobId) return;
 
     try {
-      setLoading(true)
+      setLoading(true);
       const { error } = await supabase
-        .from('job_applications')
+        .from("job_applications")
         .insert({
           user_id: user.id,
           job_id: jobId,
@@ -34,19 +36,19 @@ export function JobApplicationForm({ isOpen, onClose, onSubmit, jobId }: JobAppl
           notes: notes || null,
           next_step_date: nextStepDate || null,
           next_step_type: nextStepType || null,
-          applied_at: status === 'applied' ? new Date().toISOString() : null
-        })
+          applied_at: status === "applied" ? new Date().toISOString() : null,
+        });
 
-      if (error) throw error
+      if (error) throw error;
 
-      onSubmit()
-      onClose()
+      onSubmit();
+      onClose();
     } catch (error) {
-      console.error('Error creating application:', error)
+      console.error("Error creating application:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Dialog
@@ -55,7 +57,7 @@ export function JobApplicationForm({ isOpen, onClose, onSubmit, jobId }: JobAppl
       className="relative z-50"
     >
       <div className="fixed inset-0 bg-black/75" aria-hidden="true" />
-      
+
       <div className="fixed inset-0 flex items-center justify-center p-4">
         <Dialog.Panel className="w-full max-w-md rounded-lg bg-background p-6 shadow-xl">
           <div className="flex items-center justify-between mb-6">
@@ -141,12 +143,12 @@ export function JobApplicationForm({ isOpen, onClose, onSubmit, jobId }: JobAppl
                 disabled={loading}
                 className="btn-primary"
               >
-                {loading ? 'Création...' : 'Créer la candidature'}
+                {loading ? "Création..." : "Créer la candidature"}
               </button>
             </div>
           </form>
         </Dialog.Panel>
       </div>
     </Dialog>
-  )
+  );
 }

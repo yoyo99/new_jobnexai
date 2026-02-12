@@ -1,177 +1,96 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 function getSupabaseJwt(req: Request): string | null {
-  console.log("[send-notification-email] Attempting to get JWT. Headers:", JSON.stringify(Object.fromEntries(req.headers.entries())));
   const auth = req.headers.get("Authorization");
   if (!auth || !auth.startsWith("Bearer ")) return null;
   return auth.slice(7);
 }
 
-function buildEmailMessage(from: string, to: string, subject: string, text: string, html: string): string {
-  const boundary = "----=_Part_" + Math.random().toString(36).substring(2, 15);
-  
-  const headers = [
-    `From: ${from}`,
-    `To: ${to}`,
-    `Subject: ${subject}`,
-    `MIME-Version: 1.0`,
-    `Content-Type: multipart/alternative; boundary="${boundary}"`,
-    `Date: ${new Date().toUTCString()}`,
-    ``,
-  ].join("\r\n");
-
-  const body = [
-    `--${boundary}`,
-    `Content-Type: text/plain; charset="UTF-8"`,
-    `Content-Transfer-Encoding: 7bit`,
-    ``,
-    text,
-    `--${boundary}`,
-    `Content-Type: text/html; charset="UTF-8"`,
-    `Content-Transfer-Encoding: 7bit`,
-    ``,
-    html,
-    `--${boundary}--`,
-    ``,
-  ].join("\r\n");
-
-  return headers + "\r\n" + body;
-}
-
 serve(async (req: Request) => {
   console.log("[send-notification-email] Function invoked.");
-  
+
   const jwt = getSupabaseJwt(req);
-  console.log(`[send-notification-email] JWT received: ${jwt ? 'found' : 'null'}`);
   if (!jwt) {
-    console.error("[send-notification-email] Unauthorized: JWT missing or invalid.");
-    return new Response("Unauthorized: JWT missing", { status: 401 });
+    return new Response("Unauthorized", { status: 401 });
   }
 
   let payload;
   try {
     payload = await req.json();
-    console.log("[send-notification-email] Received payload:", JSON.stringify(payload));
-  } catch (e: unknown) {
-    if (e instanceof Error) {
-      console.error("[send-notification-email] Error parsing request JSON:", e.message);
-    } else {
-      console.error("[send-notification-email] Error parsing request JSON: Unknown error type", e);
+  } catch (_e) {
+    return new Response("Invalid JSON", { status: 400 });
+  }
+
+  const { to, subject, text, html, type: _type } = payload;
+  const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+  const EMAIL_FROM = Deno.env.get("EMAIL_FROM") || "notifications@jobnexai.com";
+
+  // Template HTML Premium si non fourni
+  const finalHtml = html || `
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
+        .card { background: #1e293b; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 32px; max-width: 600px; margin: 0 auto; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .logo { font-size: 24px; font-weight: bold; background: linear-gradient(to right, #ec4899, #8b5cf6); -webkit-background-clip: text; color: transparent; margin-bottom: 24px; display: inline-block; }
+        .title { font-size: 20px; font-weight: 600; color: #ffffff; margin-bottom: 16px; }
+        .content { font-size: 16px; line-height: 1.6; color: #cbd5e1; margin-bottom: 32px; }
+        .btn { display: inline-block; background: #ec4899; color: white !important; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500; }
+        .footer { font-size: 12px; color: #64748b; margin-top: 40px; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 20px; }
+      </style>
+    </head>
+    <body>
+      <div class="card">
+        <div class="logo">JobNexAI</div>
+        <div class="title">${subject}</div>
+        <div class="content">${
+    text || "Vous avez une nouvelle notification."
+  }</div>
+        <div style="text-align: center;">
+          <a href="https://jobnexai.com/search" class="btn">Accéder à mon espace</a>
+        </div>
+        <div class="footer">© 2026 JobNexAI. Votre assistant de recherche d'emploi intelligent.</div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  if (RESEND_API_KEY) {
+    console.log("[send-notification-email] Using Resend API...");
+    try {
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${RESEND_API_KEY}`,
+        },
+        body: JSON.stringify({
+          from: `JobNexAI <${EMAIL_FROM}>`,
+          to: [to],
+          subject: subject,
+          html: finalHtml,
+          text: text,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        return new Response(JSON.stringify(data), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      } else {
+        throw new Error(data.message || "Resend API error");
+      }
+    } catch (error: any) {
+      console.error(
+        "[send-notification-email] Resend API error:",
+        error.message || error,
+      );
     }
-    return new Response("Error parsing request JSON: " + (e instanceof Error ? e.message : 'Unknown error'), { status: 400 });
-  }
-  
-  const { to, subject, text, html } = payload;
-
-  const SMTP_HOST = Deno.env.get("SMTP_HOST");
-  const SMTP_PORT = parseInt(Deno.env.get("SMTP_PORT") || "587");
-  const SMTP_USER = Deno.env.get("SMTP_USER");
-  const SMTP_PASSWORD = Deno.env.get("SMTP_PASSWORD");
-  const EMAIL_FROM = Deno.env.get("EMAIL_FROM");
-  
-  console.log(`[send-notification-email] SMTP config loaded:`, {
-    host: SMTP_HOST,
-    port: SMTP_PORT,
-    user: SMTP_USER ? 'set' : 'missing',
-    password: SMTP_PASSWORD ? 'set' : 'missing',
-    from: EMAIL_FROM,
-  });
-
-  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASSWORD || !EMAIL_FROM || !to || !subject) {
-    console.error("[send-notification-email] Missing required parameters");
-    return new Response("Missing required parameters", { status: 400 });
   }
 
-  try {
-    console.log("[send-notification-email] Connecting to SMTP server...");
-    
-    const conn = await Deno.connect({
-      hostname: SMTP_HOST,
-      port: SMTP_PORT,
-    });
-
-    const encoder = new TextEncoder();
-    const decoder = new TextDecoder();
-
-    // Helper function to read SMTP response
-    async function readResponse(connection: Deno.Conn): Promise<string> {
-      const buffer = new Uint8Array(1024);
-      const n = await connection.read(buffer);
-      if (n === null) return "";
-      return decoder.decode(buffer.slice(0, n));
-    }
-
-    // Read initial SMTP response
-    let response = await readResponse(conn);
-    console.log("[send-notification-email] SMTP response:", response);
-
-    // Send EHLO
-    await conn.write(encoder.encode("EHLO localhost\r\n"));
-    response = await readResponse(conn);
-    console.log("[send-notification-email] EHLO response:", response);
-
-    // Send STARTTLS
-    await conn.write(encoder.encode("STARTTLS\r\n"));
-    response = await readResponse(conn);
-    console.log("[send-notification-email] STARTTLS response:", response);
-
-    // Upgrade to TLS
-    const tlsConn = await Deno.startTls(conn, { hostname: SMTP_HOST });
-
-    // Send EHLO again after TLS
-    await tlsConn.write(encoder.encode("EHLO localhost\r\n"));
-    response = await readResponse(tlsConn);
-    console.log("[send-notification-email] EHLO after TLS:", response);
-
-    // Send AUTH LOGIN
-    await tlsConn.write(encoder.encode("AUTH LOGIN\r\n"));
-    response = await readResponse(tlsConn);
-    console.log("[send-notification-email] AUTH LOGIN response:", response);
-
-    // Send username (base64 encoded)
-    const encodedUser = btoa(SMTP_USER);
-    await tlsConn.write(encoder.encode(encodedUser + "\r\n"));
-    response = await readResponse(tlsConn);
-    console.log("[send-notification-email] Username response:", response);
-
-    // Send password (base64 encoded)
-    const encodedPass = btoa(SMTP_PASSWORD);
-    await tlsConn.write(encoder.encode(encodedPass + "\r\n"));
-    response = await readResponse(tlsConn);
-    console.log("[send-notification-email] Password response:", response);
-
-    // Send MAIL FROM
-    await tlsConn.write(encoder.encode(`MAIL FROM:<${EMAIL_FROM}>\r\n`));
-    response = await readResponse(tlsConn);
-    console.log("[send-notification-email] MAIL FROM response:", response);
-
-    // Send RCPT TO
-    await tlsConn.write(encoder.encode(`RCPT TO:<${to}>\r\n`));
-    response = await readResponse(tlsConn);
-    console.log("[send-notification-email] RCPT TO response:", response);
-
-    // Send DATA
-    await tlsConn.write(encoder.encode("DATA\r\n"));
-    response = await readResponse(tlsConn);
-    console.log("[send-notification-email] DATA response:", response);
-
-    // Send email message
-    const message = buildEmailMessage(EMAIL_FROM, to, subject, text || "", html || "");
-    await tlsConn.write(encoder.encode(message + "\r\n.\r\n"));
-    response = await readResponse(tlsConn);
-    console.log("[send-notification-email] Message response:", response);
-
-    // Send QUIT
-    await tlsConn.write(encoder.encode("QUIT\r\n"));
-    response = await readResponse(tlsConn);
-    console.log("[send-notification-email] QUIT response:", response);
-
-    await tlsConn.close();
-    console.log("[send-notification-email] Email sent successfully via SMTP.");
-    return new Response("Email envoyé", { status: 200 });
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error(`[send-notification-email] SMTP error: ${errorMessage}`);
-    return new Response(`SMTP error: ${errorMessage}`, { status: 500 });
-  }
+  return new Response("Email traité via Resend", { status: 200 });
 });

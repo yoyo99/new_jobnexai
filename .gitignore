@@ -84,3 +84,6 @@ speckit.constitution
 specs/
 Jobnexai/
 Jobnexai_SaaS/
+
+# Fichiers zip des fonctions Netlify (garder en local, pas dans git)
+netlify/functions/*.zip

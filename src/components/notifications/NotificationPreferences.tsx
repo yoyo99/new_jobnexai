@@ -1,91 +1,104 @@
-import { useState, useEffect } from 'react'
-import { supabase } from '../../lib/supabase'
-import { useAuth } from '../../stores/auth'
-import { motion } from 'framer-motion'
+import { useEffect, useState } from "react";
+import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../stores/auth";
+import { motion } from "framer-motion";
 
 interface NotificationSettings {
-  id: string
-  email_notifications: boolean
-  push_notifications: boolean
-  in_app_notifications: boolean
-  job_alerts: boolean
-  connection_requests: boolean
-  messages: boolean
+  id: string;
+  email_notifications: boolean;
+  push_notifications: boolean;
+  in_app_notifications: boolean;
+  job_alerts: boolean;
+  connection_requests: boolean;
+  messages: boolean;
 }
 
 export function NotificationPreferences() {
-  const { user } = useAuth()
-  const [settings, setSettings] = useState<NotificationSettings | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const { user } = useAuth();
+  const [settings, setSettings] = useState<NotificationSettings | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<
+    { type: "success" | "error"; text: string } | null
+  >(null);
 
   useEffect(() => {
     if (user) {
-      loadSettings()
+      loadSettings();
     }
-  }, [user])
+  }, [user]);
 
   const loadSettings = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const { data, error } = await supabase
-        .from('notification_settings')
-        .select('*')
-        .eq('user_id', user?.id)
-        .single()
+        .from("notification_settings")
+        .select("*")
+        .eq("user_id", user?.id)
+        .single();
 
-      if (error) throw error
-      setSettings(data)
+      if (error) throw error;
+      setSettings(data);
     } catch (error) {
-      console.error('Error loading notification settings:', error)
+      console.error("Error loading notification settings:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const updateSettings = async () => {
-    if (!settings) return
+    if (!settings) return;
 
     try {
-      setSaving(true)
-      setMessage(null)
+      setSaving(true);
+      setMessage(null);
 
       const { error } = await supabase
-        .from('notification_settings')
+        .from("notification_settings")
         .upsert({
           user_id: user?.id,
           ...settings,
           updated_at: new Date().toISOString(),
-        })
+        });
 
-      if (error) throw error
-      setMessage({ type: 'success', text: 'Préférences mises à jour avec succès' })
+      if (error) throw error;
+      setMessage({
+        type: "success",
+        text: "Préférences mises à jour avec succès",
+      });
     } catch (error) {
-      console.error('Error updating notification settings:', error)
-      setMessage({ type: 'error', text: 'Erreur lors de la mise à jour des préférences' })
+      console.error("Error updating notification settings:", error);
+      setMessage({
+        type: "error",
+        text: "Erreur lors de la mise à jour des préférences",
+      });
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const toggleSetting = (key: keyof NotificationSettings) => {
-    if (!settings) return
-    setSettings(prev => prev ? {
-      ...prev,
-      [key]: !prev[key],
-    } : null)
-  }
+    if (!settings) return;
+    setSettings((prev) =>
+      prev
+        ? {
+          ...prev,
+          [key]: !prev[key],
+        }
+        : null
+    );
+  };
 
   if (loading) {
     return (
       <div className="flex justify-center p-4">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-400"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-400">
+        </div>
       </div>
-    )
+    );
   }
 
-  if (!settings) return null
+  if (!settings) return null;
 
   return (
     <div className="space-y-6">
@@ -94,7 +107,8 @@ export function NotificationPreferences() {
           Préférences de notification
         </h2>
         <p className="text-gray-400">
-          Personnalisez la façon dont vous souhaitez être notifié des différents événements.
+          Personnalisez la façon dont vous souhaitez être notifié des différents
+          événements.
         </p>
       </div>
 
@@ -103,18 +117,19 @@ export function NotificationPreferences() {
           <div>
             <p className="font-medium text-white">Notifications par email</p>
             <p className="text-sm text-gray-400">
-              Recevez des notifications par email pour les mises à jour importantes
+              Recevez des notifications par email pour les mises à jour
+              importantes
             </p>
           </div>
           <button
-            onClick={() => toggleSetting('email_notifications')}
+            onClick={() => toggleSetting("email_notifications")}
             className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
-              settings.email_notifications ? 'bg-primary-600' : 'bg-gray-700'
+              settings.email_notifications ? "bg-primary-600" : "bg-gray-700"
             }`}
           >
             <span
               className={`inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                settings.email_notifications ? 'translate-x-5' : 'translate-x-0'
+                settings.email_notifications ? "translate-x-5" : "translate-x-0"
               }`}
             />
           </button>
@@ -128,14 +143,27 @@ export function NotificationPreferences() {
             </p>
           </div>
           <button
-            onClick={() => toggleSetting('push_notifications')}
+            onClick={async () => {
+              if (!settings.push_notifications && window.Notification) {
+                const permission = await Notification.requestPermission();
+                if (permission !== "granted") {
+                  setMessage({
+                    type: "error",
+                    text:
+                      "Permission de notification refusée par le navigateur.",
+                  });
+                  return;
+                }
+              }
+              toggleSetting("push_notifications");
+            }}
             className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
-              settings.push_notifications ? 'bg-primary-600' : 'bg-gray-700'
+              settings.push_notifications ? "bg-primary-600" : "bg-gray-700"
             }`}
           >
             <span
               className={`inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                settings.push_notifications ? 'translate-x-5' : 'translate-x-0'
+                settings.push_notifications ? "translate-x-5" : "translate-x-0"
               }`}
             />
           </button>
@@ -143,20 +171,24 @@ export function NotificationPreferences() {
 
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-medium text-white">Notifications dans l'application</p>
+            <p className="font-medium text-white">
+              Notifications dans l'application
+            </p>
             <p className="text-sm text-gray-400">
               Recevez des notifications directement dans l'application
             </p>
           </div>
           <button
-            onClick={() => toggleSetting('in_app_notifications')}
+            onClick={() => toggleSetting("in_app_notifications")}
             className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
-              settings.in_app_notifications ? 'bg-primary-600' : 'bg-gray-700'
+              settings.in_app_notifications ? "bg-primary-600" : "bg-gray-700"
             }`}
           >
             <span
               className={`inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                settings.in_app_notifications ? 'translate-x-5' : 'translate-x-0'
+                settings.in_app_notifications
+                  ? "translate-x-5"
+                  : "translate-x-0"
               }`}
             />
           </button>
@@ -166,18 +198,19 @@ export function NotificationPreferences() {
           <div>
             <p className="font-medium text-white">Alertes emploi</p>
             <p className="text-sm text-gray-400">
-              Recevez des notifications pour les nouvelles offres correspondant à vos critères
+              Recevez des notifications pour les nouvelles offres correspondant
+              à vos critères
             </p>
           </div>
           <button
-            onClick={() => toggleSetting('job_alerts')}
+            onClick={() => toggleSetting("job_alerts")}
             className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
-              settings.job_alerts ? 'bg-primary-600' : 'bg-gray-700'
+              settings.job_alerts ? "bg-primary-600" : "bg-gray-700"
             }`}
           >
             <span
               className={`inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                settings.job_alerts ? 'translate-x-5' : 'translate-x-0'
+                settings.job_alerts ? "translate-x-5" : "translate-x-0"
               }`}
             />
           </button>
@@ -191,14 +224,14 @@ export function NotificationPreferences() {
             </p>
           </div>
           <button
-            onClick={() => toggleSetting('connection_requests')}
+            onClick={() => toggleSetting("connection_requests")}
             className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
-              settings.connection_requests ? 'bg-primary-600' : 'bg-gray-700'
+              settings.connection_requests ? "bg-primary-600" : "bg-gray-700"
             }`}
           >
             <span
               className={`inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                settings.connection_requests ? 'translate-x-5' : 'translate-x-0'
+                settings.connection_requests ? "translate-x-5" : "translate-x-0"
               }`}
             />
           </button>
@@ -212,14 +245,14 @@ export function NotificationPreferences() {
             </p>
           </div>
           <button
-            onClick={() => toggleSetting('messages')}
+            onClick={() => toggleSetting("messages")}
             className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
-              settings.messages ? 'bg-primary-600' : 'bg-gray-700'
+              settings.messages ? "bg-primary-600" : "bg-gray-700"
             }`}
           >
             <span
               className={`inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                settings.messages ? 'translate-x-5' : 'translate-x-0'
+                settings.messages ? "translate-x-5" : "translate-x-0"
               }`}
             />
           </button>
@@ -231,9 +264,9 @@ export function NotificationPreferences() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className={`rounded-lg p-4 ${
-            message.type === 'success'
-              ? 'bg-green-900/50 text-green-400'
-              : 'bg-red-900/50 text-red-400'
+            message.type === "success"
+              ? "bg-green-900/50 text-green-400"
+              : "bg-red-900/50 text-red-400"
           }`}
         >
           {message.text}
@@ -246,9 +279,9 @@ export function NotificationPreferences() {
           disabled={saving}
           className="btn-primary"
         >
-          {saving ? 'Enregistrement...' : 'Enregistrer les préférences'}
+          {saving ? "Enregistrement..." : "Enregistrer les préférences"}
         </button>
       </div>
     </div>
-  )
+  );
 }

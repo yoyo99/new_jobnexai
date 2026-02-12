@@ -1,34 +1,38 @@
-import { useState } from 'react'
-import { Dialog } from '@headlessui/react'
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
-import { Link } from 'react-router-dom'
-import { LanguageSwitcher } from './LanguageSwitcher'
-import { useTranslation } from 'react-i18next'
-import { useAuth } from '../stores/auth'
-import { Hero } from './Hero'
-import { Features } from './Features'
-import { HowItWorks } from './HowItWorks'
-import { Testimonials } from './Testimonials'
-import { Footer } from './Footer'
+import { useState } from "react";
+import { Dialog } from "@headlessui/react";
+import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import { Link } from "react-router-dom";
+import { LanguageSwitcher } from "./LanguageSwitcher";
+import { useTranslation } from "react-i18next";
+import { useAuth } from "./stores/auth";
+import { Hero } from "./Hero";
+import { Features } from "./Features";
+import { HowItWorks } from "./HowItWorks";
+import { Testimonials } from "./Testimonials";
+import { CTA } from "./CTA";
+import { Footer } from "./Footer";
 
 // Navigation pour les utilisateurs non connectés
 const publicNavigation = [
-  { name: 'Fonctionnalités', href: '/features' },
-  { name: 'Comment ça marche', href: '/how-it-works' },
-  { name: 'Tarifs', href: '/pricing' },
-  { name: 'Témoignages', href: '/testimonials' },
-]
+  { name: "Fonctionnalités", href: "/features" },
+  { name: "Comment ça marche", href: "/how-it-works" },
+  { name: "Tarifs", href: "/pricing" },
+  { name: "Témoignages", href: "/testimonials" },
+];
 
 export function LandingPage() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const { t } = useTranslation()
-  const { user } = useAuth()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { t } = useTranslation();
+  const { user } = useAuth();
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="fixed inset-x-0 top-0 z-50 backdrop-blur-sm border-b border-white/10">
-        <nav className="flex items-center justify-between p-6 lg:px-8" aria-label="Global">
+        <nav
+          className="flex items-center justify-between p-6 lg:px-8"
+          aria-label="Global"
+        >
           <div className="flex lg:flex-1">
             <Link to="/" className="-m-1.5 p-1.5">
               <span className="sr-only">JobNexAI</span>
@@ -62,23 +66,28 @@ export function LandingPage() {
             <LanguageSwitcher />
             {!user && (
               <>
-                <Link 
-                  to="/login" 
+                <Link
+                  to="/login"
                   className="text-sm font-semibold px-3 py-2 rounded-lg text-white hover:bg-white/10 transition-colors"
                 >
-                  {t('auth.login')}
+                  {t("auth.login")}
                 </Link>
-                <Link 
-                  to="/pricing" 
+                <Link
+                  to="/pricing"
                   className="text-sm font-semibold px-3 py-2 rounded-lg bg-gradient-to-r from-primary-600 to-secondary-600 text-white hover:from-primary-500 hover:to-secondary-500 transition-colors"
                 >
-                  {t('auth.startTrial')}
+                  {t("auth.startTrial")}
                 </Link>
               </>
             )}
           </div>
         </nav>
-        <Dialog as="div" className="lg:hidden" open={mobileMenuOpen} onClose={setMobileMenuOpen}>
+        <Dialog
+          as="div"
+          className="lg:hidden"
+          open={mobileMenuOpen}
+          onClose={setMobileMenuOpen}
+        >
           <div className="fixed inset-0 z-50" />
           <Dialog.Panel className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-background px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-white/10">
             <div className="flex items-center justify-between">
@@ -121,13 +130,13 @@ export function LandingPage() {
                         to="/login"
                         className="block text-center text-sm font-semibold px-3 py-2 rounded-lg text-white hover:bg-white/10 transition-colors"
                       >
-                        {t('auth.login')}
+                        {t("auth.login")}
                       </Link>
                       <Link
                         to="/pricing"
                         className="block text-center text-sm font-semibold px-3 py-2 rounded-lg bg-gradient-to-r from-primary-600 to-secondary-600 text-white hover:from-primary-500 hover:to-secondary-500 transition-colors"
                       >
-                        {t('auth.startTrial')}
+                        {t("auth.startTrial")}
                       </Link>
                     </div>
                   )}
@@ -143,8 +152,9 @@ export function LandingPage() {
         <Features />
         <HowItWorks />
         <Testimonials />
+        <CTA />
       </main>
       <Footer />
     </div>
-  )
+  );
 }
