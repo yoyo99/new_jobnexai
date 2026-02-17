@@ -1,10 +1,14 @@
-# robots.txt for JobNexAI
-User-agent: *
+User-agent: Googlebot
 Allow: /
 
-# Disallow sensitive or irrelevant paths (adapt as needed)
-Disallow: /api/
-Disallow: /admin/
-Disallow: /private/
+User-agent: Bingbot
+Allow: /
 
-Sitemap: https://jobnexai-windsurf.netlify.app/sitemap.xml
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: *
+Allow: /
