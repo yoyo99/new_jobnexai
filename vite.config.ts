@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { sentryVitePlugin } from '@sentry/vite-plugin'
 import viteCompression from 'vite-plugin-compression'
 import { VitePWA } from 'vite-plugin-pwa'
 import { visualizer } from 'rollup-plugin-visualizer'
@@ -118,19 +117,6 @@ const plugins = [
     deleteOriginFile: false
   }),
 ]
-
-// Conditionally add Sentry plugin only if auth token is available
-if (process.env.VITE_SENTRY_AUTH_TOKEN) {
-  plugins.push(
-    sentryVitePlugin({
-      org: process.env.VITE_SENTRY_ORG,
-      project: process.env.VITE_SENTRY_PROJECT,
-      authToken: process.env.VITE_SENTRY_AUTH_TOKEN,
-      telemetry: false,
-    })
-  )
-}
-
 // Add bundle analyzer in development
 if (process.env.ANALYZE) {
   plugins.push(
