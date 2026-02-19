@@ -13,13 +13,6 @@ let supabase: SupabaseClient;
  * @returns {SupabaseClient}
  */
 export function getSupabase(): SupabaseClient {
-  // --- DÉBUT LOGS DE DÉBOGAGE ---
-  console.log("--- JOBNEXAI DEBUG ---");
-  console.log("Tentative d'initialisation de Supabase avec la configuration suivante :");
-  console.log("URL (VITE_SUPABASE_URL):", import.meta.env.VITE_SUPABASE_URL);
-  console.log("Clé Anon (VITE_SUPABASE_ANON_KEY):", import.meta.env.VITE_SUPABASE_ANON_KEY ? 'Présente' : 'Manquante !');
-  console.log("--- FIN LOGS DE DÉBOGAGE ---");
-
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 

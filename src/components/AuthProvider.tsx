@@ -7,18 +7,15 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  console.log('[AuthProvider] -> Le composant est en cours de rendu.');
   const initialized = useAuth(state => state.initialized);
   const loadUser = useAuth(state => state.loadUser);
 
   useEffect(() => {
-    console.log('[AuthProvider] -> useEffect a été déclenché. Appel de loadUser...');
     // 1. Charger l'utilisateur au montage initial du composant.
     loadUser();
 
     // 2. S'abonner aux changements d'état d'authentification de Supabase.
     const { data: { subscription } } = getSupabase().auth.onAuthStateChange((event, session) => {
-      console.log(`AuthProvider: Événement d'authentification Supabase - ${event}`);
       // Recharger les données utilisateur à chaque événement pour garder l'état synchronisé.
       loadUser();
     });
@@ -26,7 +23,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // 3. Écouter les changements de stockage pour la synchronisation entre onglets.
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key?.includes('supabase.auth.token')) {
-        console.log('AuthProvider: Événement de stockage détecté, rechargement des données utilisateur.');
         loadUser();
       }
     };

@@ -14,16 +14,16 @@ import {
   ScrapingStatusResponse,
   ScrapingError
 } from './scraping-service';
-import { createLogger, LogContext } from '../../netlify/functions/lib/logger';
+import { createLogger, LogContext } from './logger';
 import { 
   triggerN8nWorkflow, 
   N8nWebhookPayload 
-} from '../../netlify/functions/lib/n8n-auth';
+} from './n8n-auth';
 import {
   trackSessionStart,
   sendPerformanceAlert,
   sendErrorAlert
-} from '../../netlify/functions/lib/mcp-monitoring';
+} from './mcp-monitoring';
 import {
   deduplicateJobs as performDeduplication,
   DeduplicationResult,

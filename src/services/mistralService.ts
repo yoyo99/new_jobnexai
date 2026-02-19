@@ -5,7 +5,7 @@
  */
 
 import type { Job, Profile } from "../types";
-import { MistralClient } from '@mistralai/mistralai';
+import { Mistral } from '@mistralai/mistralai';
 import { getUserAISettings } from '../lib/supabase';
 
 /**
@@ -63,7 +63,7 @@ export async function* generateCoverLetterStream(
         }
 
         // Créer le client Mistral
-        const mistral = new MistralClient(apiKey);
+        const mistral = new Mistral({ apiKey });
 
         // Construire le prompt optimisé pour Mistral
         const prompt = buildCoverLetterPrompt(profile, job, lang, t, tone, length);
@@ -131,7 +131,7 @@ export async function generateCoverLetter(
         }
 
         // Créer le client Mistral
-        const mistral = new MistralClient(apiKey);
+        const mistral = new Mistral({ apiKey });
 
         // Construire le prompt
         const prompt = buildCoverLetterPrompt(profile, job, lang, t, tone, length);
@@ -226,7 +226,7 @@ About the job:
 - Description: ${job.description?.substring(0, 500) || 'No description provided'}
 
 Requirements:
-${job.requirements?.substring(0, 300) || 'No specific requirements mentioned'}
+${job.description?.substring(0, 300) || 'No specific requirements mentioned'}
 
 The letter should:
 1. Address the hiring manager professionally
@@ -265,7 +265,7 @@ async function* simulateCoverLetterStream(
             greeting: 'Cher Responsable du Recrutement,\n\n',
             intro: `Je vous écris pour exprimer mon vif intérêt pour le poste de ${job.title} chez ${job.company}. `,
             body1: `Avec mon expérience en ${profile.skills?.slice(0, 3).join(', ') || 'mon domaine'}, je suis convaincu que je pourrais apporter une valeur ajoutée significative à votre équipe. `,
-            body2: `Votre offre mentionne que vous recherchez ${job.requirements?.substring(0, 100) || 'un profil qualifié'}... `,
+            body2: `Votre offre mentionne que vous recherchez ${job.description?.substring(0, 100) || 'un profil qualifié'}... `,
             closing: `Je serais ravi de discuter de la manière dont mes compétences correspondent à vos besoins. Merci pour votre temps et votre considération.\n\n`,
             signature: 'Cordialement,'
         },
@@ -273,7 +273,7 @@ async function* simulateCoverLetterStream(
             greeting: 'Dear Hiring Manager,\n\n',
             intro: `I am writing to express my strong interest in the ${job.title} position at ${job.company}. `,
             body1: `With my experience in ${profile.skills?.slice(0, 3).join(', ') || 'my field'}, I am confident I would be a valuable addition to your team. `,
-            body2: `Your job posting indicates you are looking for ${job.requirements?.substring(0, 100) || 'a qualified candidate'}... `,
+            body2: `Your job posting indicates you are looking for ${job.description?.substring(0, 100) || 'a qualified candidate'}... `,
             closing: `I look forward to discussing how my skills and experience align with your needs. Thank you for your time and consideration.\n\n`,
             signature: 'Best regards,'
         }
@@ -354,7 +354,7 @@ export async function analyzeCVWithMistral(
             };
         }
 
-        const mistral = new MistralClient(apiKey);
+        const mistral = new Mistral({ apiKey });
 
         const prompt = `
 Analyze the following CV and return a JSON object with:
@@ -469,7 +469,7 @@ export async function generateMatchScoreWithMistral(
             };
         }
 
-        const mistral = new MistralClient(apiKey);
+        const mistral = new Mistral({ apiKey });
 
         const prompt = `
 Analyze the match between the following CV and job description.

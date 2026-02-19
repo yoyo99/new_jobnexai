@@ -37,19 +37,14 @@ export const useAuth = create<AuthState>((set) => ({
   initialized: false,
 
   loadUser: async () => {
-    console.log('[AuthStore] -> Début de loadUser.');
     try {
-      console.log('[AuthStore] -> Tentative de getSession...');
       const { data: { session } } = await getSupabase().auth.getSession();
-      console.log('[AuthStore] -> getSession terminé. Session:', session ? 'trouvée' : 'nulle');
 
       if (!session?.user) {
-        console.log('[AuthStore] -> Pas de session utilisateur. Nettoyage de l\`état.');
         set({ user: null, subscription: null });
-        return; // Le finally s'occupera de `initialized`.
+        return;
       }
 
-      console.log(`[AuthStore] -> Session trouvée pour l'utilisateur ID: ${session.user.id}. Tentative de fetch le profil...`);
       const { data: profile, error: profileError } = await getSupabase()
         .from('profiles')
         .select('*, last_sign_in_at')
@@ -60,12 +55,10 @@ export const useAuth = create<AuthState>((set) => ({
         console.error('[AuthStore] -> Erreur lors du fetch du profil:', profileError);
         throw profileError;
       }
-      console.log('[AuthStore] -> Profil trouvé:', profile);
 
       // @ts-ignore
       if (window.netlifyIdentity && window.netlifyIdentity.currentUser()) {
         const jwt = await window.netlifyIdentity.currentUser().jwt();
-        console.log('[DEBUG] Netlify JWT utilisé pour Supabase :', jwt);
         if (getSupabase().auth && getSupabase().auth.setSession) {
           await getSupabase().auth.setSession({
             access_token: jwt,
@@ -87,7 +80,6 @@ export const useAuth = create<AuthState>((set) => ({
 
       let subscription: Subscription | null = null;
       if (profile) {
-        console.log(`[AuthStore] -> Profil trouvé pour l'utilisateur ID: ${profile.id}. Tentative de fetch la souscription...`);
         const { data: subData, error: subError } = await getSupabase()
           .from('subscriptions')
           .select('*')
@@ -98,17 +90,14 @@ export const useAuth = create<AuthState>((set) => ({
             throw subError;
         }
         subscription = subData;
-        console.log('[AuthStore] -> Souscription trouvée:', subscription);
       }
       
-      console.log('[AuthStore] -> Mise à jour de l\`état avec l\`utilisateur et la souscription.');
       set({ user: profile, subscription });
 
     } catch (error: any) {
       console.error('[AuthStore] -> ERREUR CATCH dans loadUser:', error);
       set({ error: error.message, user: null, subscription: null });
     } finally {
-      console.log('[AuthStore] -> FINALLY: Fin du chargement, initialized=true.');
       set({ loading: false, initialized: true });
     }
   },
