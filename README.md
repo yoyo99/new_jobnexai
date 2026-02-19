@@ -198,6 +198,180 @@ Des tests unitaires sont à ajouter dans `lib/emailService.test.js` pour simuler
 4. Push la branche (`git push origin feature/amazing-feature`)
 5. Ouvrir une Pull Request
 
+## Bonnes pratiques de développement
+
+### Structure du code
+
+- **Composants React** : Les composants doivent être placés dans `src/components/` et organisés par fonctionnalité
+- **Logique métier** : La logique métier doit être placée dans `src/lib/` ou `src/services/`
+- **Gestion d'état** : Utiliser Zustand pour l'état global et React Query pour la gestion des données
+- **Formulaires** : Utiliser `react-hook-form` pour tous les formulaires avec validation
+
+### Tests
+
+Le projet utilise Jest avec React Testing Library pour les tests unitaires :
+
+```bash
+# Lancer tous les tests
+npm test
+
+# Lancer les tests en mode watch
+npm run test:watch
+
+# Lancer les tests unitaires
+npm run test:unit
+
+# Lancer les tests e2e (Playwright)
+npm run test:e2e
+```
+
+**Structure des tests** :
+- Les tests unitaires doivent être placés dans des fichiers `__tests__/` ou avec l'extension `.test.tsx`
+- Les tests doivent couvrir les cas heureux, les erreurs et les états de chargement
+- Utiliser `screen.getByRole()` de préférence pour une meilleure accessibilité
+
+**Exemple de test** :
+```typescript
+import { render, screen, fireEvent } from '@testing-library/react'
+import { MyComponent } from '../MyComponent'
+
+describe('MyComponent', () => {
+  test('should render correctly', () => {
+    render(<MyComponent />)
+    expect(screen.getByText('Hello World')).toBeInTheDocument()
+  })
+
+  test('should handle button click', () => {
+    const mockFn = jest.fn()
+    render(<MyComponent onClick={mockFn} />)
+    fireEvent.click(screen.getByRole('button'))
+    expect(mockFn).toHaveBeenCalled()
+  })
+})
+```
+
+### Gestion des requêtes API
+
+Utiliser React Query pour toutes les requêtes API :
+
+```typescript
+import { useQuery, useMutation } from '@tanstack/react-query'
+
+// Requête de lecture
+const { data, isLoading, error } = useQuery({
+  queryKey: ['jobs', userId],
+  queryFn: async () => {
+    const { data, error } = await supabase
+      .from('jobs')
+      .select('*')
+      .eq('user_id', userId)
+    if (error) throw error
+    return data
+  }
+})
+
+// Mutation pour création/mise à jour/suppression
+const mutation = useMutation({
+  mutationFn: async (newJob) => {
+    const { data, error } = await supabase
+      .from('jobs')
+      .insert(newJob)
+    if (error) throw error
+    return data
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['jobs'] })
+  }
+})
+```
+
+### Validation des données
+
+Utiliser Zod pour la validation côté serveur et côté client :
+
+```typescript
+import { z } from 'zod'
+
+// Schéma de validation
+const JobSchema = z.object({
+  title: z.string().min(1, "Le titre est obligatoire"),
+  company: z.string().min(1, "La compagnie est obligatoire"),
+  location: z.string().optional(),
+  salary: z.number().positive("Le salaire doit être positif").optional()
+})
+
+type Job = z.infer<typeof JobSchema>
+
+// Validation dans les endpoints API
+const result = JobSchema.safeParse(requestBody)
+if (!result.success) {
+  return Response.json({ error: result.error }, { status: 400 })
+}
+```
+
+### Formulaires avec react-hook-form
+
+```typescript
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+
+const { register, handleSubmit, formState: { errors } } = useForm<Job>({
+  resolver: zodResolver(JobSchema),
+  defaultValues: {
+    title: '',
+    company: '',
+    location: '',
+    salary: undefined
+  }
+})
+
+<form onSubmit={handleSubmit(onSubmit)}>
+  <input {...register('title')} />
+  {errors.title && <span>{errors.title.message}</span>}
+  <button type="submit">Submit</button>
+</form>
+```
+
+### Bonnes pratiques de sécurité
+
+1. **Ne jamais exposer les clés API** dans le code frontend
+2. **Utiliser Row Level Security** dans Supabase pour toutes les tables
+3. **Valider toutes les entrées** côté serveur avec Zod
+4. **Utiliser des politiques CORS** restrictives
+5. **Implémenter l'authentification** pour toutes les routes sensibles
+
+### Performance
+
+1. **Utiliser React.memo** pour les composants qui rendent souvent
+2. **Implémenter le lazy loading** pour les composants lourds
+3. **Optimiser les images** avec le format WebP et le lazy loading
+4. **Utiliser la pagination** pour les listes longues
+5. **Minimiser les re-renders** avec useMemo et useCallback
+
+### Internationalisation
+
+Le projet utilise i18next pour la gestion des traductions :
+
+```typescript
+import { useTranslation } from 'react-i18next'
+
+function MyComponent() {
+  const { t } = useTranslation()
+  return <div>{t('welcome_message')}</div>
+}
+```
+
+Les fichiers de traduction sont dans `public/locales/` et suivent la structure :
+```
+public/locales/
+  en/
+    translation.json
+  fr/
+    translation.json
+  es/
+    translation.json
+```
+
 ## Licence
 
 Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.

@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useForm } from 'react-hook-form'
 import { Dialog } from '@headlessui/react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../stores/auth'
+import { toast } from 'react-hot-toast'
 
 interface JobApplicationFormProps {
   isOpen: boolean
@@ -11,40 +12,59 @@ interface JobApplicationFormProps {
   jobId?: string
 }
 
+interface FormValues {
+  status: string
+  notes: string
+  nextStepDate: string
+  nextStepType: string
+}
+
 export function JobApplicationForm({ isOpen, onClose, onSubmit, jobId }: JobApplicationFormProps) {
   const { user } = useAuth()
-  const [loading, setLoading] = useState(false)
-  const [status, setStatus] = useState<string>('draft')
-  const [notes, setNotes] = useState('')
-  const [nextStepDate, setNextStepDate] = useState('')
-  const [nextStepType, setNextStepType] = useState<string>('')
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset
+  } = useForm<FormValues>({
+    defaultValues: {
+      status: 'draft',
+      notes: '',
+      nextStepDate: '',
+      nextStepType: ''
+    }
+  })
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!user || !jobId) return
+  const onSubmitForm = async (data: FormValues) => {
+    if (!user || !jobId) {
+      toast.error('Utilisateur non authentifié')
+      return
+    }
 
     try {
-      setLoading(true)
       const { error } = await supabase
         .from('job_applications')
         .insert({
           user_id: user.id,
           job_id: jobId,
-          status,
-          notes: notes || null,
-          next_step_date: nextStepDate || null,
-          next_step_type: nextStepType || null,
-          applied_at: status === 'applied' ? new Date().toISOString() : null
+          status: data.status,
+          notes: data.notes || null,
+          next_step_date: data.nextStepDate || null,
+          next_step_type: data.nextStepType || null,
+          applied_at: data.status === 'applied' ? new Date().toISOString() : null
         })
 
-      if (error) throw error
+      if (error) {
+        throw error
+      }
 
+      toast.success('Candidature créée avec succès !')
       onSubmit()
       onClose()
+      reset()
     } catch (error) {
       console.error('Error creating application:', error)
-    } finally {
-      setLoading(false)
+      toast.error(`Erreur lors de la création: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -65,25 +85,26 @@ export function JobApplicationForm({ isOpen, onClose, onSubmit, jobId }: JobAppl
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-white transition-colors"
+              disabled={isSubmitting}
             >
               <XMarkIcon className="h-6 w-6" />
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmitForm)} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-1">
                 Statut
               </label>
               <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                {...register('status', { required: 'Le statut est obligatoire' })}
+                className={`w-full bg-white/5 border ${errors.status ? 'border-red-500' : 'border-white/10'} rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500`}
               >
                 <option value="draft">Brouillon</option>
                 <option value="applied">Postulée</option>
                 <option value="interviewing">En entretien</option>
               </select>
+              {errors.status && <p className="mt-1 text-sm text-red-500">{errors.status.message}</p>}
             </div>
 
             <div>
@@ -91,11 +112,16 @@ export function JobApplicationForm({ isOpen, onClose, onSubmit, jobId }: JobAppl
                 Notes
               </label>
               <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                className="w-full h-32 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                {...register('notes', {
+                  maxLength: {
+                    value: 2000,
+                    message: 'Les notes ne peuvent pas dépasser 2000 caractères'
+                  }
+                })}
+                className={`w-full h-32 bg-white/5 border ${errors.notes ? 'border-red-500' : 'border-white/10'} rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500`}
                 placeholder="Ajoutez vos notes ici..."
               />
+              {errors.notes && <p className="mt-1 text-sm text-red-500">{errors.notes.message}</p>}
             </div>
 
             <div>
@@ -106,15 +132,21 @@ export function JobApplicationForm({ isOpen, onClose, onSubmit, jobId }: JobAppl
                 <div>
                   <input
                     type="date"
-                    value={nextStepDate}
-                    onChange={(e) => setNextStepDate(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    {...register('nextStepDate', {
+                      validate: (value) => {
+                        if (value && new Date(value) < new Date()) {
+                          return 'La date ne peut pas être dans le passé'
+                        }
+                        return true
+                      }
+                    })}
+                    className={`w-full bg-white/5 border ${errors.nextStepDate ? 'border-red-500' : 'border-white/10'} rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500`}
                   />
+                  {errors.nextStepDate && <p className="mt-1 text-sm text-red-500">{errors.nextStepDate.message}</p>}
                 </div>
                 <div>
                   <select
-                    value={nextStepType}
-                    onChange={(e) => setNextStepType(e.target.value)}
+                    {...register('nextStepType')}
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                     <option value="">Type d'étape</option>
@@ -133,15 +165,16 @@ export function JobApplicationForm({ isOpen, onClose, onSubmit, jobId }: JobAppl
                 type="button"
                 onClick={onClose}
                 className="btn-secondary"
+                disabled={isSubmitting}
               >
                 Annuler
               </button>
               <button
                 type="submit"
-                disabled={loading}
+                disabled={isSubmitting}
                 className="btn-primary"
               >
-                {loading ? 'Création...' : 'Créer la candidature'}
+                {isSubmitting ? 'Création...' : 'Créer la candidature'}
               </button>
             </div>
           </form>

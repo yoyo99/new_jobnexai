@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd'
 import { supabase } from '../lib/supabase'
@@ -7,6 +7,7 @@ import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { downloadApplicationPDF } from '../lib/pdf'
 import { trackEvent } from '../lib/monitoring'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   CalendarIcon,
   PencilIcon,
@@ -18,6 +19,7 @@ import { JobApplicationForm } from './JobApplicationForm'
 import { AutomatedApplications } from './applications/AutomatedApplications'
 import { CoverLetterGenerator } from './applications/CoverLetterGenerator'
 import { InterviewManager } from './applications/InterviewManager'
+import { toast } from 'react-hot-toast'
 
 interface JobApplication {
   id: string
@@ -47,24 +49,20 @@ const statusColumns = [
 
 export function JobApplications() {
   const { user } = useAuth()
-  const [applications, setApplications] = useState<JobApplication[]>([])
-  const [loading, setLoading] = useState(true)
   const [selectedApplication, setSelectedApplication] = useState<JobApplication | null>(null)
   const [showNotes, setShowNotes] = useState(false)
   const [notes, setNotes] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [selectedJobId, setSelectedJobId] = useState<string | undefined>()
   const [activeTab, setActiveTab] = useState<'kanban' | 'automated' | 'cover-letter' | 'interviews'>('kanban')
+  const queryClient = useQueryClient()
 
-  useEffect(() => {
-    if (user) {
-      loadApplications()
-    }
-  }, [user])
-
-  const loadApplications = async () => {
-    try {
-      setLoading(true)
+  // Query for fetching applications
+  const { data: applications = [], isLoading, error } = useQuery<JobApplication[]>({
+    queryKey: ['jobApplications', user?.id],
+    queryFn: async () => {
+      if (!user) return []
+      
       const { data, error } = await supabase
         .from('job_applications')
         .select(`
@@ -77,17 +75,87 @@ export function JobApplications() {
             url
           )
         `)
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .order('updated_at', { ascending: false })
 
       if (error) throw error
-      setApplications(data || [])
-    } catch (error) {
-      console.error('Error loading applications:', error)
-    } finally {
-      setLoading(false)
+      return data || []
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2,
+    onError: (err) => {
+      console.error('Error loading applications:', err)
+      toast.error('Failed to load applications')
     }
-  }
+  })
+
+  // Mutation for updating application status (drag and drop)
+  const { mutate: updateApplicationStatus } = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: JobApplication['status'] }) => {
+      const { error } = await supabase
+        .from('job_applications')
+        .update({
+          status,
+          applied_at: status === 'applied' ? new Date().toISOString() : null
+        })
+        .eq('id', id)
+
+      if (error) throw error
+      return { id, status }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['jobApplications', user?.id] })
+      toast.success('Application status updated')
+    },
+    onError: (err) => {
+      console.error('Error updating application status:', err)
+      toast.error('Failed to update application status')
+    }
+  })
+
+  // Mutation for updating notes
+  const { mutate: updateNotesMutation, isPending: isUpdatingNotes } = useMutation({
+    mutationFn: async ({ id, notes }: { id: string; notes: string }) => {
+      const { error } = await supabase
+        .from('job_applications')
+        .update({ notes })
+        .eq('id', id)
+
+      if (error) throw error
+      return { id, notes }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['jobApplications', user?.id] })
+      setShowNotes(false)
+      toast.success('Notes updated successfully')
+    },
+    onError: (err) => {
+      console.error('Error updating notes:', err)
+      toast.error('Failed to update notes')
+    }
+  })
+
+  // Mutation for deleting application
+  const { mutate: deleteApplicationMutation } = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('job_applications')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+      return id
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['jobApplications', user?.id] })
+      toast.success('Application deleted successfully')
+    },
+    onError: (err) => {
+      console.error('Error deleting application:', err)
+      toast.error('Failed to delete application')
+    }
+  })
 
   const handleDragEnd = async (result: DropResult) => {
     if (!result.destination) return
@@ -95,70 +163,17 @@ export function JobApplications() {
     const { draggableId, destination } = result
     const newStatus = destination.droppableId as JobApplication['status']
 
-    try {
-      const { error } = await supabase
-        .from('job_applications')
-        .update({
-          status: newStatus,
-          applied_at: newStatus === 'applied' ? new Date().toISOString() : null
-        })
-        .eq('id', draggableId)
-
-      if (error) throw error
-
-      setApplications(prev =>
-        prev.map(app =>
-          app.id === draggableId
-            ? {
-                ...app,
-                status: newStatus,
-                applied_at: newStatus === 'applied' ? new Date().toISOString() : null
-              }
-            : app
-        )
-      )
-    } catch (error) {
-      console.error('Error updating application status:', error)
-    }
+    updateApplicationStatus({ id: draggableId, status: newStatus })
   }
 
   const updateNotes = async () => {
     if (!selectedApplication) return
 
-    try {
-      const { error } = await supabase
-        .from('job_applications')
-        .update({ notes })
-        .eq('id', selectedApplication.id)
-
-      if (error) throw error
-
-      setApplications(prev =>
-        prev.map(app =>
-          app.id === selectedApplication.id
-            ? { ...app, notes }
-            : app
-        )
-      )
-      setShowNotes(false)
-    } catch (error) {
-      console.error('Error updating notes:', error)
-    }
+    updateNotesMutation({ id: selectedApplication.id, notes })
   }
 
   const deleteApplication = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('job_applications')
-        .delete()
-        .eq('id', id)
-
-      if (error) throw error
-
-      setApplications(prev => prev.filter(app => app.id !== id))
-    } catch (error) {
-      console.error('Error deleting application:', error)
-    }
+    deleteApplicationMutation(id)
   }
 
   const handleExportPDF = async (application: JobApplication) => {
@@ -177,10 +192,20 @@ export function JobApplications() {
     }
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-400"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center py-12">
+        <div className="bg-red-500/10 border border-red-500 text-red-400 px-4 py-2 rounded-lg">
+          Failed to load applications. Please refresh the page.
+        </div>
       </div>
     )
   }
@@ -398,14 +423,16 @@ export function JobApplications() {
               <button
                 onClick={() => setShowNotes(false)}
                 className="btn-secondary"
+                disabled={isUpdatingNotes}
               >
                 Annuler
               </button>
               <button
                 onClick={updateNotes}
                 className="btn-primary"
+                disabled={isUpdatingNotes}
               >
-                Enregistrer
+                {isUpdatingNotes ? 'Enregistrement...' : 'Enregistrer'}
               </button>
             </div>
           </div>
