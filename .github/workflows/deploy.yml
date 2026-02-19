@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  NODE_VERSION: '20.11.1'
+  NODE_VERSION: "20.11.1"
 
 jobs:
   deploy-preview:
@@ -57,7 +57,12 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `## Preview Deployment\n\nDeployed to: ${deployUrl}\n\n---\n*Deployed by GitHub Actions*`
+              body: `## Preview Deployment
+
+Deployed to: ${deployUrl}
+
+---
+*Deployed by GitHub Actions*`
             });
 
   deploy-production:
