@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
 
 import { getRedisClient } from '@/lib/redisClient';
 import { getS3ObjectBuffer, uploadDocumentToS3 } from '@/lib/s3';
@@ -9,62 +8,44 @@ import {
   PoleEmploiLetterData,
 } from './utils';
 
-// Zod schema for validation
-const UserInfoSchema = z.object({
-  lastname: z.string().min(1, "Le nom est obligatoire"),
-  firstname: z.string().min(1, "Le prénom est obligatoire"),
-  address: z.string().min(1, "L'adresse est obligatoire"),
-  pole_emploi_id: z.string().min(1, "L'identifiant Pôle Emploi est obligatoire"),
-});
-
-const ApplicationSummarySchema = z.object({
-  applications: z.array(
-    z.object({
-      title: z.string().optional(),
-      company: z.string().optional(),
-      date: z.string().optional(),
-      status: z.string().optional(),
-    })
-  ),
-});
-
-const PoleEmploiLetterSchema = z.object({
-  user_info: UserInfoSchema,
-  period: z.tuple([z.number(), z.number()]),
-  summary: ApplicationSummarySchema,
-  template_type: z.string().optional(),
-});
-
-type ValidatedPoleEmploiLetterData = z.infer<typeof PoleEmploiLetterSchema>;
+function validatePayload(payload: unknown): payload is PoleEmploiLetterData {
+  if (!payload || typeof payload !== 'object') return false;
+  const data = payload as PoleEmploiLetterData;
+  return Boolean(
+    data.user_info?.lastname &&
+      data.user_info?.firstname &&
+      data.user_info?.address &&
+      data.user_info?.pole_emploi_id &&
+      Array.isArray(data.period) &&
+      data.period.length === 2 &&
+      typeof data.period[0] === 'number' &&
+      typeof data.period[1] === 'number' &&
+      data.summary?.applications &&
+      Array.isArray(data.summary.applications)
+  );
+}
 
 export async function POST(request: NextRequest) {
   try {
     const payload = await request.json();
 
-    // Validate payload using Zod
-    const validationResult = PoleEmploiLetterSchema.safeParse(payload);
-
-    if (!validationResult.success) {
-      const errorMessages = validationResult.error.errors.map(err => `
-- ${err.path.join('.')}: ${err.message}`).join('');
-      
+    if (!validatePayload(payload)) {
       return NextResponse.json(
         {
-          error: `Requête invalide. Veuillez corriger les erreurs suivantes :${errorMessages}`,
-          details: validationResult.error.errors,
+          error:
+            "Requête invalide. Veuillez fournir user_info, period et summary conformes.",
         },
         { status: 400 }
       );
     }
 
-    const validatedData = validationResult.data;
-    const [month, year] = validatedData.period;
-    const templateType = validatedData.template_type ?? 'standard';
+    const [month, year] = payload.period;
+    const templateType = payload.template_type ?? 'standard';
 
     const rawUserId =
       request.headers.get('x-user-id')?.trim() ||
-      validatedData.user_info.pole_emploi_id ||
-      `${validatedData.user_info.firstname}-${validatedData.user_info.lastname}`.replace(/\s+/g, '_');
+      payload.user_info.pole_emploi_id ||
+      `${payload.user_info.firstname}-${payload.user_info.lastname}`.replace(/\s+/g, '_');
 
     const redis = getRedisClient();
     const bucket = process.env.S3_BUCKET_POLE_EMPLOI;
@@ -103,11 +84,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const documentArrayBuffer = await generatePoleEmploiDocument(validatedData);
+    const documentArrayBuffer = await generatePoleEmploiDocument(payload);
     const documentBuffer = Buffer.from(documentArrayBuffer);
 
     const dateSuffix = new Date().toISOString().slice(0, 10);
-    const filename = `lettre_pole_emploi_${validatedData.user_info.lastname}_${dateSuffix}.docx`;
+    const filename = `lettre_pole_emploi_${payload.user_info.lastname}_${dateSuffix}.docx`;
 
     if (bucket) {
       const monthPadded = String(month).padStart(2, '0');
