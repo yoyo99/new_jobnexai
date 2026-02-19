@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  NODE_VERSION: '20.11.1'
+  NODE_VERSION: "20.11.1"
 
 jobs:
   deploy-preview:
@@ -25,10 +25,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Clean npm cache & Install dependencies
+        run: npm cache clean --force && npm ci
 
       - name: Build
         run: npm run build
@@ -70,10 +70,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Clean npm cache & Install dependencies
+        run: npm cache clean --force && npm ci
 
       - name: Build
         run: npm run build:netlify
