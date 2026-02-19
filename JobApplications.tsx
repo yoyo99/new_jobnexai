@@ -233,7 +233,7 @@ export function JobApplications() {
                                       </div>
                                       <div className="flex items-center gap-2">
                                         <button
-                                          onClick={() => deleteApplication(application.id)}
+                                          onClick={() => deleteApplicationMutation(application.id)}
                                           className="text-gray-400 hover:text-red-400"
                                         >
                                           <TrashIcon className="h-4 w-4" />
