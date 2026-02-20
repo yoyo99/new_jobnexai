@@ -1,0 +1,68 @@
+# Sprint Status Template
+# Location: _bmad-output/sprints/sprint-[N]-status.yaml
+
+sprint:
+  number: 1
+  name: "Sprint Name"
+  start_date: "YYYY-MM-DD"
+  end_date: "YYYY-MM-DD"
+  goal: "Sprint goal description"
+  status: planning | active | review | completed
+
+team:
+  capacity: 40  # Story points
+  velocity_avg: 35  # Historical average
+
+epics:
+  - id: EPIC-001
+    name: "Epic Name"
+    status: not_started | in_progress | completed
+    stories:
+      - id: STORY-001
+        title: "Story title"
+        points: 5
+        status: ready | in_progress | review | done | blocked
+        assignee: "dev"
+        blockers: []
+
+      - id: STORY-002
+        title: "Another story"
+        points: 3
+        status: ready
+        assignee: null
+        blockers: []
+
+metrics:
+  total_points: 0
+  completed_points: 0
+  remaining_points: 0
+  blocked_points: 0
+  progress_percentage: 0
+
+risks:
+  - id: RISK-001
+    description: "Risk description"
+    probability: high | medium | low
+    impact: high | medium | low
+    mitigation: "Mitigation strategy"
+    status: open | mitigated | closed
+
+blockers:
+  - id: BLOCK-001
+    story_id: STORY-XXX
+    description: "Blocker description"
+    raised_date: "YYYY-MM-DD"
+    owner: "who is working on it"
+    status: open | resolved
+
+daily_updates:
+  - date: "YYYY-MM-DD"
+    completed: ["STORY-001"]
+    in_progress: ["STORY-002"]
+    blocked: []
+    notes: "Daily standup notes"
+
+retrospective:
+  what_went_well: []
+  what_could_improve: []
+  action_items: []

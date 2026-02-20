@@ -3,7 +3,6 @@ import react from '@vitejs/plugin-react'
 import { sentryVitePlugin } from '@sentry/vite-plugin'
 import viteCompression from 'vite-plugin-compression'
 import { VitePWA } from 'vite-plugin-pwa'
-import { visualizer } from 'rollup-plugin-visualizer'
 import { fileURLToPath, URL } from 'node:url'
 // Compatibilité avec les fichiers Nav.vue requis par Netlify
 // Remarque : cette ligne ne sera pas utilisée par l'application React principale
@@ -132,16 +131,18 @@ if (process.env.VITE_SENTRY_AUTH_TOKEN) {
 }
 
 // Add bundle analyzer in development
-if (process.env.ANALYZE) {
-  plugins.push(
-    visualizer({
-      filename: 'dist/stats.html',
-      open: true,
-      gzipSize: true,
-      brotliSize: true,
-    })
-  )
-}
+// Note: rollup-plugin-visualizer is ESM-only, use `npm run build -- --analyze` separately
+// if (process.env.ANALYZE) {
+//   const { visualizer } = await import('rollup-plugin-visualizer')
+//   plugins.push(
+//     visualizer({
+//       filename: 'dist/stats.html',
+//       open: true,
+//       gzipSize: true,
+//       brotliSize: true,
+//     })
+//   )
+// }
 
 export default defineConfig({
   plugins,

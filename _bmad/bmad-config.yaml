@@ -1,0 +1,64 @@
+# BMAD Configuration for JobNexAI
+# Breakthrough Method for Agile AI-Driven Development
+
+project:
+  name: JobNexAI
+  description: SaaS job search automation platform powered by AI
+  version: 1.0.0
+
+paths:
+  bmad_root: ./_bmad
+  output_root: ./_bmad-output
+  agents: ./_bmad/agents
+  workflows: ./_bmad/workflows
+  templates: ./_bmad/templates
+  checklists: ./_bmad/checklists
+
+output_directories:
+  briefs: ./_bmad-output/briefs
+  research: ./_bmad-output/research
+  prds: ./_bmad-output/prds
+  architecture: ./_bmad-output/architecture
+  ux: ./_bmad-output/ux
+  epics: ./_bmad-output/epics
+  sprints: ./_bmad-output/sprints
+  reviews: ./_bmad-output/reviews
+
+agents:
+  - analyst
+  - pm
+  - architect
+  - ux-designer
+  - sm
+  - dev
+  - tech-writer
+  - quinn
+  - bmad-master
+
+workflow_pipeline:
+  - phase: discovery
+    workflows: [create-product-brief, research]
+    output: briefs, research
+  - phase: definition
+    workflows: [create-prd]
+    output: prds
+  - phase: design
+    workflows: [create-architecture, create-ux-design]
+    output: architecture, ux
+  - phase: planning
+    workflows: [create-epics-and-stories, sprint-planning]
+    output: epics, sprints
+  - phase: implementation
+    workflows: [dev-story, quick-dev]
+    output: code changes
+  - phase: validation
+    workflows: [code-review, qa-automate]
+    output: reviews
+  - phase: deployment
+    workflows: [retrospective]
+    output: lessons learned
+
+integration:
+  existing_agents: AGENTS.md
+  existing_commands: .claude/commands/
+  merge_strategy: complement  # BMAD complements existing JobNexAI agents

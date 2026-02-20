@@ -9,9 +9,9 @@ import { motion } from 'framer-motion';
 const languages = [
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
   { code: 'en', name: 'English', flag: '🇬🇧' },
-  // { code: 'es', name: 'Español', flag: '🇪🇸' },
-  // { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-  // { code: 'it', name: 'Italiano', flag: '🇮🇹' },
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+  { code: 'it', name: 'Italiano', flag: '🇮🇹' },
 ];
 
 export function LanguageSwitcher() {
