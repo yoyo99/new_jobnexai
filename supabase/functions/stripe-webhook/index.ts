@@ -12,34 +12,28 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 )
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { getCorsHeaders } from '../_shared/cors.ts';
 
 Deno.serve(async (req) => {
-  // **** NEW DEBUG LOG ****
-  const headersObject: { [key: string]: string } = {};
-  req.headers.forEach((value, key) => {
-    headersObject[key] = value;
-  });
-  console.log(`[STRIPE WEBHOOK DEBUG] Function invoked. Method: ${req.method}. Headers: ${JSON.stringify(headersObject)}`);
+  // Get CORS headers for this request
+  const origin = req.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    // **** NEW DEBUG LOG ****
-    console.log('[STRIPE WEBHOOK DEBUG] OPTIONS request received, sending ok.');
-    return new Response('ok', { headers: corsHeaders })
+    console.log('[STRIPE WEBHOOK] OPTIONS preflight request');
+    return new Response('ok', { headers: corsHeaders });
   }
 
-  // **** NEW: Read body once ****
+  // Read body once
   let rawBodyForLoggingAndProcessing: string;
   try {
     rawBodyForLoggingAndProcessing = await req.text();
-    console.log(`[STRIPE WEBHOOK DEBUG] Raw request body (first 500 chars): ${rawBodyForLoggingAndProcessing ? rawBodyForLoggingAndProcessing.substring(0, 500) : 'null or empty'}`);
+    console.log(`[STRIPE WEBHOOK] Request body length: ${rawBodyForLoggingAndProcessing?.length || 0}`);
   } catch (bodyError: any) {
-    console.error(`[STRIPE WEBHOOK DEBUG] CRITICAL: Failed to read request body: ${bodyError.message}`);
+    console.error(`[STRIPE WEBHOOK] Failed to read request body: ${bodyError.message}`);
     return new Response('Failed to read request body', { status: 500, headers: corsHeaders });
   }
-  // **** END NEW: Read body once ****
 
   try {
     // **** NEW DEBUG LOG ****
@@ -56,34 +50,34 @@ Deno.serve(async (req) => {
     // const body = await req.text(); // Already read into rawBodyForLoggingAndProcessing
     const body = rawBodyForLoggingAndProcessing!; // Use the already read body, assert not null as we'd return 500 if it was
     
-    // Si le webhook secret n'est pas configuré, on traite quand même l'événement
-    // mais sans vérifier la signature
-    let event;
+    // SECURITY: La vérification de signature est OBLIGATOIRE
+    // Ne jamais traiter un webhook sans vérifier la signature Stripe
     const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
-    // **** NEW DEBUG LOG ****
-    console.log(`[STRIPE WEBHOOK DEBUG] Retrieved STRIPE_WEBHOOK_SECRET: ${webhookSecret ? 'Exists and has a value' : 'MISSING or Empty'}`);
-    
-    if (webhookSecret) {
-      // **** NEW DEBUG LOG ****
-      console.log('[STRIPE WEBHOOK DEBUG] Attempting stripe.webhooks.constructEventAsync...');
-      try {
-        event = await stripe.webhooks.constructEventAsync(
+    console.log(`[STRIPE WEBHOOK] STRIPE_WEBHOOK_SECRET: ${webhookSecret ? 'configured' : 'MISSING'}`);
+
+    if (!webhookSecret) {
+      console.error('[STRIPE WEBHOOK] CRITICAL: STRIPE_WEBHOOK_SECRET is not configured. Rejecting request.');
+      return new Response(
+        JSON.stringify({ error: 'Webhook secret not configured. Contact administrator.' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    let event;
+    try {
+      console.log('[STRIPE WEBHOOK] Verifying signature...');
+      event = await stripe.webhooks.constructEventAsync(
         body,
         signature,
         webhookSecret
-        );
-        console.log('[STRIPE WEBHOOK DEBUG] constructEventAsync SUCCESSFUL.');
-      } catch (sigError: any) {
-        console.error(`[STRIPE WEBHOOK DEBUG] constructEventAsync FAILED: ${sigError.message}`);
-        throw sigError; // Re-throw to be caught by outer catch
-      }
-    } else {
-      // Traiter l'événement sans vérifier la signature
-      // Ceci est moins sécurisé mais permet de fonctionner sans webhook secret
-      event = JSON.parse(body);
-      // **** NEW DEBUG LOG ****
-      console.warn('[STRIPE WEBHOOK DEBUG] Webhook secret is MISSING. Processing without signature verification.');
-      event = JSON.parse(body);
+      );
+      console.log('[STRIPE WEBHOOK] Signature verification SUCCESSFUL.');
+    } catch (sigError: any) {
+      console.error(`[STRIPE WEBHOOK] Signature verification FAILED: ${sigError.message}`);
+      return new Response(
+        JSON.stringify({ error: 'Invalid signature' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // **** NEW DEBUG LOG ****
