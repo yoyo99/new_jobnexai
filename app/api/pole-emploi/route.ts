@@ -45,13 +45,13 @@ export async function POST(request: NextRequest) {
     const validationResult = PoleEmploiLetterSchema.safeParse(payload);
 
     if (!validationResult.success) {
-      const errorMessages = validationResult.error.errors.map(err => `
+      const errorMessages = validationResult.error.issues.map(err => `
 - ${err.path.join('.')}: ${err.message}`).join('');
       
       return NextResponse.json(
         {
           error: `Requête invalide. Veuillez corriger les erreurs suivantes :${errorMessages}`,
-          details: validationResult.error.errors,
+          details: validationResult.error.issues,
         },
         { status: 400 }
       );
