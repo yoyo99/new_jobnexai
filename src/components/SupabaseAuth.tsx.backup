@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
@@ -30,53 +30,17 @@ const SupabaseAuth: React.FC = () => {
   // Récupérer l'URL de redirection si elle existe
   const from = location.state?.from?.pathname || '/app/dashboard';
 
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setMessage(null);
-    setShowHelp(false);
-    if (!email || !password) {
-      setMessage({ type: 'error', text: t('auth.errors.requiredFields') });
-      return;
+  // Mettre à jour le mode selon la route
+  useEffect(() => {
+    setIsLogin(location.pathname !== '/register');
+  }, [location.pathname]);
+
+  // Vérifier si l'utilisateur est déjà connecté
+  useEffect(() => {
+    if (isLoggedIn && user) {
+      navigate('/app/dashboard');
     }
-    if (password.length < 9) {
-      setMessage({ type: 'error', text: t('auth.errors.passwordLength') });
-      return;
-    }
-    try {
-      setLoading(true);
-      // Utiliser notre hook auth.login à la place de AuthService.signIn
-      const { data: user, error } = await auth.login(email, password);
-      
-      if (error) {
-        // Mapping des messages d'erreur Supabase vers des clés i18n si possible
-        let errorKey = '';
-        if (error.message === 'Invalid login credentials') errorKey = 'auth.errors.login';
-        if (error.message === 'User already registered') errorKey = 'auth.errors.signup';
-        if (error.message === 'Password should be at least 9 characters') errorKey = 'auth.errors.passwordLength';
-        setMessage({ type: 'error', text: errorKey !== '' ? t(errorKey) : error.message || t('auth.errors.unknown') });
-        setShowHelp(true);
-        return;
-      }
-      if (!user) {
-        setMessage({ type: 'error', text: t('auth.errors.login') });
-        setShowHelp(true);
-        return;
-      }
-      setMessage({ type: 'success', text: t('auth.success.login') });
-      // Délai pour lire le message, puis la navigation dans son propre tick
-      setTimeout(() => {
-        setTimeout(() => {
-          navigate(from);
-        }, 2000);
-      }, 1500);
-    } catch (error: any) {
-      console.error('Error signing in:', error);
-      setMessage({ type: 'error', text: error?.message || t('auth.errors.unknown') });
-      setShowHelp(true);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [isLoggedIn, user, navigate]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     setTermsError(null);
@@ -115,12 +79,58 @@ const SupabaseAuth: React.FC = () => {
       // Délai pour lire le message, puis la navigation dans son propre tick
       setTimeout(() => {
         setTimeout(() => {
-          navigate(from);
-        }, 2000);
-      }, 1500);
+          navigate('/pricing');
+        }, 0);
+      }, 2000);
     } catch (error: any) {
       console.error('Error signing up:', error);
       setMessage({ type: 'error', text: error?.message || t('auth.errors.unknown') });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMessage(null);
+    setShowHelp(false);
+    if (!email || !password) {
+      setMessage({ type: 'error', text: t('auth.errors.requiredFields') });
+      return;
+    }
+    if (password.length < 9) {
+      setMessage({ type: 'error', text: t('auth.errors.passwordLength') });
+      return;
+    }
+    try {
+      setLoading(true);
+      // Utiliser notre hook auth.login à la place de AuthService.signIn
+      const { data: user, error } = await auth.login(email, password);
+      
+      if (error) {
+        // Mapping des messages d'erreur Supabase vers des clés i18n si possible
+        let errorKey = '';
+        if (error.message === 'Invalid login credentials') errorKey = 'auth.errors.login';
+        if (error.message === 'User already registered') errorKey = 'auth.errors.signup';
+        if (error.message === 'Password should be at least 9 characters') errorKey = 'auth.errors.passwordLength';
+        setMessage({ type: 'error', text: errorKey !== '' ? t(errorKey) : error.message || t('auth.errors.unknown') });
+        setShowHelp(true);
+        return;
+      }
+      if (!user) {
+        setMessage({ type: 'error', text: t('auth.errors.login') });
+        setShowHelp(true);
+        return;
+      }
+      setMessage({ type: 'success', text: t('auth.success.login') });
+      // Délai pour lire le message, puis la navigation
+      setTimeout(() => {
+        navigate(from);
+      }, 1500);
+    } catch (error: any) {
+      console.error('Error signing in:', error);
+      setMessage({ type: 'error', text: error?.message || t('auth.errors.unknown') });
+      setShowHelp(true);
     } finally {
       setLoading(false);
     }
@@ -180,11 +190,11 @@ const SupabaseAuth: React.FC = () => {
       
       {/* Grid pattern overlay */}
       <div 
-        className="absolute inset-0 opacity-10" 
+        className="absolute inset-0" 
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd' stroke='currentColor' stroke-width='1' opacity='0.1'%3E%3Cpath d='M30 0v60M0 30h60M0 60h60M0 0L60 60M60 0L0 60'/%3E%3C/g%3E%3C/svg%3E")`
         }}
-      />
+      ></div>
       
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -220,197 +230,175 @@ const SupabaseAuth: React.FC = () => {
             transition={{ duration: 0.5, delay: 0.4 }}
             className="text-gray-300 text-lg"
           >
-            {isLogin ? t('auth.subtitle.login') : t('auth.subtitle.signup')}
-          </motion.p>
-        </div>
-        
-        <form className="mt-8 space-y-6" onSubmit={isLogin ? handleSignIn : handleSignUp}>
-          <input type="hidden" name="remember" value="true" />
-          <div className="space-y-5">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.5 }}
-            >
-              <label htmlFor="email-address" className="block text-sm font-medium text-gray-300 mb-2">
-                {t('auth.email')}
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-4 4 0 00-8 0 4 4 0 008 0zm-4-2a2 2 0 11-4 0 2 2 0 014 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 4.477 10 10-4.477 10-10z" />
-                  </svg>
-                </div>
-                <input
-                  id="email-address"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    setMessage(null);
-                  }}
-                  className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-600 bg-white/5 text-white placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent sm:text-sm transition-all duration-200"
-                  placeholder={t('auth.email')}
-                />
-              </div>
-            </motion.div>
-            
-            {!isLogin && (
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.6 }}
-              >
-                <label htmlFor="full-name" className="block text-sm font-medium text-gray-300 mb-2">
-                  {t('auth.fullName')}
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 100-14 0 7 7 0 0014 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 1v9m0 9l9-9m-9 9h18" />
-                    </svg>
-                  </div>
-                  <input
-                    id="full-name"
-                    name="fullName"
-                    type="text"
-                    autoComplete="name"
-                    value={fullName}
-                    onChange={(e) => {
-                      setFullName(e.target.value);
-                      setMessage(null);
-                    }}
-                    className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-600 bg-white/5 text-white placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent sm:text-sm transition-all duration-200"
-                    placeholder={t('auth.fullName')}
-                  />
-                </div>
-              </motion.div>
-            )}
-            
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.7 }}
-            >
-              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-                {t('auth.password')}
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10 10V7a4 4 0 00-8 0v6a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete={isLogin ? "current-password" : "new-password"}
-                  required
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setMessage(null);
-                  }}
-                  className="appearance-none block w-full pl-10 pr-10 py-3 border border-gray-600 bg-white/5 text-white placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent sm:text-sm transition-all duration-200"
-                  placeholder={t('auth.password')}
-                />
-                <button
-                  type="button"
-                  tabIndex={-1}
-                  aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-purple-400 focus:outline-none transition-colors"
-                  style={{ background: 'none', border: 'none' }}
-                >
-                  {showPassword ? (
-                    <EyeSlashIcon className="h-5 w-5" />
-                  ) : (
-                    <EyeIcon className="h-5 w-5" />
-                  )}
-                </button>
-              </div>
-            </motion.div>
-          </div>
+              <input
+                id="email-address"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setMessage(null);
+                }}
+                className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-600 bg-white/5 text-white placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent sm:text-sm transition-all duration-200"
+                placeholder={t('auth.email')}
+              />
+            </div>
+          </motion.div>
           
-          {/* Terms checkbox for signup */}
           {!isLogin && (
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.8 }}
+              transition={{ duration: 0.5, delay: 0.6 }}
             >
-              <div className="flex items-start">
-                <div className="flex items-center h-5">
-                  <input
-                    id="terms"
-                    name="terms"
-                    type="checkbox"
-                    checked={acceptTerms}
-                    onChange={(e) => {
-                      setAcceptTerms(e.target.checked);
-                      if (e.target.checked) setTermsError(null);
-                    }}
-                    className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-white/30 rounded bg-white/5"
-                  />
+              <label htmlFor="full-name" className="block text-sm font-medium text-gray-300 mb-2">
+                {t('auth.fullName')}
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 100-14 0 7 7 0 0014 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 1v9m0 9l9-9m-9 9h18" />
+                  </svg>
                 </div>
-                <div className="ml-3 text-sm">
-                  <label htmlFor="terms" className="font-medium text-gray-300">
-                    {t('auth.acceptTerms', "J'accepte les")} {' '}
-                    <a href="/terms" className="text-purple-400 hover:text-purple-300">
-                      {t('auth.termsLink', 'conditions d\'utilisation')}
-                    </a>
-                  </label>
-                  {termsError && <p className="mt-1 text-sm text-red-400">{termsError}</p>}
-                </div>
+                <input
+                  id="full-name"
+                  name="fullName"
+                  type="text"
+                  autoComplete="name"
+                  value={fullName}
+                  onChange={(e) => {
+                    setFullName(e.target.value);
+                    setMessage(null);
+                  }}
+                  className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-600 bg-white/5 text-white placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent sm:text-sm transition-all duration-200"
+                  placeholder={t('auth.fullName')}
+                />
               </div>
             </motion.div>
+          )}
+          
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.7 }}
+          >
+            <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+              {t('auth.password')}
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v6a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete={isLogin ? "current-password" : "new-password"}
+                required
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setMessage(null);
+                }}
+                className="appearance-none block w-full pl-10 pr-10 py-3 border border-gray-600 bg-white/5 text-white placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent sm:text-sm transition-all duration-200"
+                placeholder={t('auth.password')}
+              />
+              <button
+                type="button"
+                tabIndex={-1}
+                aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-purple-400 focus:outline-none transition-colors"
+                style={{ background: 'none', border: 'none' }}
+              >
+                {showPassword ? (
+                  <EyeSlashIcon className="h-5 w-5" />
+                ) : (
+                  <EyeIcon className="h-5 w-5" />
+                )}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+        
+        {/* Terms checkbox for signup */}
+        {!isLogin && (
+          <div className="flex items-start">
+            <div className="flex items-center h-5">
+              <input
+                id="terms"
+                name="terms"
+                type="checkbox"
+                checked={acceptTerms}
+                onChange={(e) => {
+                  setAcceptTerms(e.target.checked);
+                  if (e.target.checked) setTermsError(null);
+                }}
+                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-white/30 rounded bg-white/5"
+              />
+                <input
+                  id="terms"
+                  name="terms"
+                  type="checkbox"
+                  checked={acceptTerms}
+                  onChange={(e) => {
+                    setAcceptTerms(e.target.checked);
+                    if (e.target.checked) setTermsError(null);
+                  }}
+                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-white/30 rounded bg-white/5"
+                />
+              </div>
+              <div className="ml-3 text-sm">
+                <label htmlFor="terms" className="font-medium text-gray-300">
+                  {t('auth.acceptTerms', 'J\'accepte les')} {' '}
+                  <a href="/terms" className="text-primary-400 hover:text-primary-300">
+                    {t('auth.termsLink', 'conditions d\'utilisation')}
+                  </a>
+                </label>
+                {termsError && <p className="mt-1 text-sm text-red-400">{termsError}</p>}
+              </div>
+            </div>
           )}
           
           {/* Forgot Password Link */}
           {isLogin && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.9 }}
-            >
-              <div className="flex justify-end text-sm mt-2 mb-4">
-                <button
-                  type="button"
-                  onClick={handleForgotPassword}
-                  className="font-medium text-purple-400 hover:text-purple-300 focus:outline-none underline"
-                >
-                  {t('auth.forgotPasswordLink', 'Mot de passe oublié ?')}
-                </button>
-              </div>
-            </motion.div>
-          )}
-          
-          {!isLogin && <PasswordStrengthMeter password={password} />}
-          
-          {/* Message display */}
-          <AnimatePresence>
-            {message && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className={`rounded-md p-4 mb-4 ${
-                  message.type === 'error' ? 'bg-red-900/50 text-red-400' : 'bg-green-900/50 text-green-400'
-                }`}
-                role="alert"
+            <div className="flex justify-end text-sm mt-2 mb-4">
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                className="font-medium text-primary-400 hover:text-primary-300 focus:outline-none underline"
               >
-                <p className="text-sm">{message.text}</p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-          
-          {/* Action buttons */}
+                {t('auth.forgotPasswordLink', 'Mot de passe oublié ?')}
+              </button>
+            </div>
+          )}
+          {!isLogin && <PasswordStrengthMeter password={password} />}
+          {message && (
+            <div
+              className={`rounded-md p-4 ${
+                message.type === 'error' ? 'bg-red-900/50 text-red-400' : 'bg-green-900/50 text-green-400'
+              }`}
+              role="alert"
+            >
+              <p className="text-sm">{message.text}</p>
+            </div>
+          )}
+          {showHelp && isLogin && (
+            <div className="bg-blue-900/50 text-blue-400 p-4 rounded-md">
+              <h4 className="text-sm font-medium mb-2">{t('auth.help.title')}</h4>
+              <ul className="text-xs space-y-1 list-disc list-inside">
+                <li>{t('auth.help.checkEmail')}</li>
+                <li>{t('auth.help.capsLock')}</li>
+                <li>{t('auth.help.forgotPassword')}</li>
+                <li>{t('auth.help.noAccount')}</li>
+              </ul>
+            </div>
+          )}
           <div className="space-y-4 mt-6">
             <motion.button
               whileHover={{ scale: 1.02 }}
@@ -433,20 +421,14 @@ const SupabaseAuth: React.FC = () => {
             </motion.button>
             
             {/* Divider */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-600"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-transparent text-gray-400">ou</span>
-                </div>
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-600"></div>
               </div>
-            </motion.div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-transparent text-gray-400">ou</span>
+              </div>
+            </div>
             
             {/* Google OAuth Button */}
             <motion.button
