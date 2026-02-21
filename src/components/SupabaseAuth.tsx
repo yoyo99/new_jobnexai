@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -12,7 +12,6 @@ const SupabaseAuth: React.FC = () => {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [message, setMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
-  const [showHelp, setShowHelp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [termsError, setTermsError] = useState<string | null>(null);
@@ -25,7 +24,7 @@ const SupabaseAuth: React.FC = () => {
   const [isLogin, setIsLogin] = useState(() => location.pathname !== '/register');
 
   // Utiliser notre nouveau hook au lieu du AuthService
-  const { auth, isLoggedIn, user } = useJobnexai();
+  const { auth } = useJobnexai();
 
   // Récupérer l'URL de redirection si elle existe
   const from = location.state?.from?.pathname || '/app/dashboard';
@@ -33,7 +32,6 @@ const SupabaseAuth: React.FC = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage(null);
-    setShowHelp(false);
     if (!email || !password) {
       setMessage({ type: 'error', text: t('auth.errors.requiredFields') });
       return;
@@ -54,12 +52,10 @@ const SupabaseAuth: React.FC = () => {
         if (error.message === 'User already registered') errorKey = 'auth.errors.signup';
         if (error.message === 'Password should be at least 9 characters') errorKey = 'auth.errors.passwordLength';
         setMessage({ type: 'error', text: errorKey !== '' ? t(errorKey) : error.message || t('auth.errors.unknown') });
-        setShowHelp(true);
         return;
       }
       if (!user) {
         setMessage({ type: 'error', text: t('auth.errors.login') });
-        setShowHelp(true);
         return;
       }
       setMessage({ type: 'success', text: t('auth.success.login') });
@@ -72,7 +68,6 @@ const SupabaseAuth: React.FC = () => {
     } catch (error: any) {
       console.error('Error signing in:', error);
       setMessage({ type: 'error', text: error?.message || t('auth.errors.unknown') });
-      setShowHelp(true);
     } finally {
       setLoading(false);
     }
@@ -476,7 +471,6 @@ const SupabaseAuth: React.FC = () => {
               onClick={() => {
                 setIsLogin(!isLogin);
                 setMessage(null);
-                setShowHelp(false);
               }}
               className="w-full bg-transparent border border-gray-600 text-gray-300 font-medium py-3 px-4 rounded-lg hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all duration-200"
             >
