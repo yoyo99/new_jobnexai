@@ -258,10 +258,12 @@ export function useAuth() {
       setLoading(true);
       const supabase = getSupabase();
       
+      // Force la redirection manuelle pour éviter les problèmes de protocole
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: undefined, // Laisser Supabase gérer automatiquement
+          skipBrowserRedirect: false,
         },
       });
       

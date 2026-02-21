@@ -21,7 +21,7 @@ function AuthCallback() {
           throw new Error(errorDescription)
         }
 
-        // Traiter le callback d'authentification
+        // Utiliser getSession() pour une récupération plus rapide
         const { data, error } = await supabase.auth.getSession()
 
         if (error) {
@@ -35,8 +35,8 @@ function AuthCallback() {
           
           if (isOAuth) {
             console.log('OAuth authentication successful')
-            // Créer ou mettre à jour le profil utilisateur si nécessaire
-            const { error: profileError } = await supabase
+            // Créer ou mettre à jour le profil utilisateur de manière asynchrone (non bloquant)
+            supabase
               .from('profiles')
               .upsert({
                 id: data.session.user.id,
@@ -45,14 +45,14 @@ function AuthCallback() {
                 avatar_url: data.session.user.user_metadata?.avatar_url,
                 updated_at: new Date().toISOString()
               })
-            
-            if (profileError) {
-              console.warn('Profile creation/update failed:', profileError)
-              // Ne pas échouer l'authentification pour une erreur de profil
-            }
+              .then(({ error: profileError }) => {
+                if (profileError) {
+                  console.warn('Profile creation/update failed:', profileError)
+                }
+              })
           }
           
-          // Rediriger vers le dashboard ou l'URL demandée
+          // Rediriger immédiatement sans attendre la mise à jour du profil
           const from = location.state?.from?.pathname || '/app/dashboard'
           navigate(from, { replace: true })
         } else {
@@ -67,6 +67,7 @@ function AuthCallback() {
       }
     }
 
+    // Exécuter immédiatement sans délai
     handleAuthCallback()
   }, [navigate, location])
 

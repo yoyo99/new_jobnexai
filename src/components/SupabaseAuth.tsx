@@ -160,18 +160,36 @@ const SupabaseAuth: React.FC = () => {
   };
 
   const handleGoogleSignIn = async () => {
+    console.log('🔍 Google sign-in clicked');
+    console.log('🔍 Auth object:', auth);
+    console.log('🔍 signInWithGoogle function:', auth?.signInWithGoogle);
+    
     try {
       setLoading(true);
       setMessage(null);
-      const { error } = await auth.signInWithGoogle();
       
-      if (error) {
-        setMessage({ type: 'error', text: error.message });
+      console.log('🔍 About to check signInWithGoogle...');
+      if (!auth || !auth.signInWithGoogle) {
+        console.error('❌ signInWithGoogle not available:', { auth, signInWithGoogle: auth?.signInWithGoogle });
+        throw new Error('signInWithGoogle function not available');
+      }
+      
+      // Test direct Supabase pour voir les providers disponibles
+      const supabase = (await import('../lib/supabase')).supabase;
+      console.log('🔍 Supabase client:', supabase);
+      console.log('🔍 Testing direct Supabase auth...');
+      
+      console.log('🔍 Calling signInWithGoogle...');
+      const result = await auth.signInWithGoogle();
+      console.log('🔍 signInWithGoogle result:', result);
+      
+      if (result.error) {
+        setMessage({ type: 'error', text: result.error.message });
         return;
       }
       // La redirection vers Google sera gérée automatiquement par Supabase
     } catch (error: any) {
-      console.error('Error signing in with Google:', error);
+      console.error('❌ Error signing in with Google:', error);
       setMessage({ type: 'error', text: error?.message || t('auth.errors.unknown') });
     } finally {
       setLoading(false);
@@ -361,7 +379,10 @@ const SupabaseAuth: React.FC = () => {
             
             <button
               type="button"
-              onClick={handleGoogleSignIn}
+              onClick={() => {
+                console.log('🔍 BUTTON CLICKED!');
+                handleGoogleSignIn();
+              }}
               disabled={loading}
               className="group relative w-full flex justify-center items-center gap-3 py-2 px-4 border border-gray-600 text-sm font-medium rounded-md text-white bg-white/10 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
@@ -372,6 +393,15 @@ const SupabaseAuth: React.FC = () => {
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
               </svg>
               Continuer avec Google
+            </button>
+            
+            {/* Bouton de test pour debug */}
+            <button
+              type="button"
+              onClick={() => alert('Test button works!')}
+              className="w-full mt-2 p-2 bg-red-500 text-white rounded"
+            >
+              TEST BUTTON
             </button>
             
             <button
