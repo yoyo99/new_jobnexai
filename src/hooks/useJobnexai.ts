@@ -45,13 +45,15 @@ export function useJobnexai() {
     resetPassword: auth.resetPassword,
     updatePassword: auth.updatePassword,
     updateProfile: auth.updateProfile,
+    signInWithGoogle: auth.signInWithGoogle,
   }), [
     auth.signIn,
     auth.signUp,
     auth.signOut,
     auth.resetPassword,
     auth.updatePassword,
-    auth.updateProfile
+    auth.updateProfile,
+    auth.signInWithGoogle
   ]);
   
   // Exposer les fonctions de gestion des offres d'emploi
