@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { EyeIcon, EyeSlashIcon, UserIcon, EnvelopeIcon, LockClosedIcon, SparklesIcon, CpuChipIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, EyeSlashIcon, UserIcon, EnvelopeIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 import { PasswordStrengthMeter } from './PasswordStrengthMeter';
 import { useJobnexai } from '../hooks/useJobnexai';
 
@@ -42,9 +42,11 @@ const SupabaseAuth: React.FC = () => {
     }
     try {
       setLoading(true);
+      // Utiliser notre hook auth.login à la place de AuthService.signIn
       const { data: user, error } = await auth.login(email, password);
       
       if (error) {
+        // Mapping des messages d'erreur Supabase vers des clés i18n si possible
         let errorKey = '';
         if (error.message === 'Invalid login credentials') errorKey = 'auth.errors.login';
         if (error.message === 'User already registered') errorKey = 'auth.errors.signup';
@@ -57,6 +59,7 @@ const SupabaseAuth: React.FC = () => {
         return;
       }
       setMessage({ type: 'success', text: t('auth.success.login') });
+      // Délai pour lire le message, puis la navigation dans son propre tick
       setTimeout(() => {
         setTimeout(() => {
           navigate(from);
@@ -88,6 +91,8 @@ const SupabaseAuth: React.FC = () => {
     }
     try {
       setLoading(true);
+      // Utiliser notre hook auth.register à la place de AuthService.signUp
+      // Diviser le nom complet en prénom et nom pour correspondre à l'interface attendue
       const nameParts = fullName.split(' ');
       const firstName = nameParts[0] || '';
       const lastName = nameParts.slice(1).join(' ') || '';
@@ -102,6 +107,7 @@ const SupabaseAuth: React.FC = () => {
         return;
       }
       setMessage({ type: 'success', text: t('auth.success.signup') });
+      // Délai pour lire le message, puis la navigation dans son propre tick
       setTimeout(() => {
         setTimeout(() => {
           navigate(from);
@@ -122,6 +128,7 @@ const SupabaseAuth: React.FC = () => {
     }
     try {
       setLoading(true);
+      // Utiliser notre hook auth.resetPassword à la place de AuthService.resetPassword
       const { error } = await auth.resetPassword(email);
       
       if (error) {
@@ -148,6 +155,7 @@ const SupabaseAuth: React.FC = () => {
         setMessage({ type: 'error', text: error.message });
         return;
       }
+      // La redirection vers Google sera gérée automatiquement par Supabase
     } catch (error: any) {
       console.error('Error signing in with Google:', error);
       setMessage({ type: 'error', text: error?.message || t('auth.errors.unknown') });
@@ -157,102 +165,47 @@ const SupabaseAuth: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Animated background grid */}
-      <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900">
-        <div className="absolute inset-0 opacity-20">
-          <div className="h-full w-full bg-grid-pattern"></div>
-        </div>
+    <div className="min-h-screen bg-white flex items-center justify-center px-4 sm:px-6 lg:px-8">
+      {/* Background with subtle gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-cyan-50" />
+      
+      {/* Floating elements for modern feel */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-cyan-400/20 to-indigo-400/20 rounded-full blur-3xl" />
       </div>
       
-      {/* Floating particles */}
-      <div className="absolute inset-0">
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-blue-500 rounded-full"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              y: [0, -100, 0],
-              opacity: [0, 1, 0],
-            }}
-            transition={{
-              duration: 3 + Math.random() * 2,
-              repeat: Infinity,
-              delay: Math.random() * 2,
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Main container */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="relative w-full max-w-2xl"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="relative w-full max-w-md"
       >
-        {/* Header with AI branding */}
+        {/* Logo and Brand */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="text-center mb-12"
+          className="text-center mb-8"
         >
-          <div className="inline-flex items-center justify-center mb-6">
-            <div className="relative">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl">
-                <CpuChipIcon className="w-10 h-10 text-white" />
-              </div>
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                className="absolute -inset-2 border-2 border-blue-500/30 rounded-2xl"
-              />
-            </div>
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl shadow-lg mb-4">
+            <span className="text-white font-bold text-2xl">JN</span>
           </div>
-          
-          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-            {isLogin ? 'Welcome Back' : 'Join the Revolution'}
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            {isLogin ? 'Bienvenue' : 'Rejoignez-nous'}
           </h1>
-          
-          <p className="text-xl text-gray-400 mb-2">
-            {isLogin ? 'Access your AI-powered career platform' : 'Start your intelligent job search journey'}
+          <p className="text-gray-600 text-lg">
+            {isLogin ? 'Connectez-vous à votre compte' : 'Créez votre compte gratuitement'}
           </p>
-          
-          <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
-            <SparklesIcon className="w-4 h-4" />
-            <span>Powered by Advanced AI</span>
-            <SparklesIcon className="w-4 h-4" />
-          </div>
         </motion.div>
 
-        {/* Main auth card */}
+        {/* Main Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="bg-gray-900/50 backdrop-blur-xl rounded-3xl border border-gray-800 p-8 shadow-2xl"
+          className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-gray-100 p-8"
         >
-          {/* Stats bar */}
-          <div className="grid grid-cols-3 gap-4 mb-8">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-400">10K+</div>
-              <div className="text-xs text-gray-500">Active Users</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-400">95%</div>
-              <div className="text-xs text-gray-500">Success Rate</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-pink-400">24/7</div>
-              <div className="text-xs text-gray-500">AI Support</div>
-            </div>
-          </div>
-
           <form className="space-y-6" onSubmit={isLogin ? handleSignIn : handleSignUp}>
             {/* Email Field */}
             <motion.div
@@ -260,12 +213,12 @@ const SupabaseAuth: React.FC = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
             >
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                Email Address
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                Email
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <EnvelopeIcon className="h-5 w-5 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
+                  <EnvelopeIcon className="h-5 w-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
                 </div>
                 <input
                   id="email"
@@ -278,8 +231,8 @@ const SupabaseAuth: React.FC = () => {
                     setEmail(e.target.value);
                     setMessage(null);
                   }}
-                  className="block w-full pl-10 pr-3 py-4 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
-                  placeholder="you@example.com"
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
+                  placeholder="vous@exemple.com"
                 />
               </div>
             </motion.div>
@@ -291,12 +244,12 @@ const SupabaseAuth: React.FC = () => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.35 }}
               >
-                <label htmlFor="fullName" className="block text-sm font-medium text-gray-300 mb-2">
-                  Full Name
+                <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">
+                  Nom complet
                 </label>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <UserIcon className="h-5 w-5 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
+                    <UserIcon className="h-5 w-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
                   </div>
                   <input
                     id="fullName"
@@ -308,8 +261,8 @@ const SupabaseAuth: React.FC = () => {
                       setFullName(e.target.value);
                       setMessage(null);
                     }}
-                    className="block w-full pl-10 pr-3 py-4 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
-                    placeholder="John Doe"
+                    className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
+                    placeholder="Jean Dupont"
                   />
                 </div>
               </motion.div>
@@ -321,12 +274,12 @@ const SupabaseAuth: React.FC = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}
             >
-              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-                Password
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                Mot de passe
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <LockClosedIcon className="h-5 w-5 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
+                  <LockClosedIcon className="h-5 w-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
                 </div>
                 <input
                   id="password"
@@ -339,14 +292,14 @@ const SupabaseAuth: React.FC = () => {
                     setPassword(e.target.value);
                     setMessage(null);
                   }}
-                  className="block w-full pl-10 pr-12 py-4 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
+                  className="block w-full pl-10 pr-10 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   tabIndex={-1}
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-blue-400 focus:outline-none transition-colors"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-indigo-500 focus:outline-none transition-colors"
                 >
                   {showPassword ? (
                     <EyeSlashIcon className="h-5 w-5" />
@@ -374,16 +327,16 @@ const SupabaseAuth: React.FC = () => {
                       setAcceptTerms(e.target.checked);
                       if (e.target.checked) setTermsError(null);
                     }}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-600 rounded mt-1 bg-gray-800"
+                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mt-1"
                   />
                   <div className="ml-3 text-sm">
-                    <label htmlFor="terms" className="text-gray-400">
-                      I agree to the{' '}
-                      <a href="/terms" className="text-blue-400 hover:text-blue-300 font-medium">
-                        Terms of Service
+                    <label htmlFor="terms" className="text-gray-600">
+                      J'accepte les{' '}
+                      <a href="/terms" className="text-indigo-600 hover:text-indigo-500 font-medium">
+                        conditions d'utilisation
                       </a>
                     </label>
-                    {termsError && <p className="mt-1 text-sm text-red-400">{termsError}</p>}
+                    {termsError && <p className="mt-1 text-sm text-red-600">{termsError}</p>}
                   </div>
                 </div>
               </motion.div>
@@ -400,9 +353,9 @@ const SupabaseAuth: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleForgotPassword}
-                  className="text-sm text-blue-400 hover:text-blue-300 font-medium"
+                  className="text-sm text-indigo-600 hover:text-indigo-500 font-medium"
                 >
-                  Forgot password?
+                  Mot de passe oublié ?
                 </button>
               </motion.div>
             )}
@@ -418,8 +371,8 @@ const SupabaseAuth: React.FC = () => {
                   exit={{ opacity: 0, y: -10 }}
                   className={`rounded-xl p-4 ${
                     message.type === 'error' 
-                      ? 'bg-red-900/50 text-red-300 border border-red-800' 
-                      : 'bg-green-900/50 text-green-300 border border-green-800'
+                      ? 'bg-red-50 text-red-800 border border-red-200' 
+                      : 'bg-green-50 text-green-800 border border-green-200'
                   }`}
                   role="alert"
                 >
@@ -434,7 +387,7 @@ const SupabaseAuth: React.FC = () => {
               whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-4 px-4 rounded-xl hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
+              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold py-3 px-4 rounded-xl hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
             >
               {loading ? (
                 <span className="flex items-center justify-center">
@@ -442,20 +395,20 @@ const SupabaseAuth: React.FC = () => {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8 8 8 0 008 0z"></path>
                   </svg>
-                  {isLogin ? 'Accessing...' : 'Creating...'}
+                  {isLogin ? 'Connexion...' : 'Inscription...'}
                 </span>
               ) : (
-                <span>{isLogin ? 'Access Dashboard' : 'Create Account'}</span>
+                <span>{isLogin ? 'Se connecter' : 'Créer mon compte'}</span>
               )}
             </motion.button>
 
             {/* Divider */}
-            <div className="relative my-8">
+            <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-700"></div>
+                <div className="w-full border-t border-gray-200"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-gray-900 text-gray-500">OR CONTINUE WITH</span>
+                <span className="px-4 bg-white text-gray-500">ou</span>
               </div>
             </div>
 
@@ -466,7 +419,7 @@ const SupabaseAuth: React.FC = () => {
               type="button"
               onClick={handleGoogleSignIn}
               disabled={loading}
-              className="w-full bg-gray-800 border border-gray-700 text-gray-300 font-medium py-4 px-4 rounded-xl hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              className="w-full bg-white border border-gray-200 text-gray-700 font-medium py-3 px-4 rounded-xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
             >
               <span className="flex items-center justify-center">
                 <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
@@ -475,62 +428,36 @@ const SupabaseAuth: React.FC = () => {
                   <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                 </svg>
-                Google
+                Continuer avec Google
               </span>
             </motion.button>
 
             {/* Toggle Auth */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.6 }}
-              className="text-center pt-6 border-t border-gray-800"
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              type="button"
+              onClick={() => {
+                setIsLogin(!isLogin);
+                setMessage(null);
+              }}
+              className="w-full text-center text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors"
             >
-              <button
-                type="button"
-                onClick={() => {
-                  setIsLogin(!isLogin);
-                  setMessage(null);
-                }}
-                className="text-sm text-gray-400 hover:text-white font-medium transition-colors"
-              >
-                {isLogin ? (
-                  <>
-                    New to the platform?{' '}
-                    <span className="text-blue-400 hover:text-blue-300">Sign up</span>
-                  </>
-                ) : (
-                  <>
-                    Already have an account?{' '}
-                    <span className="text-blue-400 hover:text-blue-300">Sign in</span>
-                  </>
-                )}
-              </button>
-            </motion.div>
+              {isLogin ? (
+                <>
+                  Pas encore de compte ?{' '}
+                  <span className="text-indigo-600 hover:text-indigo-500">S'inscrire</span>
+                </>
+              ) : (
+                <>
+                  Déjà un compte ?{' '}
+                  <span className="text-indigo-600 hover:text-indigo-500">Se connecter</span>
+                </>
+              )}
+            </motion.button>
           </form>
         </motion.div>
-
-        {/* Footer */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.7 }}
-          className="text-center mt-8 text-sm text-gray-500"
-        >
-          <p>Join 10,000+ professionals using AI to accelerate their careers</p>
-        </motion.div>
       </motion.div>
-
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          .bg-grid-pattern {
-            background-image: 
-              linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px);
-            background-size: 50px 50px;
-          }
-        `
-      }} />
     </div>
   );
 };
