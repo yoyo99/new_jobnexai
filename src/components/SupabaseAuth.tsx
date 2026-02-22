@@ -6,7 +6,8 @@ import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { PasswordStrengthMeter } from './PasswordStrengthMeter';
 import { useJobnexai } from '../hooks/useJobnexai';
 
-console.log('✅ TRUE ORIGINAL DESIGN FROM TMP FOLDER RESTORED!');
+const SupabaseAuth: React.FC = () => {
+  console.log('✅ TRUE ORIGINAL DESIGN FROM TMP FOLDER RESTORED!');
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
