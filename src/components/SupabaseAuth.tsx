@@ -7,7 +7,6 @@ import { PasswordStrengthMeter } from './PasswordStrengthMeter';
 import { useJobnexai } from '../hooks/useJobnexai';
 
 const SupabaseAuth: React.FC = () => {
-  console.log('🔥🔥🔥 FINAL TEST - THIS MUST SHOW UP!!! 🔥🔥🔥');
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -158,7 +157,7 @@ const SupabaseAuth: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 sm:px-6 lg:px-8">
       {/* Subtle background pattern */}
       <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-blue-50">
         <div className="absolute inset-0 opacity-5">
@@ -186,7 +185,7 @@ const SupabaseAuth: React.FC = () => {
               <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
                 <BriefcaseIcon className="w-6 h-6 text-white" />
               </div>
-              <span className="ml-3 text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">JobNexAI</span>
+              <span className="ml-3 text-2xl font-bold text-gray-900">JobNexAI</span>
             </div>
             
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
@@ -537,7 +536,9 @@ const SupabaseAuth: React.FC = () => {
       <style dangerouslySetInnerHTML={{
         __html: `
           .bg-grid-pattern {
-            background-image: linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+            background-image: 
+              linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
             background-size: 50px 50px;
           }
         `
