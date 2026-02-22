@@ -67,6 +67,11 @@ module.exports = {
   				'3': 'hsl(var(--chart-3))',
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
+  			},
+  			'neon-blue': {
+  				DEFAULT: '#3b82f6',
+  				'10': 'rgba(59, 130, 246, 0.1)',
+  				'30': 'rgba(59, 130, 246, 0.3)'
   			}
   		},
   		fontFamily: {
@@ -78,6 +83,10 @@ module.exports = {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
+  		},
+  		boxShadow: {
+  			'glow': '0 0 20px rgba(56, 189, 248, 0.6)',
+  			'neon-purple': '0 0 20px rgba(139, 92, 246, 0.8)'
   		}
   	}
   },
