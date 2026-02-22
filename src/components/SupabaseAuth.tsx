@@ -7,7 +7,7 @@ import { PasswordStrengthMeter } from './PasswordStrengthMeter';
 import { useJobnexai } from '../hooks/useJobnexai';
 
 const SupabaseAuth: React.FC = () => {
-  console.log('🔥 FINAL VERSION LOADED - PLEASE SHOW UP!');
+  console.log('🔥🔥🔥 FINAL TEST - THIS MUST SHOW UP!!! 🔥🔥🔥');
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
