@@ -7,7 +7,7 @@ import { PasswordStrengthMeter } from './PasswordStrengthMeter';
 import { useJobnexai } from '../hooks/useJobnexai';
 
 const SupabaseAuth: React.FC = () => {
-  console.log('� NEW FILE VERSION - THIS SHOULD WORK!');
+  console.log('🔴🔴🔴 RED TITLE TEST - THIS MUST BE VISIBLE!!! 🔴🔴🔴');
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -189,8 +189,8 @@ const SupabaseAuth: React.FC = () => {
               <span className="ml-3 text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">JobNexAI</span>
             </div>
             
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              {isLogin ? 'Welcome Back' : 'Start Your Journey'}
+            <h1 className="text-4xl font-bold text-red-600 mb-4">
+              {isLogin ? 'LOGIN PAGE - TEST VISIBLE' : 'SIGNUP PAGE - TEST VISIBLE'}
             </h1>
             
             <p className="text-xl text-gray-600 mb-8">
