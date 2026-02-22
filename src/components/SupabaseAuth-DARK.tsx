@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { EyeIcon, EyeSlashIcon, UserIcon, EnvelopeIcon, LockClosedIcon, SparklesIcon, BoltIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, EyeSlashIcon, UserIcon, EnvelopeIcon, LockClosedIcon, SparklesIcon, CpuChipIcon } from '@heroicons/react/24/outline';
 import { PasswordStrengthMeter } from './PasswordStrengthMeter';
 import { useJobnexai } from '../hooks/useJobnexai';
 
@@ -157,28 +157,20 @@ const SupabaseAuth: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-cyan-900 text-white flex items-center justify-center px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Animated background with blue theme */}
-      <div className="absolute inset-0">
-        <div className="absolute top-0 -left-4 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
-        <div className="absolute top-0 -right-4 w-72 h-72 bg-cyan-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse animation-delay-2000"></div>
-        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-sky-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse animation-delay-4000"></div>
+    <div className="min-h-screen bg-black text-white flex items-center justify-center px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Animated background grid */}
+      <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900">
+        <div className="absolute inset-0 opacity-20">
+          <div className="h-full w-full bg-grid-pattern"></div>
+        </div>
       </div>
       
-      {/* Grid pattern overlay */}
-      <div 
-        className="absolute inset-0 opacity-20" 
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd' stroke='%233B82F6' stroke-width='1' opacity='0.3'%3E%3Cpath d='M30 0v60M0 30h60M0 60h60M0 0L60 60M60 0L0 60'/%3E%3C/g%3E%3C/svg%3E")`
-        }}
-      />
-      
-      {/* Floating blue particles */}
+      {/* Floating particles */}
       <div className="absolute inset-0">
-        {[...Array(15)].map((_, i) => (
+        {[...Array(20)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-2 h-2 bg-blue-400 rounded-full"
+            className="absolute w-1 h-1 bg-blue-500 rounded-full"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
@@ -186,10 +178,9 @@ const SupabaseAuth: React.FC = () => {
             animate={{
               y: [0, -100, 0],
               opacity: [0, 1, 0],
-              scale: [1, 1.5, 1],
             }}
             transition={{
-              duration: 4 + Math.random() * 2,
+              duration: 3 + Math.random() * 2,
               repeat: Infinity,
               delay: Math.random() * 2,
             }}
@@ -202,9 +193,9 @@ const SupabaseAuth: React.FC = () => {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="relative w-full max-w-2xl z-10"
+        className="relative w-full max-w-2xl"
       >
-        {/* Header with blue branding */}
+        {/* Header with AI branding */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -213,26 +204,26 @@ const SupabaseAuth: React.FC = () => {
         >
           <div className="inline-flex items-center justify-center mb-6">
             <div className="relative">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl flex items-center justify-center shadow-2xl">
-                <BoltIcon className="w-10 h-10 text-white" />
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl">
+                <CpuChipIcon className="w-10 h-10 text-white" />
               </div>
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                className="absolute -inset-2 border-2 border-blue-400/50 rounded-2xl"
+                className="absolute -inset-2 border-2 border-blue-500/30 rounded-2xl"
               />
             </div>
           </div>
           
-          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-cyan-400 to-sky-400 bg-clip-text text-transparent">
+          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
             {isLogin ? 'Welcome Back' : 'Join the Revolution'}
           </h1>
           
-          <p className="text-xl text-blue-200 mb-2">
+          <p className="text-xl text-gray-400 mb-2">
             {isLogin ? 'Access your AI-powered career platform' : 'Start your intelligent job search journey'}
           </p>
           
-          <div className="flex items-center justify-center space-x-2 text-sm text-blue-300">
+          <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
             <SparklesIcon className="w-4 h-4" />
             <span>Powered by Advanced AI</span>
             <SparklesIcon className="w-4 h-4" />
@@ -244,21 +235,21 @@ const SupabaseAuth: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="bg-blue-900/30 backdrop-blur-xl rounded-3xl border border-blue-800/50 p-8 shadow-2xl"
+          className="bg-gray-900/50 backdrop-blur-xl rounded-3xl border border-gray-800 p-8 shadow-2xl"
         >
           {/* Stats bar */}
           <div className="grid grid-cols-3 gap-4 mb-8">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-400">10K+</div>
-              <div className="text-xs text-blue-300">Active Users</div>
+              <div className="text-xs text-gray-500">Active Users</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-cyan-400">95%</div>
-              <div className="text-xs text-blue-300">Success Rate</div>
+              <div className="text-2xl font-bold text-purple-400">95%</div>
+              <div className="text-xs text-gray-500">Success Rate</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-sky-400">24/7</div>
-              <div className="text-xs text-blue-300">AI Support</div>
+              <div className="text-2xl font-bold text-pink-400">24/7</div>
+              <div className="text-xs text-gray-500">AI Support</div>
             </div>
           </div>
 
@@ -269,12 +260,12 @@ const SupabaseAuth: React.FC = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
             >
-              <label htmlFor="email" className="block text-sm font-medium text-blue-200 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
                 Email Address
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <EnvelopeIcon className="h-5 w-5 text-blue-400 group-focus-within:text-cyan-400 transition-colors" />
+                  <EnvelopeIcon className="h-5 w-5 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
                 </div>
                 <input
                   id="email"
@@ -287,7 +278,7 @@ const SupabaseAuth: React.FC = () => {
                     setEmail(e.target.value);
                     setMessage(null);
                   }}
-                  className="block w-full pl-10 pr-3 py-4 bg-blue-800/30 border border-blue-700/50 rounded-xl text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
+                  className="block w-full pl-10 pr-3 py-4 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
                   placeholder="you@example.com"
                 />
               </div>
@@ -300,12 +291,12 @@ const SupabaseAuth: React.FC = () => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.35 }}
               >
-                <label htmlFor="fullName" className="block text-sm font-medium text-blue-200 mb-2">
+                <label htmlFor="fullName" className="block text-sm font-medium text-gray-300 mb-2">
                   Full Name
                 </label>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <UserIcon className="h-5 w-5 text-blue-400 group-focus-within:text-cyan-400 transition-colors" />
+                    <UserIcon className="h-5 w-5 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
                   </div>
                   <input
                     id="fullName"
@@ -317,7 +308,7 @@ const SupabaseAuth: React.FC = () => {
                       setFullName(e.target.value);
                       setMessage(null);
                     }}
-                    className="block w-full pl-10 pr-3 py-4 bg-blue-800/30 border border-blue-700/50 rounded-xl text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
+                    className="block w-full pl-10 pr-3 py-4 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
                     placeholder="John Doe"
                   />
                 </div>
@@ -330,12 +321,12 @@ const SupabaseAuth: React.FC = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}
             >
-              <label htmlFor="password" className="block text-sm font-medium text-blue-200 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
                 Password
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <LockClosedIcon className="h-5 w-5 text-blue-400 group-focus-within:text-cyan-400 transition-colors" />
+                  <LockClosedIcon className="h-5 w-5 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
                 </div>
                 <input
                   id="password"
@@ -348,14 +339,14 @@ const SupabaseAuth: React.FC = () => {
                     setPassword(e.target.value);
                     setMessage(null);
                   }}
-                  className="block w-full pl-10 pr-12 py-4 bg-blue-800/30 border border-blue-700/50 rounded-xl text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
+                  className="block w-full pl-10 pr-12 py-4 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   tabIndex={-1}
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-blue-400 hover:text-cyan-400 focus:outline-none transition-colors"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-blue-400 focus:outline-none transition-colors"
                 >
                   {showPassword ? (
                     <EyeSlashIcon className="h-5 w-5" />
@@ -383,12 +374,12 @@ const SupabaseAuth: React.FC = () => {
                       setAcceptTerms(e.target.checked);
                       if (e.target.checked) setTermsError(null);
                     }}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-blue-600 rounded mt-1 bg-blue-800/30"
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-600 rounded mt-1 bg-gray-800"
                   />
                   <div className="ml-3 text-sm">
-                    <label htmlFor="terms" className="text-blue-200">
+                    <label htmlFor="terms" className="text-gray-400">
                       I agree to the{' '}
-                      <a href="/terms" className="text-cyan-400 hover:text-cyan-300 font-medium">
+                      <a href="/terms" className="text-blue-400 hover:text-blue-300 font-medium">
                         Terms of Service
                       </a>
                     </label>
@@ -409,7 +400,7 @@ const SupabaseAuth: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleForgotPassword}
-                  className="text-sm text-cyan-400 hover:text-cyan-300 font-medium"
+                  className="text-sm text-blue-400 hover:text-blue-300 font-medium"
                 >
                   Forgot password?
                 </button>
@@ -443,7 +434,7 @@ const SupabaseAuth: React.FC = () => {
               whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold py-4 px-4 rounded-xl hover:from-blue-700 hover:to-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-4 px-4 rounded-xl hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
             >
               {loading ? (
                 <span className="flex items-center justify-center">
@@ -461,10 +452,10 @@ const SupabaseAuth: React.FC = () => {
             {/* Divider */}
             <div className="relative my-8">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-blue-700/50"></div>
+                <div className="w-full border-t border-gray-700"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-blue-900/30 text-blue-300">OR CONTINUE WITH</span>
+                <span className="px-4 bg-gray-900 text-gray-500">OR CONTINUE WITH</span>
               </div>
             </div>
 
@@ -475,7 +466,7 @@ const SupabaseAuth: React.FC = () => {
               type="button"
               onClick={handleGoogleSignIn}
               disabled={loading}
-              className="w-full bg-blue-800/30 border border-blue-700/50 text-blue-200 font-medium py-4 px-4 rounded-xl hover:bg-blue-800/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              className="w-full bg-gray-800 border border-gray-700 text-gray-300 font-medium py-4 px-4 rounded-xl hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               <span className="flex items-center justify-center">
                 <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
@@ -493,7 +484,7 @@ const SupabaseAuth: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.6 }}
-              className="text-center pt-6 border-t border-blue-700/50"
+              className="text-center pt-6 border-t border-gray-800"
             >
               <button
                 type="button"
@@ -501,17 +492,17 @@ const SupabaseAuth: React.FC = () => {
                   setIsLogin(!isLogin);
                   setMessage(null);
                 }}
-                className="text-sm text-blue-300 hover:text-white font-medium transition-colors"
+                className="text-sm text-gray-400 hover:text-white font-medium transition-colors"
               >
                 {isLogin ? (
                   <>
                     New to the platform?{' '}
-                    <span className="text-cyan-400 hover:text-cyan-300">Sign up</span>
+                    <span className="text-blue-400 hover:text-blue-300">Sign up</span>
                   </>
                 ) : (
                   <>
                     Already have an account?{' '}
-                    <span className="text-cyan-400 hover:text-cyan-300">Sign in</span>
+                    <span className="text-blue-400 hover:text-blue-300">Sign in</span>
                   </>
                 )}
               </button>
@@ -524,11 +515,22 @@ const SupabaseAuth: React.FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.7 }}
-          className="text-center mt-8 text-sm text-blue-300"
+          className="text-center mt-8 text-sm text-gray-500"
         >
           <p>Join 10,000+ professionals using AI to accelerate their careers</p>
         </motion.div>
       </motion.div>
+
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .bg-grid-pattern {
+            background-image: 
+              linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+          }
+        `
+      }} />
     </div>
   );
 };
