@@ -536,9 +536,7 @@ const SupabaseAuth: React.FC = () => {
       <style dangerouslySetInnerHTML={{
         __html: `
           .bg-grid-pattern {
-            background-image: 
-              linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+            background-image: linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
             background-size: 50px 50px;
           }
         `
