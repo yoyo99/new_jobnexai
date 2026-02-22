@@ -171,7 +171,7 @@ const SupabaseAuth: React.FC = () => {
         <div>
           <img
             className="mx-auto h-20 w-auto"
-            src="/logo.png"
+            src="/jobnexai-logo.svg"
             alt="JobNexAI"
           />
           <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
