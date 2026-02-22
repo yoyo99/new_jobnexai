@@ -26,9 +26,6 @@ export function ProtectedRoute({
   }
 
   if (!user) {
-    if (location.pathname === '/login') {
-      return <>{children}</>;
-    }
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
