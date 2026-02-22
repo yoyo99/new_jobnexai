@@ -7,7 +7,7 @@ import { PasswordStrengthMeter } from './PasswordStrengthMeter';
 import { useJobnexai } from '../hooks/useJobnexai';
 
 const SupabaseAuth: React.FC = () => {
-  console.log('🔥 BACK TO CLEAN DESIGN - LESS WHITE');
+  console.log('🔥 FINAL VERSION LOADED - PLEASE SHOW UP!');
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -186,7 +186,7 @@ const SupabaseAuth: React.FC = () => {
               <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
                 <BriefcaseIcon className="w-6 h-6 text-white" />
               </div>
-              <span className="ml-3 text-2xl font-bold text-gray-900">JobNexAI</span>
+              <span className="ml-3 text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">JobNexAI</span>
             </div>
             
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
