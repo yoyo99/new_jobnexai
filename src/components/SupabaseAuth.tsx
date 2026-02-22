@@ -7,7 +7,7 @@ import { PasswordStrengthMeter } from './PasswordStrengthMeter';
 import { useJobnexai } from '../hooks/useJobnexai';
 
 const SupabaseAuth: React.FC = () => {
-  console.log('🔥 NEW BALANCED DESIGN LOADED v2.0');
+  console.log('🔥 NEW COLORFUL DESIGN LOADED v2.1 - LESS WHITE');
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -158,12 +158,17 @@ const SupabaseAuth: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 sm:px-6 lg:px-8">
-      {/* Subtle background pattern */}
-      <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-blue-50">
-        <div className="absolute inset-0 opacity-5">
-          <div className="h-full w-full bg-grid-pattern"></div>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0">
+        <div className="absolute top-0 -left-4 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+        <div className="absolute top-0 -right-4 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse animation-delay-2000"></div>
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-indigo-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse animation-delay-4000"></div>
+      </div>
+
+      {/* Grid pattern overlay */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="h-full w-full bg-grid-pattern"></div>
       </div>
 
       {/* Main container */}
@@ -205,46 +210,46 @@ const SupabaseAuth: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"
+              className="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-2xl text-white shadow-lg"
             >
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                <DocumentTextIcon className="w-5 h-5 text-blue-600" />
+              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-4">
+                <DocumentTextIcon className="w-5 h-5 text-white" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">AI Resume Builder</h3>
-              <p className="text-sm text-gray-600">Create optimized resumes that get past ATS systems</p>
+              <h3 className="font-semibold text-white mb-2">AI Resume Builder</h3>
+              <p className="text-sm text-blue-100">Create optimized resumes that get past ATS systems</p>
             </motion.div>
 
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"
+              className="bg-gradient-to-br from-purple-500 to-purple-600 p-6 rounded-2xl text-white shadow-lg"
             >
-              <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
-                <SparklesIcon className="w-5 h-5 text-indigo-600" />
+              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-4">
+                <SparklesIcon className="w-5 h-5 text-white" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Auto Apply</h3>
-              <p className="text-sm text-gray-600">Apply to hundreds of jobs with one click</p>
+              <h3 className="font-semibold text-white mb-2">Auto Apply</h3>
+              <p className="text-sm text-purple-100">Apply to hundreds of jobs with one click</p>
             </motion.div>
 
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"
+              className="bg-gradient-to-br from-indigo-500 to-indigo-600 p-6 rounded-2xl text-white shadow-lg"
             >
-              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                <BriefcaseIcon className="w-5 h-5 text-purple-600" />
+              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-4">
+                <BriefcaseIcon className="w-5 h-5 text-white" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Interview Practice</h3>
-              <p className="text-sm text-gray-600">AI-powered mock interviews with real feedback</p>
+              <h3 className="font-semibold text-white mb-2">Interview Practice</h3>
+              <p className="text-sm text-indigo-100">AI-powered mock interviews with real feedback</p>
             </motion.div>
 
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"
+              className="bg-gradient-to-br from-green-500 to-green-600 p-6 rounded-2xl text-white shadow-lg"
             >
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                <EnvelopeIcon className="w-5 h-5 text-green-600" />
+              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-4">
+                <EnvelopeIcon className="w-5 h-5 text-white" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Cover Letters</h3>
-              <p className="text-sm text-gray-600">Personalized cover letters in seconds</p>
+              <h3 className="font-semibold text-white mb-2">Cover Letters</h3>
+              <p className="text-sm text-green-100">Personalized cover letters in seconds</p>
             </motion.div>
           </div>
 
@@ -274,7 +279,7 @@ const SupabaseAuth: React.FC = () => {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="lg:w-1/2"
         >
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-blue-100 p-8">
             <form className="space-y-6" onSubmit={isLogin ? handleSignIn : handleSignUp}>
               {/* Email Field */}
               <motion.div
@@ -300,7 +305,7 @@ const SupabaseAuth: React.FC = () => {
                       setEmail(e.target.value);
                       setMessage(null);
                     }}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors bg-white/70"
                     placeholder="you@example.com"
                   />
                 </div>
@@ -330,7 +335,7 @@ const SupabaseAuth: React.FC = () => {
                         setFullName(e.target.value);
                         setMessage(null);
                       }}
-                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors bg-white/70"
                       placeholder="John Doe"
                     />
                   </div>
@@ -456,7 +461,7 @@ const SupabaseAuth: React.FC = () => {
                 whileTap={{ scale: 0.98 }}
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-3 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
               >
                 {loading ? (
                   <span className="flex items-center justify-center">
