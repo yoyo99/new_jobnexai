@@ -35,7 +35,7 @@ const LazyComponentWrapper = ({ children }: { children: React.ReactNode }) => {
 
 // Définitions des composants lazy-loadés pour les routes publiques
 const JobNexAILanding = React.lazy(() => import("../pages/LandingPage"));
-const SupabaseAuth = React.lazy(() => import("../components/SupabaseAuth-NEW"));
+const SupabaseAuth = React.lazy(() => import("../components/SupabaseAuth"));
 const Pricing = React.lazy(() => import("../pages/PricingPage"));
 const PrivacyPolicy = React.lazy(() => import("../components/PrivacyPolicy"));
 const FeaturesPage = React.lazy(() =>
