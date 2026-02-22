@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { PasswordStrengthMeter } from './PasswordStrengthMeter';
 import { useJobnexai } from '../hooks/useJobnexai';
+import { LoginWithGoogle } from './LoginWithGoogle';
 
 const SupabaseAuth: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -299,6 +300,11 @@ const SupabaseAuth: React.FC = () => {
               </button>
             </div>
           )}
+
+          {/* Google Login Button */}
+          <div className="mt-4">
+            <LoginWithGoogle />
+          </div>
           {!isLogin && <PasswordStrengthMeter password={password} />}
           {message && (
             <div
