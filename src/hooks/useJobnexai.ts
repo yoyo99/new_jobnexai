@@ -45,18 +45,43 @@ export function useJobnexai() {
     resetPassword: auth.resetPassword,
     updatePassword: auth.updatePassword,
     updateProfile: auth.updateProfile,
-    signInWithGoogle: auth.signInWithGoogle,
   }), [
     auth.signIn,
     auth.signUp,
     auth.signOut,
     auth.resetPassword,
     auth.updatePassword,
-    auth.updateProfile,
-    auth.signInWithGoogle
+    auth.updateProfile
   ]);
   
+  // Exposer les fonctions de gestion des offres d'emploi
+  const jobActions = useMemo(() => ({
+    // Recherche et navigation
+    getJobs: jobs.getJobs,
+    getJobById: jobs.getJobById,
     
+    // Actions employeur
+    createJob: jobs.createJob,
+    updateJob: jobs.updateJob,
+    deleteJob: jobs.deleteJob,
+    getApplicationsForJob: jobs.getJobApplications,
+    updateApplicationStatus: jobs.updateApplicationStatus,
+    
+    // Actions candidat
+    applyToJob: jobs.applyToJob,
+    getMyApplications: jobs.getMyApplications,
+  }), [
+    jobs.getJobs,
+    jobs.getJobById,
+    jobs.createJob,
+    jobs.updateJob,
+    jobs.deleteJob,
+    jobs.getJobApplications,
+    jobs.updateApplicationStatus,
+    jobs.applyToJob,
+    jobs.getMyApplications
+  ]);
+  
   // Exposer les fonctions utilitaires API
   const apiActions = useMemo(() => ({
     checkAPIStatus: netlify.checkAuth,

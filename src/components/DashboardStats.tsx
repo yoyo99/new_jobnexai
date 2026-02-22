@@ -250,16 +250,7 @@ export function DashboardStats() {
   if (loading) {
     return (
       <div className="flex justify-center py-12">
-        {/* AI-styled skeleton loading */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="glass-card p-6">
-              <div className="skeleton h-14 w-14 rounded-2xl mb-5" />
-              <div className="skeleton h-10 w-20 rounded-lg mb-2" />
-              <div className="skeleton h-4 w-32 rounded" />
-            </div>
-          ))}
-        </div>
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-400"></div>
       </div>
     )
   }
@@ -268,16 +259,16 @@ export function DashboardStats() {
 
   return (
     <div className="space-y-6">
-      {/* AI-styled Timeframe selector */}
+      {/* Timeframe selector */}
       <div className="flex justify-end space-x-2">
         {(['week', 'month', 'year'] as const).map((tf) => (
           <button
             key={tf}
             onClick={() => setTimeframe(tf)}
-            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               timeframe === tf
-                ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-glow'
-                : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/10 hover:border-primary-500/30'
+                ? 'bg-primary-600 text-white'
+                : 'bg-white/5 text-gray-400 hover:bg-white/10'
             }`}
           >
             {t(`dashboard.timeframe.${tf}`)}
@@ -285,158 +276,145 @@ export function DashboardStats() {
         ))}
       </div>
 
-      {/* Main stats - AI Modern Design */}
+      {/* Main stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Applications Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass-card p-6 relative"
+          className="card"
         >
-          {/* Icon with gradient border */}
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 relative">
-            <div className="absolute inset-0 rounded-2xl p-[2px] bg-gradient-to-br from-primary-500 via-secondary-500 to-pink-500">
-              <div className="w-full h-full rounded-2xl bg-card" />
+          <div className="flex items-center justify-between">
+            <div className="p-3 rounded-lg bg-white/5">
+              <BriefcaseIcon className="h-6 w-6 text-primary-400" />
             </div>
-            <BriefcaseIcon className="h-6 w-6 text-primary-400 relative z-10" />
+            <div className="flex items-center space-x-2">
+              <span className={`text-sm ${
+                stats.applications.percentageChange > 0 ? 'text-green-400' : 'text-red-400'
+              }`}>
+                {stats.applications.percentageChange > 0 ? (
+                  <ArrowUpIcon className="h-4 w-4 inline" />
+                ) : (
+                  <ArrowDownIcon className="h-4 w-4 inline" />
+                )}
+                {Math.abs(stats.applications.percentageChange).toFixed(1)}%
+              </span>
+            </div>
           </div>
-
-          {/* Value with gradient text */}
-          <div className="text-4xl font-bold font-['Space_Grotesk'] bg-clip-text text-transparent bg-gradient-to-r from-primary-400 via-secondary-400 to-pink-400 leading-none mb-2">
-            {stats.applications.total}
-          </div>
-          <p className="text-muted-foreground text-sm">{t('dashboard.stats.applications')}</p>
-
-          {/* Trend indicator */}
-          <div className={`absolute top-6 right-6 flex items-center gap-1 text-sm px-2.5 py-1 rounded-lg ${
-            stats.applications.percentageChange > 0 ? 'text-green-400 bg-green-400/10' : 'text-red-400 bg-red-400/10'
-          }`}>
-            {stats.applications.percentageChange > 0 ? (
-              <ArrowUpIcon className="h-3 w-3" />
-            ) : (
-              <ArrowDownIcon className="h-3 w-3" />
-            )}
-            {Math.abs(stats.applications.percentageChange).toFixed(1)}%
+          <div className="mt-4">
+            <h3 className="text-lg font-semibold text-white">
+              {stats.applications.total}
+            </h3>
+            <p className="text-sm text-gray-400">{t('dashboard.stats.applications')}</p>
           </div>
         </motion.div>
 
-        {/* Interviews Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="glass-card p-6"
+          className="card"
         >
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 relative">
-            <div className="absolute inset-0 rounded-2xl p-[2px] bg-gradient-to-br from-neon-blue via-primary-500 to-secondary-500">
-              <div className="w-full h-full rounded-2xl bg-card" />
+          <div className="flex items-center justify-between">
+            <div className="p-3 rounded-lg bg-white/5">
+              <CalendarIcon className="h-6 w-6 text-primary-400" />
             </div>
-            <CalendarIcon className="h-6 w-6 text-neon-blue relative z-10" />
           </div>
-
-          <div className="text-4xl font-bold font-['Space_Grotesk'] bg-clip-text text-transparent bg-gradient-to-r from-neon-blue via-primary-400 to-secondary-400 leading-none mb-2">
-            {stats.interviews.upcoming}
+          <div className="mt-4">
+            <h3 className="text-lg font-semibold text-white">
+              {stats.interviews.upcoming}
+            </h3>
+            <p className="text-sm text-gray-400">{t('dashboard.stats.interviewsUpcoming')}</p>
           </div>
-          <p className="text-muted-foreground text-sm">{t('dashboard.stats.interviewsUpcoming')}</p>
         </motion.div>
 
-        {/* Top Companies Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="glass-card p-6"
+          className="card"
         >
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 relative">
-            <div className="absolute inset-0 rounded-2xl p-[2px] bg-gradient-to-br from-secondary-500 to-pink-500">
-              <div className="w-full h-full rounded-2xl bg-card" />
+          <div className="flex items-center justify-between">
+            <div className="p-3 rounded-lg bg-white/5">
+              <BuildingOfficeIcon className="h-6 w-6 text-primary-400" />
             </div>
-            <BuildingOfficeIcon className="h-6 w-6 text-secondary-400 relative z-10" />
           </div>
-
-          <div className="space-y-3">
-            {stats.topCompanies.map((company) => (
-              <div key={company.name} className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground truncate">{company.name}</span>
-                <span className="text-sm font-semibold text-neon bg-neon-blue/10 px-2 py-0.5 rounded-md">{company.count}</span>
-              </div>
-            ))}
+          <div className="mt-4">
+            <div className="space-y-2">
+              {stats.topCompanies.map((company, index) => (
+                <div key={company.name} className="flex justify-between items-center">
+                  <span className="text-sm text-gray-400">{company.name}</span>
+                  <span className="text-sm text-white">{company.count}</span>
+                </div>
+              ))}
+            </div>
+            <p className="text-sm text-gray-400 mt-2">{t('dashboard.stats.topCompanies')}</p>
           </div>
-          <p className="text-muted-foreground text-sm mt-4">{t('dashboard.stats.topCompanies')}</p>
         </motion.div>
 
-        {/* Top Locations Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="glass-card p-6"
+          className="card"
         >
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 relative">
-            <div className="absolute inset-0 rounded-2xl p-[2px] bg-gradient-to-br from-green-500 to-neon-cyan">
-              <div className="w-full h-full rounded-2xl bg-card" />
+          <div className="flex items-center justify-between">
+            <div className="p-3 rounded-lg bg-white/5">
+              <MapPinIcon className="h-6 w-6 text-primary-400" />
             </div>
-            <MapPinIcon className="h-6 w-6 text-green-400 relative z-10" />
           </div>
-
-          <div className="space-y-3">
-            {stats.topLocations.map((location) => (
-              <div key={location.name} className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground truncate">{location.name}</span>
-                <span className="text-sm font-semibold text-green-400 bg-green-400/10 px-2 py-0.5 rounded-md">{location.count}</span>
-              </div>
-            ))}
+          <div className="mt-4">
+            <div className="space-y-2">
+              {stats.topLocations.map((location, index) => (
+                <div key={location.name} className="flex justify-between items-center">
+                  <span className="text-sm text-gray-400">{location.name}</span>
+                  <span className="text-sm text-white">{location.count}</span>
+                </div>
+              ))}
+            </div>
+            <p className="text-sm text-gray-400 mt-2">{t('dashboard.stats.topLocations')}</p>
           </div>
-          <p className="text-muted-foreground text-sm mt-4">{t('dashboard.stats.topLocations')}</p>
         </motion.div>
       </div>
 
-      {/* Activity timeline - AI Modern Design */}
+      {/* Activity timeline */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="glass-card p-6"
+        className="card"
       >
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center shadow-glow">
-            <ArrowTrendingUpIcon className="h-5 w-5 text-white" />
-          </div>
-          <h3 className="text-lg font-semibold font-['Space_Grotesk'] text-gradient">
-            {t('dashboard.stats.recentActivity')}
-          </h3>
-        </div>
+        <h3 className="text-lg font-semibold text-white mb-4">
+          {t('dashboard.stats.recentActivity')}
+        </h3>
         <div className="space-y-4">
           {stats.recentActivity.map((activity) => {
             const Icon = activity.icon || BriefcaseIcon
             return (
-              <motion.div
+              <div
                 key={activity.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="flex items-start gap-4 p-4 rounded-xl bg-white/5 border border-white/5 hover:border-primary-500/30 transition-all duration-300 hover:bg-white/10"
+                className="flex items-start gap-4 p-4 rounded-lg bg-white/5"
               >
-                <div className={`p-2.5 rounded-xl bg-gradient-to-br from-white/10 to-white/5 ${activity.color || 'text-primary-400'}`}>
+                <div className={`p-2 rounded-lg bg-white/5 ${activity.color || 'text-primary-400'}`}>
                   <Icon className="h-5 w-5" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">
+                  <p className="text-sm font-medium text-white truncate">
                     {t(`dashboard.activity.${activity.type}`)}: {activity.title}
                   </p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-gray-400">
                     {activity.company}
                     {activity.status && (
                       <>
-                        <span className="mx-2 text-primary-500/50">•</span>
-                        <span className="capitalize text-neon-blue">{activity.status}</span>
+                        <span className="mx-2">•</span>
+                        <span className="capitalize">{activity.status}</span>
                       </>
                     )}
                   </p>
-                  <p className="text-xs text-muted-foreground/70 mt-1.5">
+                  <p className="text-xs text-gray-500 mt-1">
                     {format(new Date(activity.date), 'dd MMMM yyyy à HH:mm', { locale: fr })}
                   </p>
                 </div>
-              </motion.div>
+              </div>
             )
           })}
         </div>

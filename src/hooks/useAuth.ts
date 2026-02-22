@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { User } from '@supabase/supabase-js';
+import { User, AuthResponse } from '@supabase/supabase-js';
 import { mapSupabaseError, logError, AppError } from '../utils/error-handling';
 import { getSupabase } from './useSupabaseConfig';
 
@@ -251,40 +251,6 @@ export function useAuth() {
       return { data: null, error, loading: false };
     }
   };
-
-  // Authentification avec Google OAuth
-  const signInWithGoogle = async (): Promise<AuthResult> => {
-    try {
-      setLoading(true);
-      const supabase = getSupabase();
-      
-      // Force la redirection manuelle pour éviter les problèmes de protocole
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: undefined, // Laisser Supabase gérer automatiquement
-          skipBrowserRedirect: false,
-        },
-      });
-      
-      if (error) {
-        const mappedError = mapSupabaseError(error);
-        logError(mappedError, 'useAuth.signInWithGoogle');
-        setLoading(false);
-        return { data: null, error: mappedError, loading: false };
-      }
-      
-      // La redirection gérera la suite de l'authentification
-      setLoading(false);
-      
-      return { data: data, error: null, loading: false };
-    } catch (err) {
-      const error = mapSupabaseError(err);
-      logError(error, 'useAuth.signInWithGoogle');
-      setLoading(false);
-      return { data: null, error, loading: false };
-    }
-  };
   
   // Chargement initial de l'utilisateur
   useEffect(() => {
@@ -330,7 +296,6 @@ export function useAuth() {
     resetPassword,
     updatePassword,
     updateProfile,
-    signInWithGoogle,
     loadUser,
     isLoggedIn: !!user,
   };

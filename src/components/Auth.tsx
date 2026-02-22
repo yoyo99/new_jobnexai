@@ -221,8 +221,6 @@ const Auth: React.FC = () => {
                   setEmail(e.target.value);
                   setMessage(null);
                 }}
-                aria-invalid={message?.type === 'error' ? 'true' : undefined}
-                aria-describedby={message ? 'form-message' : undefined}
                 className={`appearance-none rounded-none relative block w-full px-3 py-2 border border-white/10 placeholder-gray-400 text-white ${isLogin && !fullName ? 'rounded-t-md' : ''} focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm bg-white/5`}
                 placeholder={t('auth.email')}
               />
@@ -243,8 +241,6 @@ const Auth: React.FC = () => {
                   setPassword(e.target.value);
                   setMessage(null);
                 }}
-                aria-invalid={message?.type === 'error' ? 'true' : undefined}
-                aria-describedby={message ? 'form-message' : undefined}
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-white/10 placeholder-gray-400 text-white rounded-b-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm bg-white/5 pr-10"
                 placeholder={t('auth.password')}
               />
@@ -279,12 +275,10 @@ const Auth: React.FC = () => {
           {!isLogin && <PasswordStrengthMeter password={password} />}
           {message && (
             <div
-              id="form-message"
               className={`rounded-md p-4 ${
                 message.type === 'error' ? 'bg-red-900/50 text-red-400' : 'bg-green-900/50 text-green-400'
               }`}
               role="alert"
-              aria-live="polite"
             >
               <p className="text-sm">{message.text}</p>
             </div>
