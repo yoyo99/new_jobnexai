@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { EyeIcon, EyeSlashIcon, UserIcon, EnvelopeIcon, LockClosedIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { PasswordStrengthMeter } from './PasswordStrengthMeter';
 import { useJobnexai } from '../hooks/useJobnexai';
 
@@ -165,63 +165,80 @@ const SupabaseAuth: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-4 sm:px-6 lg:px-8">
-      {/* Background with subtle gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-cyan-50" />
-      
-      {/* Floating elements for modern feel */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-cyan-400/20 to-indigo-400/20 rounded-full blur-3xl" />
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      {/* Animated background elements */}
+      <div className="absolute inset-0">
+        <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+        <div className="absolute top-0 -right-4 w-72 h-72 bg-cyan-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse animation-delay-2000"></div>
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse animation-delay-4000"></div>
       </div>
+      
+      {/* Grid pattern overlay */}
+      <div 
+        className="absolute inset-0 opacity-10" 
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd' stroke='currentColor' stroke-width='1' opacity='0.1'%3E%3Cpath d='M30 0v60M0 30h60M0 60h60M0 0L60 60M60 0L0 60'/%3E%3C/g%3E%3C/svg%3E")`
+        }}
+      />
       
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="relative w-full max-w-md"
+        transition={{ duration: 0.5 }}
+        className="relative z-10 max-w-md w-full space-y-8 bg-white/10 backdrop-blur-xl p-8 rounded-2xl shadow-2xl border border-white/20"
       >
-        {/* Logo and Brand */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="text-center mb-8"
-        >
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl shadow-lg mb-4">
-            <span className="text-white font-bold text-2xl">JN</span>
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {isLogin ? 'Bienvenue' : 'Rejoignez-nous'}
-          </h1>
-          <p className="text-gray-600 text-lg">
-            {isLogin ? 'Connectez-vous à votre compte' : 'Créez votre compte gratuitement'}
-          </p>
-        </motion.div>
-
-        {/* Main Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-gray-100 p-8"
-        >
-          <form className="space-y-6" onSubmit={isLogin ? handleSignIn : handleSignUp}>
-            {/* Email Field */}
+        {/* Logo and title */}
+        <div className="text-center">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="mx-auto mb-6"
+          >
+            <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-cyan-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <span className="text-white font-bold text-xl">JN</span>
+            </div>
+          </motion.div>
+          
+          <motion.h2
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="text-4xl font-bold text-white mb-2 bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent"
+          >
+            {isLogin ? t('auth.title.login') : t('auth.title.signup')}
+          </motion.h2>
+          
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="text-gray-300 text-lg"
+          >
+            {isLogin ? t('auth.subtitle.login') : t('auth.subtitle.signup')}
+          </motion.p>
+        </div>
+        
+        <form className="mt-8 space-y-6" onSubmit={isLogin ? handleSignIn : handleSignUp}>
+          <input type="hidden" name="remember" value="true" />
+          <div className="space-y-5">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
+              transition={{ duration: 0.5, delay: 0.5 }}
             >
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email
+              <label htmlFor="email-address" className="block text-sm font-medium text-gray-300 mb-2">
+                {t('auth.email')}
               </label>
-              <div className="relative group">
+              <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <EnvelopeIcon className="h-5 w-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
+                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-4 4 0 00-8 0 4 4 0 008 0zm-4-2a2 2 0 11-4 0 2 2 0 014 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 4.477 10 10-4.477 10-10z" />
+                  </svg>
                 </div>
                 <input
-                  id="email"
+                  id="email-address"
                   name="email"
                   type="email"
                   autoComplete="email"
@@ -231,28 +248,30 @@ const SupabaseAuth: React.FC = () => {
                     setEmail(e.target.value);
                     setMessage(null);
                   }}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
-                  placeholder="vous@exemple.com"
+                  className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-600 bg-white/5 text-white placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent sm:text-sm transition-all duration-200"
+                  placeholder={t('auth.email')}
                 />
               </div>
             </motion.div>
-
-            {/* Name Field for Signup */}
+            
             {!isLogin && (
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.35 }}
+                transition={{ duration: 0.5, delay: 0.6 }}
               >
-                <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">
-                  Nom complet
+                <label htmlFor="full-name" className="block text-sm font-medium text-gray-300 mb-2">
+                  {t('auth.fullName')}
                 </label>
-                <div className="relative group">
+                <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <UserIcon className="h-5 w-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
+                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 100-14 0 7 7 0 0014 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 1v9m0 9l9-9m-9 9h18" />
+                    </svg>
                   </div>
                   <input
-                    id="fullName"
+                    id="full-name"
                     name="fullName"
                     type="text"
                     autoComplete="name"
@@ -261,25 +280,26 @@ const SupabaseAuth: React.FC = () => {
                       setFullName(e.target.value);
                       setMessage(null);
                     }}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
-                    placeholder="Jean Dupont"
+                    className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-600 bg-white/5 text-white placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent sm:text-sm transition-all duration-200"
+                    placeholder={t('auth.fullName')}
                   />
                 </div>
               </motion.div>
             )}
-
-            {/* Password Field */}
+            
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
+              transition={{ duration: 0.5, delay: 0.7 }}
             >
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Mot de passe
+              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+                {t('auth.password')}
               </label>
-              <div className="relative group">
+              <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <LockClosedIcon className="h-5 w-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
+                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10 10V7a4 4 0 00-8 0v6a2 2 0 002 2z" />
+                  </svg>
                 </div>
                 <input
                   id="password"
@@ -292,14 +312,16 @@ const SupabaseAuth: React.FC = () => {
                     setPassword(e.target.value);
                     setMessage(null);
                   }}
-                  className="block w-full pl-10 pr-10 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
-                  placeholder="••••••••"
+                  className="appearance-none block w-full pl-10 pr-10 py-3 border border-gray-600 bg-white/5 text-white placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent sm:text-sm transition-all duration-200"
+                  placeholder={t('auth.password')}
                 />
                 <button
                   type="button"
                   tabIndex={-1}
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-indigo-500 focus:outline-none transition-colors"
+                  aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-purple-400 focus:outline-none transition-colors"
+                  style={{ background: 'none', border: 'none' }}
                 >
                   {showPassword ? (
                     <EyeSlashIcon className="h-5 w-5" />
@@ -309,15 +331,17 @@ const SupabaseAuth: React.FC = () => {
                 </button>
               </div>
             </motion.div>
-
-            {/* Terms for Signup */}
-            {!isLogin && (
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.45 }}
-              >
-                <div className="flex items-start">
+          </div>
+          
+          {/* Terms checkbox for signup */}
+          {!isLogin && (
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.8 }}
+            >
+              <div className="flex items-start">
+                <div className="flex items-center h-5">
                   <input
                     id="terms"
                     name="terms"
@@ -327,99 +351,106 @@ const SupabaseAuth: React.FC = () => {
                       setAcceptTerms(e.target.checked);
                       if (e.target.checked) setTermsError(null);
                     }}
-                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mt-1"
+                    className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-white/30 rounded bg-white/5"
                   />
-                  <div className="ml-3 text-sm">
-                    <label htmlFor="terms" className="text-gray-600">
-                      J'accepte les{' '}
-                      <a href="/terms" className="text-indigo-600 hover:text-indigo-500 font-medium">
-                        conditions d'utilisation
-                      </a>
-                    </label>
-                    {termsError && <p className="mt-1 text-sm text-red-600">{termsError}</p>}
-                  </div>
                 </div>
-              </motion.div>
-            )}
-
-            {/* Forgot Password Link */}
-            {isLogin && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.5 }}
-                className="text-right"
-              >
+                <div className="ml-3 text-sm">
+                  <label htmlFor="terms" className="font-medium text-gray-300">
+                    {t('auth.acceptTerms', "J'accepte les")} {' '}
+                    <a href="/terms" className="text-purple-400 hover:text-purple-300">
+                      {t('auth.termsLink', 'conditions d\'utilisation')}
+                    </a>
+                  </label>
+                  {termsError && <p className="mt-1 text-sm text-red-400">{termsError}</p>}
+                </div>
+              </div>
+            </motion.div>
+          )}
+          
+          {/* Forgot Password Link */}
+          {isLogin && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.9 }}
+            >
+              <div className="flex justify-end text-sm mt-2 mb-4">
                 <button
                   type="button"
                   onClick={handleForgotPassword}
-                  className="text-sm text-indigo-600 hover:text-indigo-500 font-medium"
+                  className="font-medium text-purple-400 hover:text-purple-300 focus:outline-none underline"
                 >
-                  Mot de passe oublié ?
+                  {t('auth.forgotPasswordLink', 'Mot de passe oublié ?')}
                 </button>
+              </div>
+            </motion.div>
+          )}
+          
+          {!isLogin && <PasswordStrengthMeter password={password} />}
+          
+          {/* Message display */}
+          <AnimatePresence>
+            {message && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className={`rounded-md p-4 mb-4 ${
+                  message.type === 'error' ? 'bg-red-900/50 text-red-400' : 'bg-green-900/50 text-green-400'
+                }`}
+                role="alert"
+              >
+                <p className="text-sm">{message.text}</p>
               </motion.div>
             )}
-
-            {!isLogin && <PasswordStrengthMeter password={password} />}
-
-            {/* Message Display */}
-            <AnimatePresence>
-              {message && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className={`rounded-xl p-4 ${
-                    message.type === 'error' 
-                      ? 'bg-red-50 text-red-800 border border-red-200' 
-                      : 'bg-green-50 text-green-800 border border-green-200'
-                  }`}
-                  role="alert"
-                >
-                  <p className="text-sm font-medium">{message.text}</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Submit Button */}
+          </AnimatePresence>
+          
+          {/* Action buttons */}
+          <div className="space-y-4 mt-6">
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold py-3 px-4 rounded-xl hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
+              className="w-full bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-semibold py-3 px-4 rounded-lg hover:from-purple-700 hover:to-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
             >
               {loading ? (
-                <span className="flex items-center justify-center">
+                <span className="flex items-center">
                   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8 8 8 0 008 0z"></path>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8 8 0 008 0z"></path>
                   </svg>
-                  {isLogin ? 'Connexion...' : 'Inscription...'}
+                  {isLogin ? t('auth.signingIn') : t('auth.signingUp')}
                 </span>
               ) : (
-                <span>{isLogin ? 'Se connecter' : 'Créer mon compte'}</span>
+                <span>{isLogin ? t('auth.signIn') : t('auth.createAccount')}</span>
               )}
             </motion.button>
-
+            
             {/* Divider */}
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200"></div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-600"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-4 bg-transparent text-gray-400">ou</span>
+                </div>
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-500">ou</span>
-              </div>
-            </div>
-
-            {/* Google Button */}
+            </motion.div>
+            
+            {/* Google OAuth Button */}
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               type="button"
               onClick={handleGoogleSignIn}
               disabled={loading}
-              className="w-full bg-white border border-gray-200 text-gray-700 font-medium py-3 px-4 rounded-xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
+              className="w-full bg-white text-gray-900 font-semibold py-3 px-4 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg border border-gray-200"
             >
               <span className="flex items-center justify-center">
                 <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
@@ -431,8 +462,8 @@ const SupabaseAuth: React.FC = () => {
                 Continuer avec Google
               </span>
             </motion.button>
-
-            {/* Toggle Auth */}
+            
+            {/* Toggle Login/Register */}
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -441,22 +472,12 @@ const SupabaseAuth: React.FC = () => {
                 setIsLogin(!isLogin);
                 setMessage(null);
               }}
-              className="w-full text-center text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors"
+              className="w-full bg-transparent border border-gray-600 text-gray-300 font-medium py-3 px-4 rounded-lg hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all duration-200"
             >
-              {isLogin ? (
-                <>
-                  Pas encore de compte ?{' '}
-                  <span className="text-indigo-600 hover:text-indigo-500">S'inscrire</span>
-                </>
-              ) : (
-                <>
-                  Déjà un compte ?{' '}
-                  <span className="text-indigo-600 hover:text-indigo-500">Se connecter</span>
-                </>
-              )}
+              {isLogin ? t('auth.createAccount') : t('auth.alreadyRegistered')}
             </motion.button>
-          </form>
-        </motion.div>
+          </div>
+        </form>
       </motion.div>
     </div>
   );
