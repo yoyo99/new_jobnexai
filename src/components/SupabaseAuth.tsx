@@ -7,6 +7,7 @@ import { PasswordStrengthMeter } from './PasswordStrengthMeter';
 import { useJobnexai } from '../hooks/useJobnexai';
 
 const SupabaseAuth: React.FC = () => {
+  console.log('🔥 NEW BALANCED DESIGN LOADED v2.0');
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
