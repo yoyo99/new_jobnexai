@@ -8,6 +8,16 @@
         "/Volumes/SamsungSSD840EVO250GB/Obsidian_Vault"
       ]
     },
+    "vps-ssh": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-ssh",
+        "--host", "38.242.238.205",
+        "--username", "root",
+        "--private-key-path", "~/.ssh/id_ed25519"
+      ]
+    },
     "n8n-mcp": {
       "command": "npx",
       "args": [
