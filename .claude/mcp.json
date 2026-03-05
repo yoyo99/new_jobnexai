@@ -1,5 +1,13 @@
 {
   "mcpServers": {
+    "obsidian": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-obsidian",
+        "/Volumes/SamsungSSD840EVO250GB/Obsidian_Vault"
+      ]
+    },
     "n8n-mcp": {
       "command": "npx",
       "args": [
