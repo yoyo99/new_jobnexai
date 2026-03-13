@@ -1,6 +1,11 @@
+/**
+ * Configuration PostCSS pour Vite
+ * Initialise correctement Tailwind CSS comme plugin PostCSS
+ */
+
 module.exports = {
-  plugins: {
-    tailwindcss: { config: './tailwind.config.cjs' },
-    autoprefixer: {},
-  },
+  plugins: [
+    require('tailwindcss')(),
+    require('autoprefixer')(),
+  ],
 }
