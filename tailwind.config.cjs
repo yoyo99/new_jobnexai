@@ -84,6 +84,12 @@ module.exports = {
   		fontFamily: {
 			sans: [
 				'Inter var', ...require('tailwindcss/defaultTheme').fontFamily.sans
+			],
+			body: [
+				'Inter', 'system-ui', 'sans-serif'
+			],
+			display: [
+				'Space Grotesk', 'sans-serif'
 			]
 		},
   		borderRadius: {
