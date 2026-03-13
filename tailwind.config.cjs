@@ -62,12 +62,19 @@ module.exports = {
   			input: 'hsl(var(--input))',
   			ring: 'hsl(var(--ring))',
   			chart: {
-  				'1': 'hsl(var(--chart-1))',
-  				'2': 'hsl(var(--chart-2))',
-  				'3': 'hsl(var(--chart-3))',
-  				'4': 'hsl(var(--chart-4))',
-  				'5': 'hsl(var(--chart-5))'
-  			},
+      '1': 'hsl(var(--chart-1))',
+      '2': 'hsl(var(--chart-2))',
+      '3': 'hsl(var(--chart-3))',
+      '4': 'hsl(var(--chart-4))',
+      '5': 'hsl(var(--chart-5))',
+      '6': 'hsl(var(--chart-6))',
+      '7': 'hsl(var(--chart-7))',
+      '8': 'hsl(var(--chart-8))',
+      '9': 'hsl(var(--chart-9))',
+      '10': 'hsl(var(--chart-10))',
+      '11': 'hsl(var(--chart-11))',
+      '12': 'hsl(var(--chart-12))'
+    },
   			'neon-blue': {
   				DEFAULT: '#3b82f6',
   				'10': 'rgba(59, 130, 246, 0.1)',
