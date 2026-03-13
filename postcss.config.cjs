@@ -1,11 +1,11 @@
 /**
- * Configuration PostCSS pour Vite
- * Initialise correctement Tailwind CSS comme plugin PostCSS
+ * Configuration PostCSS pour Vite avec Tailwind CSS v4
+ * Utilise le nouveau plugin @tailwindcss/postcss
  */
 
 module.exports = {
-  plugins: [
-    require('tailwindcss')(),
-    require('autoprefixer')(),
-  ],
+  plugins: {
+    '@tailwindcss/postcss': {},
+    autoprefixer: {},
+  },
 }
