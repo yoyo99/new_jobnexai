@@ -23,12 +23,12 @@ const config = {
         body: ['"Inter"', 'system-ui', 'sans-serif'],
       },
       colors: {
+        ...require('tailwindcss/defaultTheme').colors,
         glow: "hsl(var(--glow))",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
-        ...require('tailwindcss/defaultTheme').colors,
       },
       borderColor: {
         border: "hsl(var(--border))",
