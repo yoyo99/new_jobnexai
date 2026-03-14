@@ -28,6 +28,7 @@ const config = {
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
+        ...require('tailwindcss/defaultTheme').colors,
       },
       borderColor: {
         border: "hsl(var(--border))",
